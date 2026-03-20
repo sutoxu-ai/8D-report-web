@@ -20,7 +20,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# 从 Streamlit Secrets 读取 API
+# 读取 Secrets（Streamlit Cloud）
 # =========================================================
 API_KEY = st.secrets["DEEPSEEK_API_KEY"]
 BASE_URL = st.secrets["DEEPSEEK_BASE_URL"]
@@ -31,38 +31,57 @@ client = openai.OpenAI(
 )
 
 # =========================================================
-# Web 授权状态（Session 级）
+# 授权与试用次数（Web：session_state 级）
 # =========================================================
+MAX_TRIAL_GENERATIONS = 3  # 试用模式允许生成次数（你可以改成 2/3/5）
+
 if "license_type" not in st.session_state:
-    st.session_state.license_type = "trial"   # trial / active
+    st.session_state.license_type = "trial"  # trial / active
+
+if "trial_count" not in st.session_state:
+    st.session_state.trial_count = 0  # 已生成次数（仅 trial 生效）
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
+def trial_remaining() -> int:
+    """返回试用剩余生成次数（active 模式返回一个很大的数用于展示）"""
+    if st.session_state.license_type == "active":
+        return 999999
+    return max(0, MAX_TRIAL_GENERATIONS - st.session_state.trial_count)
+
 # =========================================================
-# 授权区
+# 侧边栏：授权/状态/历史
 # =========================================================
 def license_panel():
     with st.sidebar:
         st.header("系统状态")
 
         if st.session_state.license_type == "trial":
-            st.warning("⚠️ 当前为试用版（仅预览，不可导出 Word）")
+            rem = trial_remaining()
+            st.warning(f"⚠️ 当前为试用版：可生成 {MAX_TRIAL_GENERATIONS} 次（剩余 {rem} 次）")
+            st.caption("试用版：可完整预览内容；正式版：额外支持 Word 导出与无限次生成。")
+
+            if rem <= 0:
+                st.error("❌ 试用次数已用完：请输入激活码继续使用。")
+
             code = st.text_input("输入激活码", type="password")
-            if st.button("激活正式版"):
+            if st.button("激活正式版", use_container_width=True):
+                # 这里仍是“轻量激活”：长度>=8 即激活
+                # 以后你要做“真正售卖”，可改成：请求你的授权服务器验证
                 if len(code) >= 8:
                     st.session_state.license_type = "active"
                     st.success("✅ 激活成功（当前会话）")
                 else:
-                    st.error("激活码格式无效")
+                    st.error("激活码格式无效（至少 8 位）")
         else:
-            st.success("✅ 正式版（当前会话）")
+            st.success("✅ 正式版：无限次生成 + 支持 Word 导出")
 
         st.markdown("---")
         st.header("历史记录（最近 5 条）")
 
         for i, item in enumerate(st.session_state.history[-5:]):
-            if st.button(f"📄 {item['title']}", key=f"h_{i}"):
+            if st.button(f"📄 {item['title']}", key=f"h_{i}", use_container_width=True):
                 st.session_state.current_result = item["content"]
 
 # =========================================================
@@ -102,7 +121,7 @@ with col1:
     p_desc = st.text_area(
         "不良信息描述",
         height=160,
-        placeholder="请使用 5W2H 描述异常事实"
+        placeholder="请使用 5W2H 描述不良信息（越具体越好）"
     )
 
     p_name = st.text_input("产品型号 / 名称")
@@ -112,10 +131,16 @@ with col1:
     o_date = r1.date_input("发现日期", datetime.now())
     qty = r2.number_input("不良数量", min_value=1)
 
+    # ✅ 生成按钮
     if st.button("🚀 自动生成 8D 报告", use_container_width=True):
         if not p_desc:
-            st.error("请先输入异常描述")
+            st.error("请先输入不良信息。")
         else:
+            # ========= 关键：试用次数限制（仅限制“生成”，不限制“预览”） =========
+            if st.session_state.license_type == "trial" and trial_remaining() <= 0:
+                st.error("❌ 试用生成次数已用完，请在左侧输入激活码继续使用。")
+                st.stop()
+
             with st.spinner("8D 报告生成中（约 60 秒）"):
                 sys_prompt = """
 你将直接输出一份【正式 8D 报告正文】。
@@ -139,21 +164,33 @@ D8. 团队表彰
 A 与 B 之间空两行。
 """
 
-                resp = client.chat.completions.create(
-                    model="deepseek-chat",
-                    messages=[
-                        {"role": "system", "content": sys_prompt},
-                        {"role": "user", "content": f"异常事实：{p_desc}"}
-                    ],
-                    temperature=0.2
-                )
+                try:
+                    resp = client.chat.completions.create(
+                        model="deepseek-chat",
+                        messages=[
+                            {"role": "system", "content": sys_prompt},
+                            {"role": "user", "content": f"异常事实：{p_desc}"}
+                        ],
+                        temperature=0.2
+                    )
 
-                result = resp.choices[0].message.content
-                st.session_state.current_result = result
-                st.session_state.history.append({
-                    "title": f"{p_name[:10]}_{o_date}",
-                    "content": result
-                })
+                    result = resp.choices[0].message.content
+
+                    # ✅ 写入当前结果
+                    st.session_state.current_result = result
+
+                    # ✅ 记录历史
+                    st.session_state.history.append({
+                        "title": f"{(p_name or '8D')[:10]}_{o_date}",
+                        "content": result
+                    })
+
+                    # ✅ 试用计数：只在 trial 模式下增加
+                    if st.session_state.license_type == "trial":
+                        st.session_state.trial_count += 1
+
+                except Exception as e:
+                    st.error(f"分析引擎响应失败：{str(e)}")
 
 # ---------------- 预览 / 导出区 ----------------
 with col2:
@@ -163,6 +200,7 @@ with col2:
         content = st.session_state.current_result
         st.markdown(content)
 
+        # ✅ 只有正式版允许导出 Word
         if st.session_state.license_type == "active":
             doc = Document()
             doc.styles["Normal"].font.name = "宋体"
@@ -179,8 +217,12 @@ with col2:
             st.download_button(
                 "📥 导出 Word 报告",
                 bio.getvalue(),
-                file_name=f"8D_Report_{p_name}.docx",
+                file_name=f"8D_Report_{p_name or 'NA'}.docx",
                 use_container_width=True
             )
         else:
-            st.info("🔒 试用版仅支持预览，激活后可导出 Word")
+            st.info("🔒 试用版可完整预览；激活后可导出 Word，并无限次生成。")
+    else:
+        # 初始提示：增加一点产品引导
+        if st.session_state.license_type == "trial":
+            st.caption(f"提示：试用版剩余生成次数 {trial_remaining()} / {MAX_TRIAL_GENERATIONS}")
