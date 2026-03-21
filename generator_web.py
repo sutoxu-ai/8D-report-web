@@ -118,18 +118,7 @@ def license_panel():
                     st.error("激活码格式无效（至少 8 位）")
 
             # （可选）给你自己一个“重置试用”的隐藏入口，方便演示
-            with st.expander("（仅管理员）试用次数管理", expanded=False):
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    if st.button("重置为 0", use_container_width=True):
-                        set_trial_used(0)
-                        st.success("已重置为 0")
-                        st.rerun()
-                with col_b:
-                    if st.button("扣回 1 次", use_container_width=True):
-                        set_trial_used(max(0, get_trial_used() - 1))
-                        st.success("已扣回 1 次")
-                        st.rerun()
+
 
         else:
             st.success("✅ 正式版：无限次生成 + 支持 Word 导出")
