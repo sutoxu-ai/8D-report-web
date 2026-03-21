@@ -37,12 +37,10 @@ client = openai.OpenAI(
 # =========================================================
 # 2. Cookies：试用次数持久化（刷新不重置）+ 年费到期
 # =========================================================
-MAX_TRIAL_GENERATIONS = 3                # 试用允许生成次数
-TRIAL_COOKIE_NAME = "trial_count"        # cookie key（试用已用次数）
-LICENSE_EXPIRE_COOKIE = "license_expire" # cookie key（正式版到期日：YYYY-MM-DD）
-COOKIE_PREFIX = "ai8d/8d-report/"        # 防共享域冲突（建议固定）
-
-# 年费期限（你要一年就保持365）
+MAX_TRIAL_GENERATIONS = 3
+TRIAL_COOKIE_NAME = "trial_count"
+LICENSE_EXPIRE_COOKIE = "license_expire"
+COOKIE_PREFIX = "ai8d/8d-report/"
 LICENSE_DAYS = 365
 
 cookies = EncryptedCookieManager(
@@ -50,7 +48,6 @@ cookies = EncryptedCookieManager(
     password=st.secrets.get("COOKIES_PASSWORD", "CHANGE_ME_PLEASE_Use_Secrets"),
 )
 
-# 按组件要求：未 ready 前必须 stop，否则取不到 cookie 值
 if not cookies.ready():
     st.stop()
 
@@ -63,7 +60,6 @@ def _safe_int(x, default=0):
 
 
 def _safe_date_ymd(s: str):
-    """解析 YYYY-MM-DD，失败返回 None"""
     try:
         return datetime.strptime(s, "%Y-%m-%d").date()
     except Exception:
@@ -71,30 +67,25 @@ def _safe_date_ymd(s: str):
 
 
 def get_trial_used() -> int:
-    """从 cookie 读取试用已用次数（刷新/重开浏览器仍然存在）"""
     return _safe_int(cookies.get(TRIAL_COOKIE_NAME), 0)
 
 
 def set_trial_used(val: int):
-    """写入试用次数 cookie 并立即保存"""
     cookies[TRIAL_COOKIE_NAME] = str(max(0, val))
     cookies.save()
 
 
 def inc_trial_used() -> int:
-    """试用已用次数 +1，并保存，返回最新值"""
     new_val = get_trial_used() + 1
     set_trial_used(new_val)
     return new_val
 
 
 def trial_remaining() -> int:
-    """试用剩余次数"""
     return max(0, MAX_TRIAL_GENERATIONS - get_trial_used())
 
 
 def get_license_expire_date():
-    """读取正式版到期日（date or None）"""
     expire_str = cookies.get(LICENSE_EXPIRE_COOKIE)
     if not expire_str:
         return None
@@ -102,32 +93,21 @@ def get_license_expire_date():
 
 
 def set_license_expire_date(d):
-    """写入正式版到期日（YYYY-MM-DD）并保存"""
     cookies[LICENSE_EXPIRE_COOKIE] = d.strftime("%Y-%m-%d")
     cookies.save()
 
 
 def is_license_valid_today() -> bool:
-    """判断正式版是否在有效期内"""
     exp = get_license_expire_date()
     if not exp:
         return False
     return datetime.today().date() <= exp
 
 
+# ✅ ✅ ✅ 仅此一处为功能修改：一年有效期（不叠加）
 def calc_new_expire_date_for_activation() -> str:
-    """
-    续费策略：
-    - 若当前已有未过期到期日：从当前到期日往后 + LICENSE_DAYS
-    - 若已过期或无到期日：从今天起 + LICENSE_DAYS
-    """
     today = datetime.today().date()
-    current_exp = get_license_expire_date()
-    if current_exp and current_exp >= today:
-        base = current_exp
-    else:
-        base = today
-    new_exp = base + timedelta(days=LICENSE_DAYS)
+    new_exp = today + timedelta(days=LICENSE_DAYS)
     return new_exp.strftime("%Y-%m-%d")
 
 
