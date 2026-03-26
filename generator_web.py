@@ -2,17 +2,13 @@ import streamlit as st
 from io import BytesIO
 from datetime import datetime, timedelta
 import re
-
+import json
+from pathlib import Path
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
-
 import openai
-
-# ✅ Cookie 持久化（刷新不重置）
-from streamlit_cookies_manager import EncryptedCookieManager
-
 
 # =========================================================
 # 0. 页面配置
@@ -35,211 +31,137 @@ client = openai.OpenAI(
 )
 
 # =========================================================
-# 2. Cookies：试用次数持久化（刷新不重置）+ 年费到期
+# 2. License 本地持久化（替代 Cookie）
 # =========================================================
+LICENSE_FILE = Path("license.json")
 MAX_TRIAL_GENERATIONS = 3
-TRIAL_COOKIE_NAME = "trial_count"
-LICENSE_EXPIRE_COOKIE = "license_expire"
-COOKIE_PREFIX = "ai8d/8d-report/"
 LICENSE_DAYS = 365
 
-cookies = EncryptedCookieManager(
-    prefix=COOKIE_PREFIX,
-    password=st.secrets.get("COOKIES_PASSWORD", "CHANGE_ME_PLEASE_Use_Secrets"),
-)
+def load_license():
+    if LICENSE_FILE.exists():
+        try:
+            return json.loads(LICENSE_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {
+        "trial_used": 0,
+        "license_expire": None
+    }
 
-if not cookies.ready():
-    st.stop()
+def save_license(data: dict):
+    LICENSE_FILE.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
 
+license_data = load_license()
 
-def _safe_int(x, default=0):
-    try:
-        return int(x)
-    except Exception:
-        return default
+def trial_remaining():
+    return max(0, MAX_TRIAL_GENERATIONS - license_data.get("trial_used", 0))
 
-
-def _safe_date_ymd(s: str):
-    try:
-        return datetime.strptime(s, "%Y-%m-%d").date()
-    except Exception:
-        return None
-
-
-def get_trial_used() -> int:
-    return _safe_int(cookies.get(TRIAL_COOKIE_NAME), 0)
-
-
-def set_trial_used(val: int):
-    cookies[TRIAL_COOKIE_NAME] = str(max(0, val))
-    cookies.save()
-
-
-def inc_trial_used() -> int:
-    new_val = get_trial_used() + 1
-    set_trial_used(new_val)
-    return new_val
-
-
-def trial_remaining() -> int:
-    return max(0, MAX_TRIAL_GENERATIONS - get_trial_used())
-
-
-def get_license_expire_date():
-    expire_str = cookies.get(LICENSE_EXPIRE_COOKIE)
-    if not expire_str:
-        return None
-    return _safe_date_ymd(expire_str)
-
-
-def set_license_expire_date(d):
-    cookies[LICENSE_EXPIRE_COOKIE] = d.strftime("%Y-%m-%d")
-    cookies.save()
-
-
-def is_license_valid_today() -> bool:
-    exp = get_license_expire_date()
+def is_license_valid_today():
+    exp = license_data.get("license_expire")
     if not exp:
         return False
-    return datetime.today().date() <= exp
+    return datetime.today().date() <= datetime.strptime(exp, "%Y-%m-%d").date()
 
+def activate_new_license():
+    exp_date = datetime.today().date() + timedelta(days=LICENSE_DAYS)
+    license_data["license_expire"] = exp_date.strftime("%Y-%m-%d")
+    save_license(license_data)
 
-# ✅ ✅ ✅ 仅此一处为功能修改：一年有效期（不叠加）
-def calc_new_expire_date_for_activation() -> str:
-    today = datetime.today().date()
-    new_exp = today + timedelta(days=LICENSE_DAYS)
-    return new_exp.strftime("%Y-%m-%d")
-
+def inc_trial_used():
+    license_data["trial_used"] = license_data.get("trial_used", 0) + 1
+    save_license(license_data)
 
 # =========================================================
-# 3. 授权状态（会话级：trial/active）
-#    说明：是否“真正有效”由 cookie 中的到期日决定
+# 3. Session State
 # =========================================================
 if "license_type" not in st.session_state:
-    st.session_state.license_type = "trial"  # trial / active
+    st.session_state.license_type = "active" if is_license_valid_today() else "trial"
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
+def sync_license_state():
+    st.session_state.license_type = "active" if is_license_valid_today() else "trial"
 
-def sync_license_state_from_cookie():
-    """
-    将会话状态与 cookie 到期日对齐：
-    - 如果 cookie 显示有效：会话置 active
-    - 如果 cookie 显示无效/过期：会话置 trial
-    """
-    if is_license_valid_today():
-        st.session_state.license_type = "active"
-    else:
-        # 过期/无授权 -> 回到试用
-        st.session_state.license_type = "trial"
-
-
-# 每次脚本运行都同步一次（避免刷新/跨页面状态混乱）
-sync_license_state_from_cookie()
-
+sync_license_state()
 
 # =========================================================
-# 4. 侧边栏：状态/激活/历史
+# 4. Sidebar：授权面板
 # =========================================================
 def license_panel():
     with st.sidebar:
         st.header("系统状态")
 
-        # 显示到期信息（如果有）
-        exp = get_license_expire_date()
-        if exp:
-            exp_str = exp.strftime("%Y-%m-%d")
-        else:
-            exp_str = ""
+        exp = license_data.get("license_expire")
 
         if st.session_state.license_type == "active":
             st.success("✅ 正式版：无限次生成 + 支持 Word 导出")
-            if exp_str:
-                st.info(f"📅 授权有效期至：{exp_str}")
+            if exp:
+                st.info(f"📅 授权有效期至：{exp}")
         else:
-            used = get_trial_used()
+            used = license_data.get("trial_used", 0)
             rem = trial_remaining()
-
             st.warning(f"⚠️ 试用版：允许生成 {MAX_TRIAL_GENERATIONS} 次（已用 {used}，剩余 {rem}）")
-            st.caption("试用版：可完整预览生成内容；正式版：支持 Word 导出 + 无限次生成。")
-            if exp_str:
-                # 有到期记录但已过期
-                st.error(f"❌ 授权已到期（到期日：{exp_str}），已退回试用模式。")
+
+            if exp:
+                st.error(f"❌ 授权已到期（到期日：{exp}）")
 
             if rem <= 0:
-                st.error("❌ 试用次数已用完：请输入激活码继续使用。")
+                st.error("❌ 试用次数已用完，请激活。")
 
-        # 激活/续费入口：两种模式都可输入（trial 用于开通；active 用于续费延长）
         st.markdown("---")
         st.subheader("🔑 授权 / 续费")
 
-        code = st.text_input("输入激活码", type="password", placeholder="请输入激活码")
-        if st.button("立即激活 / 续费", use_container_width=True):
-            # 你现在的激活码校验仍是轻量方式：长度>=8即通过
-            # 如需“一码一客户”或“码池到期管理”，后续可升级为服务端校验
-            if len(code) >= 8:
-                new_exp_str = calc_new_expire_date_for_activation()
-                new_exp_date = _safe_date_ymd(new_exp_str)
+        code = st.text_input("输入激活码", type="password")
 
-                if new_exp_date:
-                    set_license_expire_date(new_exp_date)
-                    sync_license_state_from_cookie()
-                    st.success(f"✅ 操作成功！有效期已更新至 {new_exp_str}")
-                    st.rerun()
-                else:
-                    st.error("到期日期计算失败，请联系管理员。")
+        if st.button("立即激活 / 续费", use_container_width=True):
+            if len(code) >= 8:
+                activate_new_license()
+                sync_license_state()
+                st.success("✅ 授权成功，已生效一年")
+                st.rerun()
             else:
-                st.error("激活码格式无效（至少 8 位）")
+                st.error("激活码无效（至少 8 位）")
 
         st.markdown("---")
         st.header("历史记录（最近 5 条）")
+
         for i, item in enumerate(st.session_state.history[-5:]):
             if st.button(f"📄 {item['title']}", key=f"h_{i}", use_container_width=True):
                 st.session_state.current_result = item["content"]
-
 
 # =========================================================
 # 5. Word 写入
 # =========================================================
 def write_8d_to_word(doc, raw_text):
-    lines = raw_text.split("\n")
-    for line in lines:
+    for line in raw_text.split("\n"):
         line = line.strip()
         if not line:
             continue
-
         line = re.sub(r"^[\-\*\•\d\.\)\s]+", "", line)
         line = line.replace("**", "")
-
         if re.match(r"^D[1-8]\b", line):
-            p = doc.add_heading(line, level=1)
-            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            doc.add_heading(line, level=1)
         else:
             p = doc.add_paragraph(line)
             p.paragraph_format.space_after = Pt(6)
 
-
 # =========================================================
-# 6. 主界面
+# 6. UI
 # =========================================================
 st.title("📊 8D 报告自动生成系统")
 st.markdown("---")
-
 license_panel()
 
 col1, col2 = st.columns([1, 1])
 
-# ---------------- 输入区 ----------------
 with col1:
     st.header("📝 输入基本信息")
 
-    p_desc = st.text_area(
-        "不良信息描述",
-        height=160,
-        placeholder="推荐使用 5W2H 描述不良信息（越具体越好）"
-    )
-
+    p_desc = st.text_area("不良信息描述", height=160)
     p_name = st.text_input("产品型号 / 名称")
     cust = st.text_input("客户名称")
 
@@ -247,80 +169,35 @@ with col1:
     o_date = r1.date_input("发现日期", datetime.now())
     qty = r2.number_input("不良数量", min_value=1)
 
-    # ✅ 生成按钮
     if st.button("🚀 自动生成 8D 报告", use_container_width=True):
+        sync_license_state()
 
-        if not p_desc:
-            st.error("请先输入异常描述。")
+        if st.session_state.license_type == "trial" and trial_remaining() <= 0:
+            st.error("❌ 试用次数已用完")
             st.stop()
 
-        # 每次关键操作前再次同步授权（防止到期后仍停留active）
-        sync_license_state_from_cookie()
+        with st.spinner("8D 报告生成中…"):
+            resp = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "你将直接输出正式 8D 报告正文"},
+                    {"role": "user", "content": p_desc}
+                ],
+                temperature=0.2
+            )
 
-        # =========================================================
-        # ✅ 试用次数限制（trial 且 已用>=MAX -> 拦截）
-        # =========================================================
-        if st.session_state.license_type == "trial":
-            used_now = get_trial_used()
-            if used_now >= MAX_TRIAL_GENERATIONS:
-                st.error("❌ 试用生成次数已用完，请在左侧输入激活码继续使用。")
-                st.stop()
+            result = resp.choices[0].message.content
+            st.session_state.current_result = result
 
-        with st.spinner("8D 报告生成中（约 60 秒）"):
-            sys_prompt = """
-你将直接输出一份【正式 8D 报告正文】。
-【严格要求】：
-- 禁止任何自我介绍或第一人称
-- 所有内容必须可直接提交客户
-- 不允许使用问号
+            st.session_state.history.append({
+                "title": f"{p_name or '8D'}_{o_date}",
+                "content": result
+            })
 
-必须完整包含：
-D1. 成立团队
-D2. 问题描述（5W2H）
-D3. 临时围堵措施
-D4. 根本原因分析
-  A. 为什么发生（4M1E + 仅异常项 5Why）
-  B. 为什么流出（5Why）
-D5. 永久纠正措施选择
-D6. 实施纠正措施
-D7. 防止再发生（标准化 / FMEA / 控制计划）
-D8. 团队表彰
+            if st.session_state.license_type == "trial":
+                inc_trial_used()
+                st.info(f"ℹ️ 剩余试用次数：{trial_remaining()}")
 
-A 与 B 之间空两行。
-"""
-
-            try:
-                resp = client.chat.completions.create(
-                    model="deepseek-chat",
-                    messages=[
-                        {"role": "system", "content": sys_prompt},
-                        {"role": "user", "content": f"异常事实：{p_desc}"}
-                    ],
-                    temperature=0.2
-                )
-
-                result = resp.choices[0].message.content
-
-                # ✅ 写入当前结果（完整展示，不截断）
-                st.session_state.current_result = result
-
-                # ✅ 写入历史
-                st.session_state.history.append({
-                    "title": f"{(p_name or '8D')[:10]}_{o_date}",
-                    "content": result
-                })
-
-                # ✅ 生成成功后再扣试用次数（顺序正确）
-                if st.session_state.license_type == "trial":
-                    new_used = inc_trial_used()
-                    rem = trial_remaining()
-                    st.info(f"ℹ️ 本次已计入试用次数：已用 {new_used} / {MAX_TRIAL_GENERATIONS}，剩余 {rem}")
-
-            except Exception as e:
-                st.error(f"分析引擎响应失败：{str(e)}")
-
-
-# ---------------- 预览 / 导出区 ----------------
 with col2:
     st.header("📄 8D 报告预览")
 
@@ -328,17 +205,12 @@ with col2:
         content = st.session_state.current_result
         st.markdown(content)
 
-        # 每次导出前也校验一次是否到期
-        sync_license_state_from_cookie()
+        sync_license_state()
 
-        # ✅ 只有正式版允许导出 Word（且必须未到期）
         if st.session_state.license_type == "active":
             doc = Document()
             doc.styles["Normal"].font.name = "宋体"
-            doc.styles["Normal"]._element.rPr.rFonts.set(
-                qn("w:eastAsia"), "宋体"
-            )
-
+            doc.styles["Normal"]._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
             doc.add_heading("8D 问题纠正与预防措施报告", 0)
             write_8d_to_word(doc, content)
 
@@ -352,12 +224,5 @@ with col2:
                 use_container_width=True
             )
         else:
-            st.info("🔒 试用版可完整预览；激活后可导出 Word，并无限次生成。")
-
-    else:
-        if st.session_state.license_type == "trial":
-            st.caption(f"提示：试用剩余 {trial_remaining()} / {MAX_TRIAL_GENERATIONS} 次（刷新不会重置）")
-        else:
-            exp = get_license_expire_date()
-            if exp:
-                st.caption(f"提示：当前授权有效期至 {exp.strftime('%Y-%m-%d')}")
+            st.info("🔒 激活后可导出 Word")
+``
