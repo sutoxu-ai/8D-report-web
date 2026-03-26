@@ -2,3 +2,4 @@ streamlit
 openai
 python-docx
 streamlit-cookies-manager-v2
+streamlit-language-picker
