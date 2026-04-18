@@ -120,8 +120,10 @@ except:
 
 try:
     supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-except:
+    st.success("✅ Supabase 连接成功")  # 调试用
+except Exception as e:
     supabase = None
+    st.error(f"❌ Supabase 连接失败：{str(e)}")  # 显示具体错误
 
 
 # --- 辅助函数定义 (注意缩进) ---
