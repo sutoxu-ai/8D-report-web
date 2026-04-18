@@ -133,13 +133,15 @@ st.caption(f"🔍 SUPABASE_KEY = {SUPABASE_KEY[:30] if SUPABASE_KEY else 'EMPTY'
 supabase = True  # 标记为已连接（用于调试）
 
 def get_user_license(user_id):
+    st.caption(f"🔍 get_user_license 被调用，user_id={user_id}")  # 调试用
+    st.caption(f"🔍 SUPABASE_URL = {SUPABASE_URL[:50] if SUPABASE_URL else 'EMPTY'}...")  # 调试用
     if not SUPABASE_URL:
-        st.error("❌ SUPABASE_URL 为空")
+        st.error("❌ SUPABASE_URL 为空！")
         return None
     try:
         url = f"{SUPABASE_URL}/rest/v1/licenses?user_id=eq.{user_id}"
         st.caption(f"🔍 URL: {url}")
-        st.caption(f"🔍 Key: {SUPABASE_KEY[:30]}...")
+        st.caption(f"🔍 Headers Key: {SUPABASE_KEY[:30] if SUPABASE_KEY else 'EMPTY'}...")
         r = requests.get(url, headers=HEADERS, timeout=10)
         st.caption(f"🔍 Status: {r.status_code}")
         st.caption(f"🔍 Response: {r.text[:300]}")
