@@ -8,7 +8,8 @@ from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 import openai
-from supabase import create_client
+import requests
+# from supabase import create_client
 
 # --- 页面配置 ---
 st.set_page_config(page_title="8D 报告智能生成助手", page_icon="📊", layout="wide")
@@ -118,11 +119,98 @@ except:
     API_KEY = ""
     BASE_URL = "https://api.deepseek.com"
 
-try:
-    supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-    st.success("✅ Supabase 连接成功")  # 调试用
-except Exception as e:
-    supabase = None
+# 直接使用 HTTP API，不依赖 supabase-py 库
+SUPABASE_URL = st.secrets.get("SUPABASE_URL", "")
+SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "")
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
+}
+
+supabase = True  # 标记为已连接（用于调试）
+
+def get_user_license(user_id):
+    if not SUPABASE_URL:
+        return None
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/licenses?user_id=eq.{user_id}"
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        if r.status_code == 200 and r.json():
+            return r.json()[0]
+        return None
+    except Exception as e:
+        st.error(f"Get license error: {e}")
+        return None
+
+def create_free_license(user_id):
+    if not SUPABASE_URL:
+        return None
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/licenses"
+        data = {
+            "user_id": user_id,
+            "plan_type": "free",
+            "trial_used": 0,
+            "trial_limit": 3
+        }
+        r = requests.post(url, json=data, headers=HEADERS, timeout=10)
+        if r.status_code in [200, 201]:
+            return r.json()
+        return None
+    except Exception as e:
+        st.error(f"Create license error: {e}")
+        return None
+
+def inc_trial_used(user_id):
+    if not SUPABASE_URL:
+        return
+    try:
+        # 先获取当前记录
+        url = f"{SUPABASE_URL}/rest/v1/licenses?user_id=eq.{user_id}"
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        if r.status_code == 200 and r.json():
+            lic = r.json()[0]
+            new_count = lic.get('trial_used', 0) + 1
+            # 更新
+            update_url = f"{SUPABASE_URL}/rest/v1/licenses?id=eq.{lic['id']}"
+            requests.patch(update_url, json={"trial_used": new_count}, headers=HEADERS, timeout=10)
+        
+        # 记录日志
+        log_url = f"{SUPABASE_URL}/rest/v1/usage_logs"
+        requests.post(log_url, json={"user_id": user_id, "action": "generate_report"}, headers=HEADERS, timeout=10)
+    except:
+        pass
+
+def activate_license_code(user_id, code):
+    if not SUPABASE_URL:
+        return False
+    try:
+        from datetime import datetime, timedelta
+        exp = (datetime.now() + timedelta(days=365)).isoformat()
+        url = f"{SUPABASE_URL}/rest/v1/licenses?user_id=eq.{user_id}"
+        data = {
+            "plan_type": "pro",
+            "license_expire": exp
+        }
+        r = requests.patch(url, json=data, headers=HEADERS, timeout=10)
+        return r.status_code in [200, 201]
+    except:
+        return False
+
+def can_generate_report(user_id):
+    lic = get_user_license(user_id)
+    if not lic:
+        return False
+    if lic['plan_type'] == 'free':
+        return lic.get('trial_used', 0) < lic.get('trial_limit', 3)
+    if lic['plan_type'] in ['pro', 'enterprise']:
+        if lic.get('license_expire'):
+            from datetime import datetime
+            return datetime.now() < datetime.fromisoformat(lic['license_expire'].replace('Z', '+00:00'))
+        return True
+    return False
     st.error(f"❌ Supabase 连接失败：{str(e)}")  # 显示具体错误
 
 
