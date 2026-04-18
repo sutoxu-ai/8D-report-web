@@ -211,20 +211,6 @@ def activate_license_code(user_id, code):
     except:
         return False
 
-def can_generate_report(user_id):
-    lic = get_user_license(user_id)
-    if not lic:
-        return False
-    if lic['plan_type'] == 'free':
-        return lic.get('trial_used', 0) < lic.get('trial_limit', 3)
-    if lic['plan_type'] in ['pro', 'enterprise']:
-        if lic.get('license_expire'):
-            from datetime import datetime
-            return datetime.now() < datetime.fromisoformat(lic['license_expire'].replace('Z', '+00:00'))
-        return True
-    return False
-    st.error(f"❌ Supabase 连接失败：{str(e)}")  # 显示具体错误
-
 
 # --- 辅助函数定义 (注意缩进) ---
 
