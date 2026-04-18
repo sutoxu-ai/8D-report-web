@@ -159,9 +159,15 @@ def can_generate_report(user_id):
     if lic['plan_type'] == 'free':
         return lic['trial_used'] < lic['trial_limit']
     if lic['plan_type'] in ['pro', 'enterprise']:
-        if lic.get('license_expire'):
+        # 如果没有设置过期时间，直接认为有效
+        if not lic.get('license_expire'):
+            return True
+        # 如果有设置过期时间，才进行时间比较
+        try:
             return datetime.now() < datetime.fromisoformat(lic['license_expire'])
-        return True
+        except:
+            # 如果时间格式解析出错，也默认有效（或者打印日志）
+            return True
     return False
 
 
