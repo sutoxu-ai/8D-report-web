@@ -128,7 +128,8 @@ HEADERS = {
     "Content-Type": "application/json",
     "Prefer": "return=representation"
 }
-
+st.caption(f"🔍 SUPABASE_URL = {SUPABASE_URL[:50] if SUPABASE_URL else 'EMPTY'}...")
+st.caption(f"🔍 SUPABASE_KEY = {SUPABASE_KEY[:30] if SUPABASE_KEY else 'EMPTY'}...")
 supabase = True  # 标记为已连接（用于调试）
 
 def get_user_license(user_id):
@@ -391,10 +392,12 @@ with st.sidebar:
         st.success(f"欢迎，{user_input}")
         
         # 🔧 调试输出
-        st.caption(f"🔍 Debug: supabase connected = {supabase is not None}")
+        
         
         lic = get_user_license(user_input)
         st.caption(f"🔍 Debug: license = {lic}")
+                # 🔧 调试输出
+        st.caption(f"🔍 Debug: supabase connected = {supabase is not None}")
         
         if lic:
             if lic['plan_type'] == 'free':
