@@ -154,6 +154,7 @@ def create_free_license(user_id):
 
 def can_generate_report(user_id):
     lic = get_user_license(user_id)
+    st.write(f"🔍 can_generate_report: lic={lic}")  # 调试用
     if not lic:
         return False
     if lic['plan_type'] == 'free':
@@ -293,7 +294,13 @@ with st.sidebar:
     if user_input:
         st.session_state.user_id = user_input
         st.success(f"欢迎，{user_input}")
+        
+        # 🔧 调试输出
+        st.caption(f"🔍 Debug: supabase connected = {supabase is not None}")
+        
         lic = get_user_license(user_input)
+        st.caption(f"🔍 Debug: license = {lic}")
+        
         if lic:
             if lic['plan_type'] == 'free':
                 st.warning(f"⚠️ 试用版：剩余 {lic['trial_limit'] - lic['trial_used']} 次")
