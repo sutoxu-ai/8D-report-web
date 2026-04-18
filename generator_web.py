@@ -227,16 +227,7 @@ def can_generate_report(user_id):
 
 
 # --- 辅助函数定义 (注意缩进) ---
-def get_user_license(user_id):
-    if not supabase:
-        return None
-    try:
-        r = supabase.table("licenses").select("*").eq("user_id", user_id).execute()
-        if r.data:
-            return r.data[0]
-        return create_free_license(user_id)
-    except:
-        return None
+
 
 
 def create_free_license(user_id):
