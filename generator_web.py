@@ -137,19 +137,16 @@ def get_user_license(user_id):
         return None
     try:
         url = f"{SUPABASE_URL}/rest/v1/licenses?user_id=eq.{user_id}"
-        st.caption(f"🔍 请求 URL: {url}")  # 调试用
-        st.caption(f"🔍 Headers: {HEADERS.get('apikey', '')[:20]}...")  # 调试用
+        st.caption(f"🔍 URL: {url}")
+        st.caption(f"🔍 Key: {SUPABASE_KEY[:30]}...")
         r = requests.get(url, headers=HEADERS, timeout=10)
-        st.caption(f"🔍 状态码：{r.status_code}")  # 调试用
-        st.caption(f"🔍 返回内容：{r.text[:200]}")  # 调试用
+        st.caption(f"🔍 Status: {r.status_code}")
+        st.caption(f"🔍 Response: {r.text[:300]}")
         if r.status_code == 200 and r.json():
             return r.json()[0]
         return None
     except Exception as e:
-        st.error(f"❌ Get license error: {e}")
-        return Nonedef get_user_license(user_id):
-    if not SUPABASE_URL:
-        st.error("❌ SUPABASE_URL 为空")
+        st.error(f"❌ Error: {e}")
         return None
     try:
         url = f"{SUPABASE_URL}/rest/v1/licenses?user_id=eq.{user_id}"
