@@ -323,22 +323,21 @@ with st.sidebar:
     # 激活码输入（仅试用版显示）
     if user_input:
         lic = get_user_license(user_input)
-        if lic and lic['plan_type'] == 'free':
-            st.markdown("---")
-            st.subheader(T["activate_title"])
-            activate_code = st.text_input(T["activate_code_hint"], type="password", key="act_code")
-            if st.button(T["activate_btn"], use_container_width=True):
-                if not activate_code:
-                    st.error("请输入激活码")
-                elif len(activate_code) < 6:
-                    st.error("激活码格式错误")
+        st.markdown("---")
+        st.subheader(T["activate_title"])
+        activate_code = st.text_input(T["activate_code_hint"], type="password", key="act_code")
+        if st.button(T["activate_btn"], use_container_width=True):
+            if not activate_code:
+                st.error("请输入激活码")
+            elif len(activate_code) < 6:
+                st.error("激活码格式错误")
+            else:
+                success, msg = activate_license_code(user_input, activate_code)
+                if success:
+                    st.success(msg)
+                    st.rerun()
                 else:
-                    success, msg = activate_license_code(user_input, activate_code)
-                    if success:
-                        st.success(msg)
-                        st.rerun()
-                    else:
-                        st.error(msg)
+                    st.error(msg)
 
 # ==================== 主页面 ====================
 st.title(T["main_title"])
