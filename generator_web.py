@@ -301,7 +301,7 @@ with st.sidebar:
     st.header("👤 用户登录")
     user_input = st.text_input("用户名/邮箱", key="user_input")
     
-    if user_input:
+    if user_input:          # 第 304 行
         st.session_state.user_id = user_input
         st.success(f"欢迎，{user_input}")
         
@@ -313,16 +313,12 @@ with st.sidebar:
                 st.success("✅ 专业版")
                 if lic.get('license_expire'):
                     st.caption(f"有效期至：{datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')}")
-                    
+        
         if st.button(T["logout"]):
             st.session_state.user_id = None
             st.rerun()
-    else:
-        st.info(T["login_required"])
-    
-    # 激活码输入（仅试用版显示）
-    if user_input:
-        lic = get_user_license(user_input)
+        
+        # 激活码输入 - 直接在这里，不要再判断 if user_input
         st.markdown("---")
         st.subheader(T["activate_title"])
         activate_code = st.text_input(T["activate_code_hint"], type="password", key="act_code")
@@ -338,6 +334,8 @@ with st.sidebar:
                     st.rerun()
                 else:
                     st.error(msg)
+    else:
+        st.info(T["login_required"])
 
 # ==================== 主页面 ====================
 st.title(T["main_title"])
