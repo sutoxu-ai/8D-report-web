@@ -251,15 +251,6 @@ def can_generate_report(user_id):
     return False
 
 
-def inc_trial_used(user_id):
-    if not supabase:
-        return
-    try:
-        supabase.rpc("inc_trial_used", params={"p_user_id": user_id}).execute()
-        supabase.table("usage_logs").insert({"user_id": user_id, "action": "generate_report"}).execute()
-    except:
-        pass
-
 
 def activate_license_code(user_id, code):
     if not supabase:
