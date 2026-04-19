@@ -378,9 +378,9 @@ with st.sidebar:
         
         
         lic = get_user_license(user_input)
-        st.caption(f"🔍 Debug: license = {lic}")
+        #st.caption(f"🔍 Debug: license = {lic}")
                 # 🔧 调试输出
-        st.caption(f"🔍 Debug: supabase connected = {supabase is not None}")
+        #st.caption(f"🔍 Debug: supabase connected = {supabase is not None}")
         
         if lic:
             if lic['plan_type'] == 'free':
