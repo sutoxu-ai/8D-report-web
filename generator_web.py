@@ -133,8 +133,8 @@ st.caption(f"🔍 SUPABASE_KEY = {SUPABASE_KEY[:30] if SUPABASE_KEY else 'EMPTY'
 supabase = True  # 标记为已连接（用于调试）
 
 def get_user_license(user_id):
-    st.write(f"🔍 [1] 函数被调用，user_id={user_id}")
-    st.write(f"🔍 [2] SUPABASE_URL={SUPABASE_URL[:50] if SUPABASE_URL else 'EMPTY'}")
+    #st.write(f"🔍 [1] 函数被调用，user_id={user_id}")
+    #st.write(f"🔍 [2] SUPABASE_URL={SUPABASE_URL[:50] if SUPABASE_URL else 'EMPTY'}")
     
     if not SUPABASE_URL:
         st.error("❌ SUPABASE_URL 为空！")
@@ -142,12 +142,12 @@ def get_user_license(user_id):
     
     try:
         url = f"{SUPABASE_URL}/rest/v1/licenses?user_id=eq.{user_id}"
-        st.write(f"🔍 [3] URL={url}")
-        st.write(f"🔍 [4] Headers OK")
+       # st.write(f"🔍 [3] URL={url}")
+        #st.write(f"🔍 [4] Headers OK")
         
         r = requests.get(url, headers=HEADERS, timeout=10)
-        st.write(f"🔍 [5] Status={r.status_code}")
-        st.write(f"🔍 [6] Response={r.text[:200]}")
+        #st.write(f"🔍 [5] Status={r.status_code}")
+        #st.write(f"🔍 [6] Response={r.text[:200]}")
         
         if r.status_code == 200 and r.json():
             return r.json()[0]
@@ -233,7 +233,7 @@ def create_free_license(user_id):
 
 def can_generate_report(user_id):
     lic = get_user_license(user_id)
-    st.write(f"🔍 can_generate_report: lic={lic}")  # 调试用
+    #(f"🔍 can_generate_report: lic={lic}")  # 调试用
     if not lic:
         return False
     if lic['plan_type'] == 'free':
