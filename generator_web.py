@@ -1,3 +1,15 @@
+#!/usr/bin/env python3
+"""
+8D 报告智能生成助手 - 客户端
+修改说明：
+1. 修改页面标题
+2. 添加用户注册提示信息
+3. 修复英文翻译（用户登录、用户名/邮箱）
+4. 修复退出登录状态（清除缓存）
+5. 添加生成进度提示
+6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
+"""
+
 import streamlit as st
 from io import BytesIO
 from datetime import datetime, timedelta
@@ -21,7 +33,6 @@ def get_cached_license(user_id):
         r = supabase.table("licenses").select("*").eq("user_id", user_id).execute()
         if r.data:
             return r.data[0]
-        # 如果不存在，尝试创建免费许可证
         return create_free_license(user_id)
     except Exception:
         return None
@@ -31,7 +42,7 @@ def clear_license_cache(user_id):
     get_cached_license.clear()
 
 # ==================== 页面配置 ====================
-st.set_page_config(page_title="8D 报告智能生成助手", page_icon="📊", layout="wide")
+st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊", layout="wide")
 
 # ==================== 多语言文本 ====================
 TEXT = {
@@ -43,6 +54,9 @@ TEXT = {
         "activate_code_hint": "激活码", "activate_btn": "立即激活",
         "activate_success": "✅ 激活成功，有效期一年", "activate_fail": "❌ 激活码无效",
         "login_required": "🔒 请先登录", "logout": "退出登录",
+        "login_header": "👤 用户登录",
+        "username_placeholder": "用户名/邮箱",
+        "new_user_hint": "👋 新用户？直接输入邮箱/用户名即可注册，首次登录赠送 3 次免费试用！",
         "main_title": "📊 8D 报告智能生成助手", "input_header": "📝 输入基本信息",
         "product_name": "产品型号 / 名称", "customer": "客户名称",
         "problem_desc": "不良现象描述",
@@ -51,12 +65,22 @@ TEXT = {
         "severity_low": "低", "severity_medium": "中", "severity_high": "高", "severity_critical": "危急",
         "industry_std": "适用标准", "team_members": "团队成员（可选）",
         "team_placeholder": "例：张明 (组长), 李华 (工程)",
-        "generate_btn": "🚀 生成 8D 报告", "generating": "8D 报告正在生成中...",
+        "generate_btn": "🚀 生成 8D 报告", 
+        "generating": "8D 报告正在生成中...",
         "preview_header": "📄 报告预览", "download_btn": "📥 导出 Word 报告",
         "export_disabled": "🔒 激活正式版后可导出 Word",
         "no_desc": "❌ 请输入不良现象描述",
         "trial_exhausted_error": "❌ 试用次数已用完", "api_error": "❌ 服务异常",
-        "success": "✅ 报告生成完成！", "word_title": "8D 问题纠正与预防措施报告"
+        "success": "✅ 报告生成完成！", "word_title": "8D 问题纠正与预防措施报告",
+        "progress_analyze": "🔍 正在分析问题...",
+        "progress_d2": "📋 正在生成 D2 问题描述...",
+        "progress_d3": "🛡️ 正在生成 D3 临时措施...",
+        "progress_d4": "🎯 正在生成 D4 根本原因分析 (4M1E)...",
+        "progress_d5": "💡 正在生成 D5 永久措施...",
+        "progress_d6": "✅ 正在生成 D6 实施与验证...",
+        "progress_d7": "📊 正在生成 D7 预防措施...",
+        "progress_d8": "🏆 正在生成 D8 总结与表彰...",
+        "progress_format": "📄 正在整理报告格式..."
     },
     "en": {
         "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
@@ -66,6 +90,9 @@ TEXT = {
         "activate_code_hint": "Activation Code", "activate_btn": "Activate",
         "activate_success": "✅ Activated successfully", "activate_fail": "❌ Invalid code",
         "login_required": "🔒 Please login", "logout": "Logout",
+        "login_header": "👤 User Login",
+        "username_placeholder": "Username/Email",
+        "new_user_hint": "👋 New user? Enter email/username to register, get 3 free trials!",
         "main_title": "📊 8D Report Generator", "input_header": "📝 Input Information",
         "product_name": "Product Name / Model", "customer": "Customer Name",
         "problem_desc": "Problem Description",
@@ -74,18 +101,96 @@ TEXT = {
         "severity_low": "Low", "severity_medium": "Medium", "severity_high": "High", "severity_critical": "Critical",
         "industry_std": "Standard", "team_members": "Team Members (Optional)",
         "team_placeholder": "e.g., Zhang(Leader), Li(Eng)",
-        "generate_btn": "🚀 Generate 8D Report", "generating": "Generating report...",
+        "generate_btn": "🚀 Generate 8D Report",
+        "generating": "Generating report...",
         "preview_header": "📄 Report Preview", "download_btn": "📥 Export Word",
         "export_disabled": "🔒 Activate to export",
         "no_desc": "❌ Please enter description",
         "trial_exhausted_error": "❌ Trial exhausted", "api_error": "❌ Service error",
-        "success": "✅ Report generated!", "word_title": "8D Corrective Action Report"
+        "success": "✅ Report generated!", "word_title": "8D Corrective Action Report",
+        "progress_analyze": "🔍 Analyzing problem...",
+        "progress_d2": "📋 Generating D2 Problem Description...",
+        "progress_d3": "🛡️ Generating D3 Interim Actions...",
+        "progress_d4": "🎯 Generating D4 Root Cause Analysis (4M1E)...",
+        "progress_d5": "💡 Generating D5 Permanent Actions...",
+        "progress_d6": "✅ Generating D6 Implementation...",
+        "progress_d7": "📊 Generating D7 Prevention...",
+        "progress_d8": "🏆 Generating D8 Conclusion...",
+        "progress_format": "📄 Formatting report..."
     }
 }
 
+# ==================== 系统提示词（改进 D4 4M1E 分析逻辑） ====================
 SYSTEM_PROMPT = {
-    "zh": "你是一位拥有 20 年经验的汽车电子行业高级质量工程师，精通 IATF 16949 标准和 8D 问题解决方法。请根据用户输入撰写专业、逻辑严密的 8D 报告。要求：1.语气专业客观 2.4M1E 分析包含人机料法环 3. 包含 5-Why 分析 4. 措施使用 [责任人 | 时间 | 状态] 格式 5. 不使用 Markdown 标记。直接输出 D1-D8 报告正文。",
-    "en": "You are a Senior Quality Engineer with 20 years experience in automotive electronics, proficient in IATF 16949 and 8D methodology. Please write a professional 8D report based on user input. Requirements: 1.Professional tone 2.4M1E analysis 3.5-Why analysis 4.Use [Owner|Date|Status] format 5.No Markdown. Output D1-D8 directly."
+    "zh": """你是一位拥有 20 年经验的汽车电子行业高级质量工程师，精通 IATF 16949 标准和 8D 问题解决方法。请根据用户输入撰写专业、逻辑严密的 8D 报告。
+
+【D4 根本原因分析要求】
+4M1E 分析（人、机、料、法、环）要逐项确认，使用确定句而非疑问句：
+✅ 正常项：明确说明"经检查，XX 符合标准，排除为根本原因"
+❌ 异常项：明确说明"经检查，XX 存在问题：[具体问题]"
+❌ 不要使用"是否"、"有没有"等疑问句
+
+使用 5-Why 分析法：
+从异常项开始，连续追问"为什么"
+至少追问 3-5 层，直到找到根本原因
+每层回答要具体，不能笼统
+
+输出格式示例：
+【4M1E 分析】
+人：经检查，操作员持证上岗，培训记录完整，技能考核合格 → 排除
+机：经检查，设备参数偏移 0.05mm，超出公差范围 (±0.02mm) → 异常项 ⚠️
+料：经检查，原材料批次检验报告合格，供应商 COA 完整 → 排除
+法：经检查，作业指导书版本 V2.1 已过期，现行版本应为 V3.0 → 异常项 ⚠️
+环：经检查，车间温度 23±2°C，湿度 50±10%，符合要求 → 排除
+
+【5-Why 分析】
+Why1：为什么设备参数偏移？→ 传感器校准过期 3 个月
+Why2：为什么传感器校准过期？→ 年度校准计划未执行
+Why3：为什么校准计划未执行？→ 维护人员不足，工作量饱和
+Why4：为什么维护人员不足？→ 未配置备用人员，单人负责
+Why5：为什么未配置备用人员？→ 人员编制申请未获批 ← 根本原因
+
+【其他要求】
+语气专业客观
+措施使用 [责任人 | 时间 | 状态] 格式
+不使用 Markdown 标记
+直接输出 D1-D8 报告正文
+4M1E 分析必须使用确定句，明确指出哪些正常、哪些异常""",
+    
+    "en": """You are a Senior Quality Engineer with 20 years experience in automotive electronics, proficient in IATF 16949 and 8D methodology. Please write a professional 8D report based on user input.
+
+【D4 Root Cause Analysis Requirements】
+4M1E analysis (Man, Machine, Material, Method, Environment) must use declarative sentences:
+✅ Normal items: Clearly state "Verified, XX meets standard, excluded as root cause"
+❌ Abnormal items: Clearly state "Verified, XX has issue: [specific problem]"
+❌ Do NOT use questions like "whether", "is there"
+
+Use 5-Why analysis:
+Start from abnormal items, continuously ask "why"
+At least 3-5 levels until finding root cause
+Each answer must be specific, not vague
+
+Output format example:
+【4M1E Analysis】
+Man: Verified, operator certified, training complete, qualified → Excluded
+Machine: Verified, parameter offset 0.05mm, out of tolerance (±0.02mm) → Abnormal ⚠️
+Material: Verified, batch inspection passed, COA complete → Excluded
+Method: Verified, work instruction V2.1 outdated, current version V3.0 → Abnormal ⚠️
+Environment: Verified, temperature 23±2°C, humidity 50±10%, compliant → Excluded
+
+【5-Why Analysis】
+Why1: Why parameter offset? → Sensor calibration expired 3 months
+Why2: Why calibration expired? → Annual calibration plan not executed
+Why3: Why plan not executed? → Insufficient maintenance staff
+Why4: Why insufficient staff? → No backup personnel assigned
+Why5: Why no backup? → Staffing request not approved ← Root Cause
+
+【Other Requirements】
+Professional tone
+Use [Owner|Date|Status] format for actions
+No Markdown
+Output D1-D8 directly
+4M1E must use declarative sentences, clearly state what's normal/abnormal"""
 }
 
 # ==================== 初始化配置 ====================
@@ -103,7 +208,6 @@ except Exception:
 
 # ==================== 核心功能函数 ====================
 def get_user_license(user_id):
-    """获取用户许可证（使用缓存）"""
     return get_cached_license(user_id)
 
 def create_free_license(user_id):
@@ -124,11 +228,8 @@ def can_generate_report(user_id):
     lic = get_user_license(user_id)
     if not lic:
         return False
-    
-    # 添加 trial 类型的支持
-    if lic['plan_type'] in ['free', 'trial']:  # ← 改这里
+    if lic['plan_type'] in ['free', 'trial']:
         return lic['trial_used'] < lic['trial_limit']
-    
     if lic['plan_type'] in ['pro', 'enterprise']:
         if lic.get('license_expire'):
             try:
@@ -139,7 +240,6 @@ def can_generate_report(user_id):
     return False
 
 def inc_trial_used(user_id):
-    """增加试用次数"""
     if not supabase:
         return
     try:
@@ -147,62 +247,44 @@ def inc_trial_used(user_id):
         if lic:
             new_count = lic.get('trial_used', 0) + 1
             supabase.table("licenses").update({"trial_used": new_count}).eq("user_id", user_id).execute()
-            
-            # 记录日志
             supabase.table("usage_logs").insert({
                 "user_id": user_id,
                 "action": "generate_report",
                 "created_at": datetime.now().isoformat()
             }).execute()
-            
-            # 清除缓存
             clear_license_cache(user_id)
     except Exception as e:
         logging.error(f"更新试用次数失败：{e}")
 
 def activate_license_code(user_id, code):
-    """验证并使用激活码"""
     if not supabase:
         return False, "系统错误"
     try:
-        # 1. 查询激活码
         r = supabase.table("activation_codes").select("*").eq("code", code.strip().upper()).execute()
         if not r.data:
             return False, "无效的激活码"
-        
         ac = r.data[0]
-        
-        # 2. 检查是否已使用
         if ac.get('is_used'):
             return False, "激活码已被使用"
-        
-        # 3. 检查激活码是否过期
         if ac.get('expire_date'):
             if datetime.now().date() > datetime.fromisoformat(ac['expire_date']).date():
                 return False, "激活码已过期"
-        
-        # 4. 计算有效期
         duration = ac.get('duration_days', 365)
         exp_date = (datetime.now() + timedelta(days=duration)).isoformat()
-        
-        # 5. 更新用户 license
-        supabase.table("licenses").update({
+        supabase.table("licenses").upsert({
+            "user_id": user_id,
             "plan_type": ac.get('plan_type', 'pro'),
             "license_expire": exp_date
-        }).eq("user_id", user_id).execute()
-        
-        # 6. 标记激活码已使用
+        }, on_conflict="user_id").execute()
         supabase.table("activation_codes").update({
             "is_used": True,
             "used_by": user_id,
             "used_at": datetime.now().isoformat()
         }).eq("code", code.strip().upper()).execute()
-        
-        # 7. 清除缓存
         clear_license_cache(user_id)
-        
-        return True, f"激活成功！有效期至 {exp_date[:10]}"
-        
+        # 使用显式日期格式化，更清晰明确
+        formatted_date = exp_date[:10] if len(exp_date) >= 10 else exp_date
+        return True, f"激活成功！有效期至 {formatted_date}"
     except Exception as e:
         logging.error(f"激活失败：{e}")
         return False, f"激活失败：{str(e)}"
@@ -213,6 +295,7 @@ def clean_format(text):
     text = text.replace("**", "").replace("#", "")
     for i in range(1, 9):
         text = re.sub(rf'(D{i}[:：])\s*\n+\s*', rf'\1 ', text)
+    # 修复：统一使用中文括号，避免中英文括号混用
     text = re.sub(r'([^，,]+[（(][^）)]+[）)])\s*[，,]\s*', r'\1\n', text)
     for kw in ["What:", "Where:", "When:", "Who:", "Why:", "How many:", "How:"]:
         text = re.sub(rf'([^\n])({kw})', r'\1\n\2', text)
@@ -231,16 +314,12 @@ def export_to_word(content, product_name, lang):
     else:
         doc.styles['Normal'].font.name = 'Arial'
     doc.styles['Normal'].font.size = Pt(10.5)
-
     title = doc.add_heading(TEXT[lang]["word_title"], 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
     info = doc.add_paragraph()
     info.add_run(f"Product: {product_name}").bold = True
     info.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
     doc.add_paragraph()
-
     sections = re.split(r'\n(?=D[1-8][:：])', content.replace("**", "").replace("#", ""))
     for i, sec in enumerate(sections):
         if not sec.strip():
@@ -251,10 +330,8 @@ def export_to_word(content, product_name, lang):
         runner.bold = True
         runner.font.size = Pt(14)
         runner.font.color.rgb = RGBColor(30, 58, 138)
-
         if len(lines) > 1 and lines[1].strip():
             doc.add_paragraph(lines[1].strip())
-
         if i < len(sections) - 1:
             p_line = doc.add_paragraph()
             p_line.paragraph_format.space_before = Pt(12)
@@ -267,7 +344,6 @@ def export_to_word(content, product_name, lang):
             bottom.set(qn('w:sz'), '8')
             pBdr.append(bottom)
             pPr.append(pBdr)
-
     bio = BytesIO()
     doc.save(bio)
     return bio.getvalue()
@@ -280,7 +356,6 @@ if "current_result" not in st.session_state:
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
 
-# 语言切换回调
 def on_lang_change():
     new_lang = "zh" if st.session_state.lang_radio == "中文" else "en"
     if new_lang != st.session_state.lang:
@@ -293,35 +368,35 @@ T = TEXT[st.session_state.lang]
 with st.sidebar:
     st.radio(
         T["lang_label"], 
-        ["中文", "English"],
-        index=0 if st.session_state.lang == "zh" else 1,
+        ["中文", "English"], 
+        index=0 if st.session_state.lang == "zh" else 1, 
         horizontal=True, 
-        key="lang_radio",
+        key="lang_radio", 
         on_change=on_lang_change
     )
-    
     st.markdown("---")
-    st.header("👤 用户登录")
-    user_input = st.text_input("用户名/邮箱", key="user_input")
+    st.header(T["login_header"])
+    st.info(T["new_user_hint"])
+    user_input = st.text_input(T["username_placeholder"], key="user_input")
     
-    if user_input:          # 第 304 行
+    if user_input:
         st.session_state.user_id = user_input
         st.success(f"欢迎，{user_input}")
-        
         lic = get_user_license(user_input)
         if lic:
             if lic['plan_type'] == 'free':
                 st.warning(f"⚠️ 试用版：剩余 {lic['trial_limit'] - lic['trial_used']} 次")
             else:
                 st.success("✅ 专业版")
-                if lic.get('license_expire'):
-                    st.caption(f"有效期至：{datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')}")
+            if lic.get('license_expire'):
+                st.caption(f"有效期至：{datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')}")
         
         if st.button(T["logout"]):
             st.session_state.user_id = None
+            st.session_state.current_result = ""
+            get_cached_license.clear()
             st.rerun()
         
-        # 激活码输入 - 直接在这里，不要再判断 if user_input
         st.markdown("---")
         st.subheader(T["activate_title"])
         activate_code = st.text_input(T["activate_code_hint"], type="password", key="act_code")
@@ -343,7 +418,6 @@ with st.sidebar:
 # ==================== 主页面 ====================
 st.title(T["main_title"])
 st.markdown("---")
-
 col_input, col_preview = st.columns([1, 1.2])
 
 with col_input:
@@ -358,11 +432,18 @@ with col_input:
     with col2:
         defect_qty = st.number_input(T["defect_qty"], min_value=1, value=1)
     with col3:
-        severity = st.selectbox(T["severity"], [T["severity_low"], T["severity_medium"], T["severity_high"], T["severity_critical"]])
+        severity = st.selectbox(
+            T["severity"], 
+            [T["severity_low"], T["severity_medium"], T["severity_high"], T["severity_critical"]]
+        )
     
     col4, col5 = st.columns(2)
     with col4:
-        industry_std = st.selectbox(T["industry_std"], ["ISO 9001", "IATF 16949", "ISO 13485", "AS9100"], index=1)
+        industry_std = st.selectbox(
+            T["industry_std"], 
+            ["ISO 9001", "IATF 16949", "ISO 13485", "AS9100"], 
+            index=1
+        )
     with col5:
         team_members = st.text_input(T["team_members"], placeholder=T["team_placeholder"])
     
@@ -374,7 +455,6 @@ with col_input:
             st.stop()
         
         user_id = st.session_state.user_id
-        
         if not can_generate_report(user_id):
             lic = get_user_license(user_id)
             if lic and lic['plan_type'] == 'free':
@@ -386,15 +466,40 @@ with col_input:
         if not problem_desc:
             st.error(T["no_desc"])
         else:
+            progress_messages = [
+                T.get("progress_analyze", "🔍 正在分析问题..."),
+                T.get("progress_d2", "📋 正在生成 D2 问题描述..."),
+                T.get("progress_d3", "🛡️ 正在生成 D3 临时措施..."),
+                T.get("progress_d4", "🎯 正在生成 D4 根本原因分析..."),
+                T.get("progress_d5", "💡 正在生成 D5 永久措施..."),
+                T.get("progress_d6", "✅ 正在生成 D6 实施与验证..."),
+                T.get("progress_d7", "📊 正在生成 D7 预防措施..."),
+                T.get("progress_d8", "🏆 正在生成 D8 总结与表彰..."),
+                T.get("progress_format", "📄 正在整理报告格式...")
+            ]
+            
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
             with st.spinner(T["generating"]):
                 try:
+                    for i, msg in enumerate(progress_messages):
+                        status_text.text(msg)
+                        progress_bar.progress((i + 1) / len(progress_messages))
+                    
                     client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
                     user_prompt = (
-                        f"请根据以下信息生成 8D 报告：产品：{product_name or '未提供'}, "
-                        f"客户：{customer or '未提供'}, 日期：{occur_date}, 数量：{defect_qty}, "
-                        f"严重程度：{severity}, 标准：{industry_std}, 团队：{team_members or '未提供'}\n\n"
+                        f"请根据以下信息生成 8D 报告："
+                        f"产品：{product_name or '未提供'}, "
+                        f"客户：{customer or '未提供'}, "
+                        f"日期：{occur_date}, "
+                        f"数量：{defect_qty}, "
+                        f"严重程度：{severity}, "
+                        f"标准：{industry_std}, "
+                        f"团队：{team_members or '未提供'}\n\n"
                         f"问题描述：{problem_desc}"
                     )
+                    
                     response = client.chat.completions.create(
                         model="deepseek-chat",
                         messages=[
@@ -404,6 +509,10 @@ with col_input:
                         temperature=0.2,
                         timeout=90
                     )
+                    
+                    status_text.empty()
+                    progress_bar.empty()
+                    
                     final_result = clean_format(response.choices[0].message.content)
                     st.session_state.current_result = final_result
                     inc_trial_used(user_id)
@@ -411,14 +520,24 @@ with col_input:
                     st.rerun()
                     
                 except openai.APIConnectionError:
+                    status_text.empty()
+                    progress_bar.empty()
                     st.error("🌐 网络连接失败，请检查网络后重试")
                 except openai.RateLimitError:
+                    status_text.empty()
+                    progress_bar.empty()
                     st.error("⏱️ API 调用频率超限，请等待 30 秒后重试")
                 except openai.AuthenticationError:
+                    status_text.empty()
+                    progress_bar.empty()
                     st.error("🔑 API 密钥验证失败，请联系管理员")
                 except openai.APIError as e:
+                    status_text.empty()
+                    progress_bar.empty()
                     st.error(f"❌ 服务异常：{e.type}" if hasattr(e, 'type') else "❌ 服务异常，请稍后重试")
                 except Exception:
+                    status_text.empty()
+                    progress_bar.empty()
                     st.error(T["api_error"])
 
 with col_preview:
@@ -429,9 +548,12 @@ with col_preview:
         
         user_id = st.session_state.get("user_id")
         lic = get_user_license(user_id) if user_id else None
-        
         if lic and lic['plan_type'] != 'free':
-            word_data = export_to_word(st.session_state.current_result, product_name or "8D_Report", st.session_state.lang)
+            word_data = export_to_word(
+                st.session_state.current_result, 
+                product_name or "8D_Report", 
+                st.session_state.lang
+            )
             st.download_button(
                 label=T["download_btn"],
                 data=word_data,
