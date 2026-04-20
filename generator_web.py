@@ -124,8 +124,11 @@ def can_generate_report(user_id):
     lic = get_user_license(user_id)
     if not lic:
         return False
-    if lic['plan_type'] == 'free':
+    
+    # 添加 trial 类型的支持
+    if lic['plan_type'] in ['free', 'trial']:  # ← 改这里
         return lic['trial_used'] < lic['trial_limit']
+    
     if lic['plan_type'] in ['pro', 'enterprise']:
         if lic.get('license_expire'):
             try:
