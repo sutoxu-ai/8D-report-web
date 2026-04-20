@@ -202,7 +202,7 @@ def activate_license_code(user_id, code):
         
     except Exception as e:
         logging.error(f"激活失败：{e}")
-        return False, "激活失败，请联系客服"
+        return False, f"激活失败：{str(e)}"
 
 def clean_format(text):
     if not text:
