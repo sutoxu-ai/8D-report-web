@@ -60,8 +60,21 @@ hide_streamlit_style = """
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
         
+        /* 隐藏右上角 Fork 和 GitHub 链接 */
+        header a[href*="github"],
+        header button:has(svg),
+        header .stToolbar button {
+            display: none !important;
+        }
+        
         /* ========== 右下角元素 ========== */
         footer {visibility: hidden !important; display: none !important;}
+        
+        /* 隐藏右下角浮动按钮 - 用固定位置选择 */
+        div[style*="position: fixed"][style*="bottom"],
+        div[style*="position:fixed"][style*="bottom"] {
+            display: none !important;
+        }
         
         /* ========== 隐藏 Pages 切换器 (admin/web) ========== */
         [data-testid="stSidebarNav"] ul {display: none !important;}
