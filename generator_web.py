@@ -48,54 +48,130 @@ st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊"
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素（最强版本） ====================
 hide_streamlit_style = """
     <style>
-        /* 隐藏右上角的菜单按钮（三个点） */
+        /* 隐藏右上角菜单 */
         #MainMenu {visibility: hidden;}
         
-        /* 隐藏右下角的 "Made with Streamlit" 水印 */
+        /* 隐藏 footer 水印 */
         footer {visibility: hidden;}
-        footer:after {display: none !important;}
         
-        /* 隐藏右下角的部署按钮（两个图标） */
-        .stAppDeployButton {
+        /* 隐藏右下角部署按钮 - 多种选择器全覆盖 */
+        .stAppDeployButton,
+        .stDeployButton,
+        .st-emotion-cache-1v0mbdj,
+        .st-emotion-cache-ocqkz7,
+        .st-emotion-cache-1dp5vir,
+        .st-emotion-cache-1vt4y43,
+        .st-emotion-cache-1kyxreq,
+        [data-testid="stDeployButton"],
+        [data-testid="stStatusWidget"],
+        div[data-testid="stDecoration"],
+        div:has(> .stAppDeployButton) {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
         }
         
-        /* 隐藏部署按钮的父容器 */
-        .st-emotion-cache-ocqkz7 {
-            display: none !important;
-        }
-        
-        /* 隐藏底部工具栏 */
-        .stToolbar {
-            display: none !important;
-        }
-        
-        /* 隐藏所有底部固定元素 */
-        .stApp > .st-emotion-cache-1v0mbdj {
-            display: none !important;
-        }
-        
-        /* 隐藏右上角的 Share 按钮 */
-        .stActionButton {
+        /* 隐藏 header 和 toolbar */
+        header, .stToolbar {
             visibility: hidden !important;
         }
         
-        /* 隐藏顶部工具栏 */
-        header {
-            visibility: hidden !important;
-        }
-        
-        /* 调整页面顶部空白 */
+        /* 调整主内容区域，避免底部空白 */
         .main .block-container {
             padding-top: 0rem !important;
+            padding-bottom: 0rem !important;
+        }
+        
+        /* 隐藏 iframe 品牌图标 */
+        iframe[title="streamlit deploy button"],
+        iframe[src*="streamlit"],
+        iframe {
+            display: none !important;
+        }
+        
+        /* 隐藏所有可能包含图标的固定定位元素 */
+        div[style*="position: fixed"][style*="bottom"],
+        div[style*="position:fixed"][style*="bottom"] {
+            display: none !important;
         }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# 更强的 JavaScript 删除
+hide_deploy_js = """
+    <script>
+        (function() {
+            // 定时器 ID 数组
+            const intervals = [];
+            
+            function removeStreamlitBranding() {
+                // 删除所有可能包含部署按钮的元素
+                const selectors = [
+                    '.stAppDeployButton',
+                    '.stDeployButton', 
+                    '.st-emotion-cache-1v0mbdj',
+                    '.st-emotion-cache-ocqkz7',
+                    '[data-testid="stDeployButton"]',
+                    '[data-testid="stStatusWidget"]'
+                ];
+                
+                selectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(el => {
+                        if (el && el.parentNode) {
+                            el.parentNode.removeChild(el);
+                        }
+                    });
+                });
+                
+                // 删除所有 iframe
+                document.querySelectorAll('iframe').forEach(iframe => {
+                    if (iframe.src && iframe.src.includes('streamlit')) {
+                        iframe.remove();
+                    }
+                });
+                
+                // 查找并删除底部固定元素
+                const allDivs = document.querySelectorAll('div');
+                allDivs.forEach(div => {
+                    const style = window.getComputedStyle(div);
+                    if (style.position === 'fixed' && 
+                        (style.bottom === '0px' || style.bottom === '0')) {
+                        div.remove();
+                    }
+                });
+            }
+            
+            // 立即执行
+            removeStreamlitBranding();
+            
+            // 每 0.5 秒执行一次，持续 5 秒
+            for (let i = 0; i < 10; i++) {
+                setTimeout(removeStreamlitBranding, i * 500);
+            }
+            
+            // 使用 MutationObserver 监控 DOM 变化
+            const observer = new MutationObserver(() => {
+                removeStreamlitBranding();
+            });
+            observer.observe(document.body, { 
+                childList: true, 
+                subtree: true,
+                attributes: true 
+            });
+        })();
+    </script>
+"""
+st.markdown(hide_deploy_js, unsafe_allow_html=True)
 
 # 使用 JavaScript 精确隐藏部署按钮
 hide_deploy_js = """
