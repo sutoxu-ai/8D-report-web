@@ -56,26 +56,14 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
-        /* ========== 顶部区域 - 只隐藏菜单按钮，保留侧边栏折叠按钮 ========== */
+        /* ========== 顶部区域 ========== */
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
-        
-        /* 隐藏右上角工具栏所有按钮（Share、星标、编辑、GitHub）- 但保留侧边栏控制按钮 */
-        [data-testid="stToolbar"] > div:not([data-testid="stSidebarCollapsedControl"]) {
-            display: none !important;
-        }
         
         /* ========== 右下角元素 ========== */
         footer {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右下角 Deploy 和 Cloud 按钮 */
-        [data-testid="stAppDeployButton"],
-        [data-testid="stAppCloudButton"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* ========== 隐藏 Pages 切换器 (admin/web) - 只隐藏导航列表 ========== */
+        /* ========== 隐藏 Pages 切换器 (admin/web) ========== */
         [data-testid="stSidebarNav"] ul {display: none !important;}
         
         /* ========== 调整主内容区域 ========== */
