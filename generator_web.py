@@ -47,38 +47,24 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
 <style>
-    /* 隐藏右上角菜单 */
+    /* 只隐藏右上角菜单（不要隐藏整个 header！） */
     #MainMenu {visibility: hidden !important; display: none !important;}
     
     /* 隐藏 footer 水印 */
     footer {visibility: hidden !important; display: none !important;}
     
-    /* 隐藏 Pages 导航菜单列表（保留 sidebar 展开/收起按钮） */
+    /* 隐藏 Pages 导航菜单列表 */
     [data-testid="stSidebarNav"] > ul {display: none !important;}
-    
-    /* 隐藏 header 区域 */
-    header {display: none !important;}
     
     /* 调整主内容区域 */
     .main .block-container {
         padding-top: 0.5rem !important;
     }
-    
-    /* 确保 sidebar toggle 按钮可见 */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-    }
-    
-    /* 保护侧边栏展开按钮 */
-    section[data-testid="stSidebar"] button {
-        display: flex !important;
-    }
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# ==================== JavaScript 只隐藏特定按钮 ====================
+# ==================== JavaScript 隐藏右上角按钮 ====================
 hide_buttons_script = """
 <script>
 // 只隐藏明确的右上角工具按钮，保留 sidebar toggle
