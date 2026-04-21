@@ -60,19 +60,23 @@ hide_streamlit_style = """
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右上角 Fork 和 GitHub 链接 */
-        header a[href*="github"],
-        header button:has(svg),
-        header .stToolbar button {
+        /* 隐藏右上角 Fork 和 GitHub 链接 - 用通用选择器 */
+        a[href*="github"],
+        a[href*="fork"] {
+            display: none !important;
+        }
+        
+        /* 隐藏所有 header 里的按钮（除了侧边栏控制） */
+        header button:not([data-testid="stSidebarCollapsedControl"]) {
             display: none !important;
         }
         
         /* ========== 右下角元素 ========== */
         footer {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右下角浮动按钮 - 用固定位置选择 */
-        div[style*="position: fixed"][style*="bottom"],
-        div[style*="position:fixed"][style*="bottom"] {
+        /* 隐藏右下角所有浮动按钮 */
+        button[kind="secondary"],
+        .stButton[kind="secondary"] {
             display: none !important;
         }
         
