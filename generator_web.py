@@ -47,87 +47,58 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
 <style>
-    /* 隐藏右上角菜单和所有 toolbar 按钮 */
+    /* 隐藏右上角菜单 */
     #MainMenu {visibility: hidden !important; display: none !important;}
-    header[data-testid="stHeader"] {display: none !important;}
     
     /* 隐藏 footer 水印 */
     footer {visibility: hidden !important; display: none !important;}
     
-    /* 隐藏 Pages 导航菜单 */
+    /* 隐藏 Pages 导航菜单列表（保留 sidebar 展开/收起按钮） */
     [data-testid="stSidebarNav"] > ul {display: none !important;}
     
-    /* 隐藏主 header 工具栏区域 */
-    .stApp > div:nth-child(1) > div:first-child > div:first-child > div:first-child {
-        display: none !important;
-    }
-    
-    /* 隐藏 toolbar 按钮容器 */
-    header .st-spacer {display: none !important;}
+    /* 隐藏 header 区域 */
+    header {display: none !important;}
     
     /* 调整主内容区域 */
     .main .block-container {
         padding-top: 0.5rem !important;
     }
     
-    /* 强制隐藏 Streamlit 默认 header 区域 */
-    .stApp > header {
-        display: none !important;
-        visibility: hidden !important;
+    /* 确保 sidebar toggle 按钮可见 */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+    }
+    
+    /* 保护侧边栏展开按钮 */
+    section[data-testid="stSidebar"] button {
+        display: flex !important;
     }
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# ==================== 更激进的 JavaScript 隐藏方案 ====================
+# ==================== JavaScript 只隐藏特定按钮 ====================
 hide_buttons_script = """
 <script>
-// 递归隐藏所有可疑按钮的函数
-function hideAllSuspiciousButtons() {
-    // 隐藏包含 fork, github, share, edit, star 等关键词的链接
+// 只隐藏明确的右上角工具按钮，保留 sidebar toggle
+function hideTopRightButtons() {
+    // 隐藏含有 fork, github, star 等的链接
     document.querySelectorAll('a').forEach(el => {
         const href = (el.href || '').toLowerCase();
         const text = (el.textContent || '').toLowerCase();
-        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
         if (href.includes('fork') || href.includes('github') || 
-            text.includes('fork') || text.includes('star') ||
-            aria.includes('share') || aria.includes('edit')) {
+            text.includes('fork') || text.includes('star')) {
             el.style.display = 'none';
         }
-    });
-    
-    // 隐藏 header 中的按钮
-    document.querySelectorAll('header button').forEach(el => {
-        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
-        const title = (el.getAttribute('title') || '').toLowerCase();
-        if (aria.includes('share') || aria.includes('edit') || 
-            aria.includes('star') || title.includes('fork') || title.includes('star')) {
-            el.style.display = 'none';
-        }
-    });
-    
-    // 隐藏 Streamlit toolbar
-    document.querySelectorAll('[data-testid="stToolbar"]').forEach(el => {
-        el.style.display = 'none';
-    });
-    
-    // 隐藏 toolbar button
-    document.querySelectorAll('.stToolbar').forEach(el => {
-        el.style.display = 'none';
     });
 }
 
-// 立即执行
-hideAllSuspiciousButtons();
-
-// 持续监控 DOM 变化
-const hideObserver = new MutationObserver(() => {
-    hideAllSuspiciousButtons();
-});
-hideObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
-
-// 定期执行确保隐藏
-setInterval(hideAllSuspiciousButtons, 2000);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(hideTopRightButtons, 500));
+} else {
+    setTimeout(hideTopRightButtons, 500);
+}
 </script>
 """
 st.markdown(hide_buttons_script, unsafe_allow_html=True)
