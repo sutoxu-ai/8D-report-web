@@ -47,6 +47,7 @@ def clear_license_cache(user_id):
 st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊", layout="wide")
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
         /* 隐藏右上角的菜单按钮（三个点） */
@@ -54,54 +55,86 @@ hide_streamlit_style = """
         
         /* 隐藏右下角的 "Made with Streamlit" 水印 */
         footer {visibility: hidden;}
+        footer:after {display: none !important;}
         
-        /* 隐藏右下角的 Streamlit 品牌图标（多种可能的选择器） */
-        .stAppDeployButton {display: none !important;}
-        .stDeployButton {display: none !important;}
-        .stStatusWidget {display: none !important;}
+        /* 隐藏右下角的部署按钮（两个图标） */
+        .stAppDeployButton {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
         
-        /* 隐藏部署按钮容器 */
-        .st-emotion-cache-1y4p8pa {display: none !important;}
-        .st-emotion-cache-1incye8 {display: none !important;}
-        .st-emotion-cache-18ni7ap {display: none !important;}
-        .st-emotion-cache-1dp5vir {display: none !important;}
+        /* 隐藏部署按钮的父容器 */
+        .st-emotion-cache-ocqkz7 {
+            display: none !important;
+        }
         
-        /* 隐藏所有包含 "Deploy" 或 "deploy" 的元素 */
-        [class*="Deploy"] {display: none !important;}
-        [class*="deploy"] {display: none !important;}
+        /* 隐藏底部工具栏 */
+        .stToolbar {
+            display: none !important;
+        }
         
-        /* 隐藏右上角的 Share 按钮和 Action 按钮 */
-        .stActionButton {visibility: hidden;}
-        .stActionButton button {display: none !important;}
+        /* 隐藏所有底部固定元素 */
+        .stApp > .st-emotion-cache-1v0mbdj {
+            display: none !important;
+        }
+        
+        /* 隐藏右上角的 Share 按钮 */
+        .stActionButton {
+            visibility: hidden !important;
+        }
         
         /* 隐藏顶部工具栏 */
-        header {visibility: hidden;}
-        
-        /* 隐藏部署相关的所有元素 */
-        [data-testid="stStatusWidget"] {display: none !important;}
-        [data-testid="stToolbar"] {display: none !important;}
-        [data-testid="stDecoration"] {display: none !important;}
+        header {
+            visibility: hidden !important;
+        }
         
         /* 调整页面顶部空白 */
         .main .block-container {
-            padding-top: 0.5rem;
-        }
-        
-        /* 隐藏右下角浮动按钮 */
-        .stApp > div:last-child {
-            display: none !important;
-        }
-        
-        /* 隐藏所有可能包含品牌图标的元素 */
-        iframe {display: none !important;}
-        
-        /* 隐藏底部所有内容 */
-        .stApp footer {
-            display: none !important;
+            padding-top: 0rem !important;
         }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# 使用 JavaScript 精确隐藏部署按钮
+hide_deploy_js = """
+    <script>
+        function hideDeployButtons() {
+            // 查找所有包含部署按钮的元素
+            const buttons = document.querySelectorAll('.stAppDeployButton, [data-testid="stDeployButton"], button[aria-label="Deploy"], button[aria-label="Share"], .st-emotion-cache-ocqkz7');
+            buttons.forEach(btn => {
+                btn.style.display = 'none';
+                btn.style.visibility = 'hidden';
+                btn.style.opacity = '0';
+            });
+            
+            // 查找右下角固定的 div
+            const fixedDivs = document.querySelectorAll('.stApp > div:last-child, .stApp > div:last-of-type');
+            fixedDivs.forEach(div => {
+                if (div.children.length === 0 || div.children[0]?.className?.includes('Deploy')) {
+                    div.style.display = 'none';
+                }
+            });
+        }
+        
+        // 立即执行
+        hideDeployButtons();
+        
+        // 持续监控
+        const observer = new MutationObserver(function() {
+            hideDeployButtons();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        // 延迟多次执行确保覆盖
+        setTimeout(hideDeployButtons, 100);
+        setTimeout(hideDeployButtons, 500);
+        setTimeout(hideDeployButtons, 1000);
+        setTimeout(hideDeployButtons, 2000);
+    </script>
+"""
+st.markdown(hide_deploy_js, unsafe_allow_html=True)
 
 # 使用 JavaScript 强制删除部署相关元素
 hide_deploy_js = """
