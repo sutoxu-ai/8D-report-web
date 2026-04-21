@@ -8,8 +8,9 @@
 4. 修复退出登录状态（清除缓存）
 5. 添加生成进度提示
 6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
-7. 隐藏 Streamlit 默认 UI 元素
+7. 隐藏 Streamlit 默认 UI 元素（右上角菜单、右下角水印和品牌图标、GitHub 图标）
 8. 优化布局：顶部极简状态栏 + 侧边栏完整登录功能
+9. 侧边栏默认折叠，点击双箭头可展开
 """
 
 import streamlit as st
@@ -48,13 +49,9 @@ st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
     layout="wide",
-    initial_sidebar_state="collapsed"  # 改为 collapsed，侧边栏默认折叠
+    initial_sidebar_state="collapsed"  # 侧边栏默认折叠
 )
 
-# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
-# ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏） ====================
-# ==================== 隐藏 Streamlit 默认 UI 元素（包括 GitHub 图标） ====================
-# ==================== 隐藏 Streamlit 默认 UI 元素（最强版本） ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏按钮） ====================
 hide_streamlit_style = """
     <style>
@@ -83,10 +80,15 @@ hide_streamlit_style = """
             opacity: 1 !important;
         }
         
-        /* 调整主内容区域，让内容更靠左 */
+        /* 确保侧边栏可见 */
+        [data-testid="stSidebar"] {
+            display: block !important;
+            visibility: visible !important;
+        }
+        
+        /* 调整主内容区域 */
         .main .block-container {
             padding-top: 0.5rem !important;
-            padding-left: 1rem !important;
         }
         
         /* 手机端适配 */
@@ -98,68 +100,6 @@ hide_streamlit_style = """
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-# 使用 JavaScript 删除这些元素
-force_hide_js = """
-    <script>
-        // 立即执行的函数
-        (function() {
-            // 要删除的元素选择器列表
-            const selectors = [
-                '.stStatusWidget',
-                '[data-testid="stStatusWidget"]',
-                '.stActionButton',
-                '[data-testid="stActionButton"]',
-                '.st-emotion-cache-1y4p8pa',
-                '.st-emotion-cache-1incye8',
-                '.st-emotion-cache-1dp5vir',
-                '#MainMenu',
-                '.stAppDeployButton'
-            ];
-            
-            // 删除元素的函数
-            function removeElements() {
-                selectors.forEach(selector => {
-                    const elements = document.querySelectorAll(selector);
-                    elements.forEach(el => {
-                        if (el && el.parentNode) {
-                            el.parentNode.removeChild(el);
-                        }
-                    });
-                });
-                
-                // 特殊处理：删除所有高度为 0 的固定定位元素
-                const allDivs = document.querySelectorAll('div');
-                allDivs.forEach(div => {
-                    const style = window.getComputedStyle(div);
-                    if (style.position === 'fixed' && style.top === '0px' && style.height === '0px') {
-                        if (div.parentNode) {
-                            div.parentNode.removeChild(div);
-                        }
-                    }
-                });
-            }
-            
-            // 立即执行
-            removeElements();
-            
-            // 使用 MutationObserver 监控 DOM 变化
-            const observer = new MutationObserver(function(mutations) {
-                removeElements();
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-            
-            // 多次延迟执行，确保覆盖所有动态加载的内容
-            setTimeout(removeElements, 100);
-            setTimeout(removeElements, 500);
-            setTimeout(removeElements, 1000);
-            setTimeout(removeElements, 2000);
-            setTimeout(removeElements, 3000);
-        })();
-    </script>
-"""
-st.markdown(force_hide_js, unsafe_allow_html=True)
-
 
 # ==================== 多语言文本 ====================
 TEXT = {
