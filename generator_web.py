@@ -74,16 +74,9 @@ hide_streamlit_style = """
         [data-testid="stAppDeployButton"],
         [data-testid="stAppCloudButton"],
         .stAppDeployButton,
-        .stAppCloudButton,
-        button[kind="secondary"][data-testid*="Deploy"],
-        button[kind="secondary"][data-testid*="Cloud"] {
+        .stAppCloudButton {
             display: none !important;
             visibility: hidden !important;
-        }
-        
-        /* 隐藏右下角所有浮动按钮 */
-        div[data-testid*="stApp"] > div:last-child > div:has(button) {
-            display: none !important;
         }
         
         /* ========== 隐藏 Pages 切换器 (admin/web) - 只隐藏导航列表 ========== */
