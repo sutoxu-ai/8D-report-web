@@ -8,8 +8,8 @@
 4. 修复退出登录状态（清除缓存）
 5. 添加生成进度提示
 6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
-7. 隐藏 Streamlit 默认 UI 元素（右上角菜单、右下角水印和品牌图标）
-8. 将登录界面从侧边栏移到顶部，解决手机端显示问题
+7. 隐藏 Streamlit 默认 UI 元素
+8. 优化布局：顶部极简状态栏 + 侧边栏完整登录功能
 """
 
 import streamlit as st
@@ -47,9 +47,6 @@ def clear_license_cache(user_id):
 st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊", layout="wide")
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
-# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
-# ==================== 隐藏 Streamlit 默认 UI 元素（最强版本） ====================
-# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
         /* 隐藏右上角的菜单按钮（三个点） */
@@ -62,7 +59,7 @@ hide_streamlit_style = """
         .stAppDeployButton {display: none !important;}
         .stDeployButton {display: none !important;}
         
-        /* 隐藏顶部工具栏和 header */
+        /* 隐藏顶部工具栏 */
         header {visibility: hidden; height: 0px !important;}
         .stToolbar {display: none !important;}
         
@@ -73,24 +70,17 @@ hide_streamlit_style = """
             margin-top: 0rem !important;
         }
         
-        /* 压缩整个页面顶部的空白 */
-        .stApp header {
-            display: none !important;
-        }
-        
-        /* 移除 Streamlit 默认的顶部空白区域 */
+        /* 隐藏所有可能产生空白的元素 */
         .st-emotion-cache-1v0mbdj {
             padding-top: 0rem !important;
         }
-        
-        /* 让主内容区域紧贴顶部 */
-        .stApp > div:first-child {
+        .st-emotion-cache-6qob1r {
             padding-top: 0rem !important;
         }
         
-        /* 隐藏所有可能产生空白的元素 */
-        .st-emotion-cache-6qob1r {
-            padding-top: 0rem !important;
+        /* 侧边栏宽度优化 */
+        [data-testid="stSidebar"] {
+            min-width: 280px !important;
         }
     </style>
 """
@@ -232,7 +222,7 @@ Start from abnormal items, continuously ask "why"
 At least 3-5 levels until finding root cause
 Each answer must be specific, not vague
 
-Output format example (注意换行)：
+Output format example (with line breaks):
 【4M1E Analysis】
 
 Man: Verified, operator certified → Excluded
@@ -369,22 +359,17 @@ def clean_format(text):
     for i in range(1, 9):
         text = re.sub(rf'(D{i}[:：])\s*\n+\s*', rf'\1 ', text)
     
-    # 处理 4M1E 每个因子后换行（人、机、料、法、环）
-    text = re.sub(r'([人机料法环]：)', r'\n\1', text)  # 每个因子前加换行
-    text = re.sub(r'(→ 排除|→ 异常项[^，]*？)', r'\1\n', text)  # 排除/异常项后换行
+    # 处理 4M1E 每个因子后换行
+    text = re.sub(r'([人机料法环]：)', r'\n\1', text)
+    text = re.sub(r'(→ 排除|→ 异常项[^，]*？)', r'\1\n', text)
     
     # 处理 5-Why 每个 Why 后换行
-    text = re.sub(r'(Why\d+：)', r'\n\1', text)  # Why 前加换行
-    text = re.sub(r'(→ [^\n]+)(?=Why\d+：|$)', r'\1\n', text)  # 每个回答后换行
+    text = re.sub(r'(Why\d+：)', r'\n\1', text)
+    text = re.sub(r'(→ [^\n]+)(?=Why\d+：|$)', r'\1\n', text)
     
     # 处理中文版本 5-Why
     text = re.sub(r'(为什么\d+：)', r'\n\1', text)
     text = re.sub(r'(→ [^\n]+)(?=为什么\d+：|$)', r'\1\n', text)
-    
-    # 处理措施格式
-    for kw in ["人：", "机：", "料：", "法：", "环："]:
-        text = re.sub(rf'([^\n])({kw})', r'\1\n\n\2', text)
-        text = re.sub(rf'({kw})([^\n])', r'\1\n\2', text)
     
     # 清理多余空行（保留最多两个换行）
     text = re.sub(r'\n{3,}', '\n\n', text)
@@ -443,29 +428,20 @@ if "user_id" not in st.session_state:
 
 T = TEXT[st.session_state.lang]
 
-# ==================== 顶部登录栏（替代侧边栏登录） ====================
-# ==================== 顶部登录栏（紧凑版） ====================
-def render_top_login_bar():
-    """渲染顶部登录栏 - 紧凑版"""
+# ==================== 顶部极简状态栏 ====================
+def render_top_status_bar():
+    """渲染顶部极简状态栏 - 只显示状态和语言"""
     T = TEXT[st.session_state.lang]
     
-    # 使用更紧凑的列宽比例
-    col_status, col_lang, col_login = st.columns([1, 1, 3])
+    col_status, col_lang = st.columns([6, 1])
     
-    # 左侧：系统状态（更紧凑）
     with col_status:
         user_id = st.session_state.get("user_id")
-        lic = get_user_license(user_id) if user_id else None
-        if user_id and lic:
-            if lic['plan_type'] == 'free':
-                remaining = lic['trial_limit'] - lic['trial_used']
-                st.caption(f"📊 {remaining}次剩余")
-            else:
-                st.caption("✅ 正式版")
+        if user_id:
+            st.caption(f"👤 {user_id[:20]}")
         else:
-            st.caption("🔓")
+            st.caption("🔓 未登录")
     
-    # 中间：语言切换（更紧凑）
     with col_lang:
         lang_option = st.selectbox(
             T["lang_label"],
@@ -478,75 +454,86 @@ def render_top_login_bar():
         if new_lang != st.session_state.lang:
             st.session_state.lang = new_lang
             st.rerun()
+
+# ==================== 侧边栏（登录和用户管理） ====================
+def render_sidebar():
+    """渲染侧边栏 - 登录、用户信息、激活码等"""
+    T = TEXT[st.session_state.lang]
     
-    # 右侧：登录/用户信息（更紧凑，去掉多余空白）
-    with col_login:
-        if not st.session_state.get("user_id"):
-            # 未登录状态 - 紧凑的登录按钮
-            with st.popover("🔑 登录", use_container_width=True):
-                user_input = st.text_input(T["username_placeholder"], key="top_user_input", label_visibility="collapsed", placeholder=T["username_placeholder"])
-                col_btn1, col_btn2 = st.columns([1, 2])
-                with col_btn1:
-                    if st.button("登录", use_container_width=True, key="top_login_btn"):
-                        if user_input:
-                            st.session_state.user_id = user_input
-                            st.rerun()
-                        else:
-                            st.error("请输入")
-                with col_btn2:
-                    st.caption("👋 新用户注册得3次")
+    with st.sidebar:
+        st.markdown("## 🔐 账户管理")
+        st.markdown("---")
+        
+        user_id = st.session_state.get("user_id")
+        
+        if not user_id:
+            # 未登录状态
+            st.info(T["new_user_hint"])
+            user_input = st.text_input(T["username_placeholder"], key="sidebar_user_input", placeholder="邮箱/用户名")
+            
+            if st.button("🔓 登录 / 注册", use_container_width=True, key="sidebar_login_btn"):
+                if user_input:
+                    st.session_state.user_id = user_input
+                    st.rerun()
+                else:
+                    st.error("请输入用户名/邮箱")
         else:
-            # 已登录状态 - 紧凑显示
-            user_id = st.session_state.user_id
+            # 已登录状态
             lic = get_user_license(user_id)
             
-            # 使用更紧凑的布局，减少空白
-            col_user, col_info, col_logout, col_activate = st.columns([2, 2, 1, 1])
+            # 用户信息卡片
+            st.markdown(f"### 👤 {user_id[:30]}")
             
-            with col_user:
-                st.caption(f"👤 {user_id[:15]}")
-            
-            with col_info:
-                if lic and lic.get('license_expire'):
-                    exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%m/%d')
-                    st.caption(f"📅 至 {exp_date}")
-                elif lic and lic['plan_type'] == 'free':
+            if lic:
+                if lic.get('plan_type') == 'free':
                     remaining = lic['trial_limit'] - lic['trial_used']
-                    st.caption(f"📊 剩余{remaining}次")
+                    st.info(f"📊 **试用版** | 剩余 {remaining} 次")
+                    if lic.get('license_expire'):
+                        exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                        st.caption(f"⏰ 有效期至: {exp_date}")
+                else:
+                    st.success(f"✅ **正式版**")
+                    if lic.get('license_expire'):
+                        exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                        st.caption(f"📅 有效期至: {exp_date}")
+                    else:
+                        st.caption("♾️ 永久有效")
             
-            with col_logout:
-                if st.button("🚪", key="top_logout_btn", help="退出登录", use_container_width=True):
-                    st.session_state.user_id = None
-                    st.session_state.current_result = ""
-                    get_cached_license.clear()
-                    st.rerun()
+            st.markdown("---")
             
-            with col_activate:
-                with st.popover("🔑", help="激活码", use_container_width=True):
-                    activate_code = st.text_input(T["activate_code_hint"], type="password", key="top_act_code", placeholder="激活码", label_visibility="collapsed")
-                    if st.button(T["activate_btn"], key="top_act_btn", use_container_width=True):
-                        if activate_code and len(activate_code) >= 6:
-                            success, msg = activate_license_code(user_id, activate_code)
-                            if success:
-                                st.success(msg)
-                                st.rerun()
-                            else:
-                                st.error(msg)
+            # 激活码输入
+            with st.expander("🔑 输入激活码", expanded=False):
+                activate_code = st.text_input(T["activate_code_hint"], type="password", key="sidebar_act_code", placeholder="输入激活码")
+                if st.button(T["activate_btn"], key="sidebar_act_btn", use_container_width=True):
+                    if activate_code and len(activate_code) >= 6:
+                        success, msg = activate_license_code(user_id, activate_code)
+                        if success:
+                            st.success(msg)
+                            st.rerun()
                         else:
-                            st.error("激活码无效")
+                            st.error(msg)
+                    else:
+                        st.error("请输入有效的激活码")
+            
+            # 退出登录
+            if st.button(T["logout"], key="sidebar_logout_btn", use_container_width=True):
+                st.session_state.user_id = None
+                st.session_state.current_result = ""
+                get_cached_license.clear()
+                st.rerun()
+        
+        st.markdown("---")
+        st.caption("💡 试用版可免费使用 3 次")
 
 # ==================== 主页面 ====================
-# ==================== 主页面 ====================
-# 先渲染顶部登录栏
-render_top_login_bar()
+# 先渲染顶部极简状态栏
+render_top_status_bar()
 
-# 主标题和分隔线
+# 渲染侧边栏（所有登录功能都在这里）
+render_sidebar()
+
 st.title(T["main_title"])
 st.markdown("---")
-
-col_input, col_preview = st.columns([1, 1.2])
-
-# ... 后续代码保持不变
 
 col_input, col_preview = st.columns([1, 1.2])
 
