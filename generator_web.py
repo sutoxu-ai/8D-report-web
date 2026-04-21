@@ -10,7 +10,8 @@
 6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
 7. 隐藏 Streamlit 默认 UI 元素（右上角菜单、右下角水印和品牌图标、GitHub 图标）
 8. 优化布局：顶部极简状态栏 + 侧边栏完整登录功能
-9. 侧边栏默认折叠，点击双箭头可展开
+9. 侧边栏默认展开，内部添加关闭按钮 (✕)
+10. 隐藏 Pages 切换器 (admin/web)
 """
 
 import streamlit as st
@@ -51,39 +52,102 @@ st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
     layout="wide",
-    initial_sidebar_state="collapsed"  # 保留侧边栏折叠
+    initial_sidebar_state="expanded"  # 默认展开侧边栏
 )
 
-# ==================== 隐藏 Streamlit 默认 UI 元素（之前能用的版本） ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
-        /* 隐藏右上角的菜单按钮（三个点） */
-        #MainMenu {visibility: hidden;}
+        /* ========== 右上角工具栏 - 完整隐藏 ========== */
+        /* 隐藏整个顶部工具栏容器 */
+        header {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右下角的 "Made with Streamlit" 水印 */
-        footer {visibility: hidden;}
+        /* 隐藏工具栏 */
+        [data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右下角的 Streamlit 品牌图标 */
-        .stAppDeployButton {display: none !important;}
-        .stDeployButton {display: none !important;}
-        
-        /* 隐藏右上角的 GitHub 相关图标 */
-        .stStatusWidget {
+        /* 隐藏 Share 按钮 */
+        [data-testid="stToolbar"] button[kind="header"],
+        .stToolbar button[kind="header"] {
             display: none !important;
+            visibility: hidden !important;
         }
+        
+        /* 隐藏星标按钮 (Star) */
+        [data-testid="stToolbar"] a[href*="github"],
+        .stToolbar a[href*="github"],
+        button[title*="Star"],
+        [data-testid="stStarButton"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* 隐藏编辑按钮 */
+        button[title*="Edit"],
+        [data-testid="stEditButton"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* 隐藏 GitHub 图标 */
+        .github-link,
+        [data-testid="stGithubButton"],
+        a[aria-label*="GitHub"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* 隐藏菜单 (三个点) */
+        #MainMenu {visibility: hidden !important; display: none !important;}
+        
+        /* ========== 右下角元素 ========== */
+        /* 隐藏 "Made with Streamlit" 水印 */
+        footer {visibility: hidden !important; display: none !important;}
+        [data-testid="stFooter"] {visibility: hidden !important; display: none !important;}
+        
+        /* 隐藏 Deploy 按钮 */
+        .stAppDeployButton,
+        .stDeployButton,
+        [data-testid="stDeployButton"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* ========== 状态小部件 ========== */
+        .stStatusWidget,
         [data-testid="stStatusWidget"] {
             display: none !important;
+            visibility: hidden !important;
         }
         
-        /* 确保侧边栏折叠按钮可见 */
-        [data-testid="stSidebarCollapseButton"] {
-            display: flex !important;
-            visibility: visible !important;
+        /* ========== 隐藏 Pages 切换器 (admin/web) - 精确匹配，避免隐藏折叠按钮 ========== */
+        /* 只隐藏具体的导航菜单组件，不隐藏侧边栏本身 */
+        [data-testid="stSidebarNav"] ul,
+        [data-testid="stSidebarNav"] li,
+        [data-testid="stSidebarNav"] a,
+        .stSidebarNav ul,
+        .stSidebarNav li,
+        .stSidebarNav a {
+            display: none !important;
+            visibility: hidden !important;
         }
         
         /* 调整主内容区域 */
         .main .block-container {
             padding-top: 0.5rem !important;
+        }
+        
+        /* ========== 核弹级隐藏 - 覆盖所有可能的元素 ========== */
+        header:has([data-testid="stToolbar"]),
+        header:has(.stToolbar),
+        div:has(button[title*="Share"]),
+        div:has(a[href*="github.com"]),
+        .element-container:has(button[aria-label]),
+        [data-testid="stTopBar"],
+        .stAppHeader {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
         }
     </style>
 """
@@ -464,6 +528,22 @@ def render_sidebar():
     T = TEXT[st.session_state.lang]
     
     with st.sidebar:
+        # 添加关闭侧边栏按钮（在侧边栏内部右上角）
+        col_close, col_space = st.columns([1, 5])
+        with col_close:
+            if st.button("✕", key="sidebar_close_btn", help="关闭侧边栏"):
+                # 使用 JavaScript 折叠侧边栏
+                st.javascript("""
+                    try {
+                        const sidebar = document.querySelector('[data-testid="stSidebar"]');
+                        if (sidebar) {
+                            const closeBtn = sidebar.querySelector('button[aria-label*="Collapse"]');
+                            if (closeBtn) closeBtn.click();
+                        }
+                    } catch(e) {}
+                """)
+                st.rerun()
+        
         st.markdown("## 🔐 账户管理")
         st.markdown("---")
         
