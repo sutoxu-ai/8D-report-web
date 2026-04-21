@@ -56,28 +56,16 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
-        /* ========== 顶部区域 ========== */
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右上角 Fork 和 GitHub 链接 */
-        a[href*="github.com"],
-        a[href*="fork"] {
-            display: none !important;
-        }
-        
-        /* ========== 右下角元素 ========== */
+        /* 隐藏右下角水印 */
         footer {visibility: hidden !important; display: none !important;}
         
-        /* 尝试隐藏右下角浮动按钮 */
-        .stApp > div:last-child button {
-            display: none !important;
-        }
+        /* 隐藏 Pages 切换器 (admin/web) - 只隐藏导航菜单 */
+        [data-testid="stSidebarNav"] > ul {display: none !important;}
         
-        /* ========== 隐藏 Pages 切换器 (admin/web) ========== */
-        [data-testid="stSidebarNav"] ul {display: none !important;}
-        
-        /* ========== 调整主内容区域 ========== */
+        /* 调整主内容区域 */
         .main .block-container {
             padding-top: 0.5rem !important;
         }
