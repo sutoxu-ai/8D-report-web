@@ -51,30 +51,123 @@ hide_streamlit_style = """
     <style>
         /* 隐藏右上角的菜单按钮（三个点） */
         #MainMenu {visibility: hidden;}
+        
         /* 隐藏右下角的 "Made with Streamlit" 水印 */
         footer {visibility: hidden;}
-        /* 隐藏右下角的 Streamlit 品牌图标 */
+        
+        /* 隐藏右下角的 Streamlit 品牌图标（多种可能的选择器） */
         .stAppDeployButton {display: none !important;}
         .stDeployButton {display: none !important;}
+        .stStatusWidget {display: none !important;}
+        
+        /* 隐藏部署按钮容器 */
+        .st-emotion-cache-1y4p8pa {display: none !important;}
+        .st-emotion-cache-1incye8 {display: none !important;}
+        .st-emotion-cache-18ni7ap {display: none !important;}
+        .st-emotion-cache-1dp5vir {display: none !important;}
+        
+        /* 隐藏所有包含 "Deploy" 或 "deploy" 的元素 */
+        [class*="Deploy"] {display: none !important;}
+        [class*="deploy"] {display: none !important;}
+        
         /* 隐藏右上角的 Share 按钮和 Action 按钮 */
         .stActionButton {visibility: hidden;}
         .stActionButton button {display: none !important;}
+        
         /* 隐藏顶部工具栏 */
         header {visibility: hidden;}
+        
         /* 隐藏部署相关的所有元素 */
-        .stStatusWidget {display: none !important;}
         [data-testid="stStatusWidget"] {display: none !important;}
         [data-testid="stToolbar"] {display: none !important;}
+        [data-testid="stDecoration"] {display: none !important;}
+        
         /* 调整页面顶部空白 */
         .main .block-container {
             padding-top: 0.5rem;
         }
-        /* 确保所有隐藏元素彻底不可见 */
-        .st-emotion-cache-1y4p8pa {display: none !important;}
-        .st-emotion-cache-1incye8 {display: none !important;}
+        
+        /* 隐藏右下角浮动按钮 */
+        .stApp > div:last-child {
+            display: none !important;
+        }
+        
+        /* 隐藏所有可能包含品牌图标的元素 */
+        iframe {display: none !important;}
+        
+        /* 隐藏底部所有内容 */
+        .stApp footer {
+            display: none !important;
+        }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# 使用 JavaScript 强制删除部署相关元素
+hide_deploy_js = """
+    <script>
+        // 等待 DOM 完全加载
+        function removeDeployElements() {
+            // 选择所有可能的部署按钮元素
+            const selectors = [
+                '.stAppDeployButton',
+                '.stDeployButton', 
+                '.stStatusWidget',
+                '[data-testid="stStatusWidget"]',
+                '[data-testid="stToolbar"]',
+                '[data-testid="stDecoration"]',
+                'footer',
+                'header',
+                '.st-emotion-cache-1y4p8pa',
+                '.st-emotion-cache-1incye8',
+                '.st-emotion-cache-18ni7ap'
+            ];
+            
+            selectors.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => {
+                    if (el) el.style.display = 'none';
+                });
+            });
+            
+            // 删除所有 iframe（通常是 Streamlit 的品牌图标）
+            const iframes = document.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+                iframe.style.display = 'none';
+            });
+            
+            // 删除底部固定区域
+            const appElement = document.querySelector('.stApp');
+            if (appElement) {
+                const children = appElement.children;
+                for (let i = children.length - 1; i >= 0; i--) {
+                    const child = children[i];
+                    if (child.tagName === 'DIV' && child.children.length === 0) {
+                        child.style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        // 立即执行一次
+        removeDeployElements();
+        
+        // 使用 MutationObserver 监视 DOM 变化，确保新添加的元素也被隐藏
+        const observer = new MutationObserver(function(mutations) {
+            removeDeployElements();
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // 延迟再执行一次，确保覆盖动态加载的内容
+        setTimeout(removeDeployElements, 500);
+        setTimeout(removeDeployElements, 1000);
+    </script>
+"""
+st.markdown(hide_deploy_js, unsafe_allow_html=True)
 
 # ==================== 多语言文本 ====================
 TEXT = {
