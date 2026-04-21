@@ -10,8 +10,7 @@
 6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
 7. 隐藏 Streamlit 默认 UI 元素（右上角菜单、右下角水印和品牌图标、GitHub 图标）
 8. 优化布局：顶部极简状态栏 + 侧边栏完整登录功能
-9. 侧边栏默认展开，内部添加关闭按钮 (✕)
-10. 隐藏 Pages 切换器 (admin/web)
+9. 侧边栏默认折叠，点击双箭头可展开
 """
 
 import streamlit as st
@@ -52,7 +51,7 @@ st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
     layout="wide",
-    initial_sidebar_state="expanded"  # 默认展开侧边栏
+    initial_sidebar_state="collapsed"  # 保留侧边栏折叠
 )
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
@@ -119,13 +118,12 @@ hide_streamlit_style = """
             visibility: hidden !important;
         }
         
-        /* ========== 隐藏 Pages 切换器 (admin/web) ========== */
-        [data-testid="stSidebarNav"],
-        .stSidebarNav,
-        nav[data-testid="stSidebarNav"],
-        div[data-testid="stSidebarNav"] {
-            display: none !important;
-            visibility: hidden !important;
+        /* ========== 保留可见元素 ========== */
+        /* 确保侧边栏折叠按钮可见 */
+        [data-testid="stSidebarCollapseButton"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         
         /* 调整主内容区域 */
@@ -525,22 +523,6 @@ def render_sidebar():
     T = TEXT[st.session_state.lang]
     
     with st.sidebar:
-        # 添加关闭侧边栏按钮（在侧边栏内部右上角）
-        col_close, col_space = st.columns([1, 5])
-        with col_close:
-            if st.button("✕", key="sidebar_close_btn", help="关闭侧边栏"):
-                # 使用 JavaScript 折叠侧边栏
-                st.javascript("""
-                    try {
-                        const sidebar = document.querySelector('[data-testid="stSidebar"]');
-                        if (sidebar) {
-                            const closeBtn = sidebar.querySelector('button[aria-label*="Collapse"]');
-                            if (closeBtn) closeBtn.click();
-                        }
-                    } catch(e) {}
-                """)
-                st.rerun()
-        
         st.markdown("## 🔐 账户管理")
         st.markdown("---")
         
