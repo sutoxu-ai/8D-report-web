@@ -46,11 +46,12 @@ def clear_license_cache(user_id):
 
 # ==================== 页面配置 ====================
 # ==================== 页面配置 ====================
+# ==================== 页面配置 ====================
 st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
     layout="wide",
-    initial_sidebar_state="collapsed"  # 侧边栏默认折叠
+    initial_sidebar_state="collapsed"  # 保留侧边栏折叠
 )
 
 # ==================== 隐藏 Streamlit 默认 UI 元素（之前能用的版本） ====================
