@@ -60,8 +60,12 @@ hide_streamlit_style = """
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏 GitHub 链接 */
-        [data-testid="stToolbar"] a[href*="github"] {display: none !important;}
+        /* 隐藏右上角工具栏所有按钮（Share、星标、编辑、GitHub） */
+        [data-testid="stToolbar"] {display: none !important;}
+        header [data-testid="stToolbar"] {display: none !important;}
+        
+        /* 隐藏 Deploy 按钮 */
+        .stAppDeployButton {display: none !important;}
         
         /* ========== 右下角元素 ========== */
         footer {visibility: hidden !important; display: none !important;}
@@ -645,7 +649,7 @@ with col_input:
                         status_text.markdown(f"### {phase['icon']} {phase['text']}")
                         sub_text.caption(phase['sub'])
                         progress_bar.progress((i + 1) / len(progress_phases))
-                        time.sleep(5.0)  # 每阶段停留约5.0秒
+                        time.sleep(0.8)  # 每阶段停留约0.8秒
                     
                     client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
                     user_prompt = (
