@@ -47,6 +47,7 @@ def clear_license_cache(user_id):
 st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊", layout="wide")
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏） ====================
 hide_streamlit_style = """
     <style>
         /* 隐藏右上角的菜单按钮（三个点） */
@@ -59,28 +60,32 @@ hide_streamlit_style = """
         .stAppDeployButton {display: none !important;}
         .stDeployButton {display: none !important;}
         
-        /* 隐藏顶部工具栏 */
-        header {visibility: hidden; height: 0px !important;}
-        .stToolbar {display: none !important;}
+        /* 只隐藏 header 的内容，但保留结构以支持侧边栏 */
+        header {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
         
-        /* 移除所有默认的顶部 padding/margin */
+        /* 隐藏 header 中的按钮，但保留侧边栏按钮 */
+        header .stActionButton {
+            display: none !important;
+        }
+        
+        /* 确保侧边栏可见 */
+        [data-testid="stSidebar"] {
+            display: block !important;
+            visibility: visible !important;
+        }
+        
+        /* 移除主内容区域的顶部 padding */
         .main .block-container {
             padding-top: 0rem !important;
             padding-bottom: 0rem !important;
-            margin-top: 0rem !important;
         }
         
-        /* 隐藏所有可能产生空白的元素 */
+        /* 调整顶部状态栏的间距 */
         .st-emotion-cache-1v0mbdj {
             padding-top: 0rem !important;
-        }
-        .st-emotion-cache-6qob1r {
-            padding-top: 0rem !important;
-        }
-        
-        /* 侧边栏宽度优化 */
-        [data-testid="stSidebar"] {
-            min-width: 280px !important;
         }
     </style>
 """
