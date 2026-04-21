@@ -47,52 +47,87 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
 <style>
-    /* 隐藏右上角菜单 */
+    /* 隐藏右上角菜单和所有 toolbar 按钮 */
     #MainMenu {visibility: hidden !important; display: none !important;}
+    header[data-testid="stHeader"] {display: none !important;}
     
-    /* 隐藏右下角水印 */
+    /* 隐藏 footer 水印 */
     footer {visibility: hidden !important; display: none !important;}
     
     /* 隐藏 Pages 导航菜单 */
     [data-testid="stSidebarNav"] > ul {display: none !important;}
     
+    /* 隐藏主 header 工具栏区域 */
+    .stApp > div:nth-child(1) > div:first-child > div:first-child > div:first-child {
+        display: none !important;
+    }
+    
+    /* 隐藏 toolbar 按钮容器 */
+    header .st-spacer {display: none !important;}
+    
     /* 调整主内容区域 */
     .main .block-container {
         padding-top: 0.5rem !important;
+    }
+    
+    /* 强制隐藏 Streamlit 默认 header 区域 */
+    .stApp > header {
+        display: none !important;
+        visibility: hidden !important;
     }
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# ==================== 尝试隐藏右上角按钮（使用JavaScript） ====================
+# ==================== 更激进的 JavaScript 隐藏方案 ====================
 hide_buttons_script = """
 <script>
-// 隐藏右上角工具栏按钮
-function hideToolbarButtons() {
-    // 隐藏 Fork 按钮
-    document.querySelectorAll('a[href*="fork"]').forEach(el => el.style.display = 'none');
-    // 隐藏 GitHub 按钮
-    document.querySelectorAll('a[href*="github.com"]').forEach(el => el.style.display = 'none');
-    // 隐藏 Streamlit 分享按钮
-    document.querySelectorAll('button[aria-label*="Share"]').forEach(el => el.style.display = 'none');
-    // 隐藏编辑按钮
-    document.querySelectorAll('button[aria-label*="Edit"]').forEach(el => el.style.display = 'none');
-    // 隐藏星标按钮
-    document.querySelectorAll('button[aria-label*="Star"]').forEach(el => el.style.display = 'none');
+// 递归隐藏所有可疑按钮的函数
+function hideAllSuspiciousButtons() {
+    // 隐藏包含 fork, github, share, edit, star 等关键词的链接
+    document.querySelectorAll('a').forEach(el => {
+        const href = (el.href || '').toLowerCase();
+        const text = (el.textContent || '').toLowerCase();
+        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
+        if (href.includes('fork') || href.includes('github') || 
+            text.includes('fork') || text.includes('star') ||
+            aria.includes('share') || aria.includes('edit')) {
+            el.style.display = 'none';
+        }
+    });
+    
+    // 隐藏 header 中的按钮
+    document.querySelectorAll('header button').forEach(el => {
+        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
+        const title = (el.getAttribute('title') || '').toLowerCase();
+        if (aria.includes('share') || aria.includes('edit') || 
+            aria.includes('star') || title.includes('fork') || title.includes('star')) {
+            el.style.display = 'none';
+        }
+    });
+    
+    // 隐藏 Streamlit toolbar
+    document.querySelectorAll('[data-testid="stToolbar"]').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // 隐藏 toolbar button
+    document.querySelectorAll('.stToolbar').forEach(el => {
+        el.style.display = 'none';
+    });
 }
 
-// 页面加载后执行，延迟执行确保元素已渲染
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(hideToolbarButtons, 1000));
-} else {
-    setTimeout(hideToolbarButtons, 1000);
-}
+// 立即执行
+hideAllSuspiciousButtons();
 
-// 监听 DOM 变化，持续隐藏新出现的按钮
-const observer = new MutationObserver(() => {
-    hideToolbarButtons();
+// 持续监控 DOM 变化
+const hideObserver = new MutationObserver(() => {
+    hideAllSuspiciousButtons();
 });
-observer.observe(document.body, { childList: true, subtree: true });
+hideObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+// 定期执行确保隐藏
+setInterval(hideAllSuspiciousButtons, 2000);
 </script>
 """
 st.markdown(hide_buttons_script, unsafe_allow_html=True)
