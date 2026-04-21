@@ -60,34 +60,23 @@ hide_streamlit_style = """
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右上角工具栏所有按钮（Share、星标、编辑、GitHub） */
-        [data-testid="stToolbar"] {display: none !important;}
-        header [data-testid="stToolbar"] {display: none !important;}
-        
-        /* 隐藏 Deploy 按钮 */
-        .stAppDeployButton {display: none !important;}
+        /* 隐藏右上角工具栏所有按钮（Share、星标、编辑、GitHub）- 但保留侧边栏控制按钮 */
+        [data-testid="stToolbar"] > div:not([data-testid="stSidebarCollapsedControl"]) {
+            display: none !important;
+        }
         
         /* ========== 右下角元素 ========== */
         footer {visibility: hidden !important; display: none !important;}
         
         /* 隐藏右下角 Deploy 和 Cloud 按钮 */
         [data-testid="stAppDeployButton"],
-        [data-testid="stAppCloudButton"],
-        .stAppDeployButton,
-        .stAppCloudButton {
+        [data-testid="stAppCloudButton"] {
             display: none !important;
             visibility: hidden !important;
         }
         
         /* ========== 隐藏 Pages 切换器 (admin/web) - 只隐藏导航列表 ========== */
         [data-testid="stSidebarNav"] ul {display: none !important;}
-        
-        /* ========== 确保侧边栏折叠按钮始终可见 ========== */
-        /* 侧边栏展开按钮（隐藏侧边栏后显示在左上角） */
-        [data-testid="stSidebarCollapsedControl"] {
-            visibility: visible !important;
-            display: flex !important;
-        }
         
         /* ========== 调整主内容区域 ========== */
         .main .block-container {
