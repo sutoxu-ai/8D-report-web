@@ -49,104 +49,118 @@ st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊"
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏） ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（包括 GitHub 图标） ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素（最强版本） ====================
 hide_streamlit_style = """
     <style>
-        /* 隐藏右上角的菜单按钮（三个点） */
-        #MainMenu {visibility: hidden;}
-        
-        /* 隐藏右下角的 "Made with Streamlit" 水印 */
-        footer {visibility: hidden;}
-        
-        /* 隐藏右下角的 Streamlit 品牌图标 */
-        .stAppDeployButton {display: none !important;}
-        .stDeployButton {display: none !important;}
-        
-        /* 隐藏右上角的 GitHub 相关图标（Fork 和头像） */
-        .stStatusWidget {
+        /* 隐藏所有右上角的元素 - 使用更精确的选择器 */
+        .stStatusWidget,
+        [data-testid="stStatusWidget"],
+        .stActionButton,
+        [data-testid="stActionButton"],
+        .st-emotion-cache-1y4p8pa,
+        .st-emotion-cache-1incye8,
+        .st-emotion-cache-1dp5vir,
+        .st-emotion-cache-18ni7ap {
             display: none !important;
-        }
-        [data-testid="stStatusWidget"] {
-            display: none !important;
-        }
-        
-        /* 隐藏所有可能包含 GitHub 头像的元素 */
-        .st-emotion-cache-1y4p8pa {
-            display: none !important;
-        }
-        .st-emotion-cache-1incye8 {
-            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
         }
         
-        /* 隐藏 header 中的所有按钮，但保留侧边栏功能 */
-        header .stActionButton {
+        /* 隐藏 header 右侧所有内容 */
+        header [data-testid="stToolbar"] {
             display: none !important;
         }
         
-        /* 确保侧边栏可见 */
+        /* 隐藏右上角菜单按钮 */
+        #MainMenu {
+            display: none !important;
+        }
+        
+        /* 隐藏右下角水印 */
+        footer {
+            display: none !important;
+        }
+        
+        /* 隐藏部署按钮 */
+        .stAppDeployButton {
+            display: none !important;
+        }
+        
+        /* 确保侧边栏正常显示 */
         [data-testid="stSidebar"] {
             display: block !important;
-            visibility: visible !important;
-        }
-        
-        /* 调整主内容区域 */
-        .main .block-container {
-            padding-top: 0.5rem !important;
-        }
-        
-        /* 手机端侧边栏适配 */
-        @media (max-width: 768px) {
-            [data-testid="stSidebar"] {
-                position: relative !important;
-                width: 280px !important;
-                transform: none !important;
-                visibility: visible !important;
-            }
-            [data-testid="stSidebarCollapseButton"] {
-                display: none !important;
-            }
         }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# 使用 JavaScript 强制隐藏 GitHub 图标
-hide_github_js = """
+# 使用 JavaScript 删除这些元素
+force_hide_js = """
     <script>
-        function hideGitHubWidgets() {
-            // 隐藏所有状态小部件（包含 GitHub 头像）
-            const widgets = document.querySelectorAll('.stStatusWidget, [data-testid="stStatusWidget"]');
-            widgets.forEach(w => {
-                w.style.display = 'none';
-                w.style.visibility = 'hidden';
-            });
+        // 立即执行的函数
+        (function() {
+            // 要删除的元素选择器列表
+            const selectors = [
+                '.stStatusWidget',
+                '[data-testid="stStatusWidget"]',
+                '.stActionButton',
+                '[data-testid="stActionButton"]',
+                '.st-emotion-cache-1y4p8pa',
+                '.st-emotion-cache-1incye8',
+                '.st-emotion-cache-1dp5vir',
+                '#MainMenu',
+                '.stAppDeployButton'
+            ];
             
-            // 查找所有包含 GitHub 相关内容的元素
-            const allDivs = document.querySelectorAll('div');
-            allDivs.forEach(div => {
-                if (div.innerHTML && (div.innerHTML.includes('github') || div.innerHTML.includes('GitHub') || div.innerHTML.includes('fork'))) {
-                    if (div.className && !div.className.includes('sidebar')) {
-                        div.style.display = 'none';
+            // 删除元素的函数
+            function removeElements() {
+                selectors.forEach(selector => {
+                    const elements = document.querySelectorAll(selector);
+                    elements.forEach(el => {
+                        if (el && el.parentNode) {
+                            el.parentNode.removeChild(el);
+                        }
+                    });
+                });
+                
+                // 特殊处理：删除所有高度为 0 的固定定位元素
+                const allDivs = document.querySelectorAll('div');
+                allDivs.forEach(div => {
+                    const style = window.getComputedStyle(div);
+                    if (style.position === 'fixed' && style.top === '0px' && style.height === '0px') {
+                        if (div.parentNode) {
+                            div.parentNode.removeChild(div);
+                        }
                     }
-                }
+                });
+            }
+            
+            // 立即执行
+            removeElements();
+            
+            // 使用 MutationObserver 监控 DOM 变化
+            const observer = new MutationObserver(function(mutations) {
+                removeElements();
             });
-        }
-        
-        // 立即执行
-        hideGitHubWidgets();
-        
-        // 监控 DOM 变化
-        const observer = new MutationObserver(function() {
-            hideGitHubWidgets();
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-        
-        // 延迟执行确保覆盖
-        setTimeout(hideGitHubWidgets, 100);
-        setTimeout(hideGitHubWidgets, 500);
-        setTimeout(hideGitHubWidgets, 1000);
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            // 多次延迟执行，确保覆盖所有动态加载的内容
+            setTimeout(removeElements, 100);
+            setTimeout(removeElements, 500);
+            setTimeout(removeElements, 1000);
+            setTimeout(removeElements, 2000);
+            setTimeout(removeElements, 3000);
+        })();
     </script>
 """
-st.markdown(hide_github_js, unsafe_allow_html=True)
+st.markdown(force_hide_js, unsafe_allow_html=True)
+
 
 # ==================== 多语言文本 ====================
 TEXT = {
