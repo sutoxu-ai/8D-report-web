@@ -49,234 +49,52 @@ st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊"
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（最强版本） ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
-        /* 隐藏右上角菜单 */
+        /* 隐藏右上角的菜单按钮（三个点） */
         #MainMenu {visibility: hidden;}
         
-        /* 隐藏 footer 水印 */
+        /* 隐藏右下角的 "Made with Streamlit" 水印 */
         footer {visibility: hidden;}
         
-        /* 隐藏右下角部署按钮 - 多种选择器全覆盖 */
-        .stAppDeployButton,
-        .stDeployButton,
-        .st-emotion-cache-1v0mbdj,
-        .st-emotion-cache-ocqkz7,
-        .st-emotion-cache-1dp5vir,
-        .st-emotion-cache-1vt4y43,
-        .st-emotion-cache-1kyxreq,
-        [data-testid="stDeployButton"],
-        [data-testid="stStatusWidget"],
-        div[data-testid="stDecoration"],
-        div:has(> .stAppDeployButton) {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            width: 0 !important;
-            height: 0 !important;
-            min-width: 0 !important;
-            min-height: 0 !important;
-            overflow: hidden !important;
-            pointer-events: none !important;
-        }
+        /* 隐藏右下角的 Streamlit 品牌图标 */
+        .stAppDeployButton {display: none !important;}
+        .stDeployButton {display: none !important;}
         
-        /* 隐藏 header 和 toolbar */
-        header, .stToolbar {
-            visibility: hidden !important;
-        }
+        /* 隐藏顶部工具栏和 header */
+        header {visibility: hidden; height: 0px !important;}
+        .stToolbar {display: none !important;}
         
-        /* 调整主内容区域，避免底部空白 */
+        /* 移除所有默认的顶部 padding/margin */
         .main .block-container {
             padding-top: 0rem !important;
             padding-bottom: 0rem !important;
+            margin-top: 0rem !important;
         }
         
-        /* 隐藏 iframe 品牌图标 */
-        iframe[title="streamlit deploy button"],
-        iframe[src*="streamlit"],
-        iframe {
+        /* 压缩整个页面顶部的空白 */
+        .stApp header {
             display: none !important;
         }
         
-        /* 隐藏所有可能包含图标的固定定位元素 */
-        div[style*="position: fixed"][style*="bottom"],
-        div[style*="position:fixed"][style*="bottom"] {
-            display: none !important;
+        /* 移除 Streamlit 默认的顶部空白区域 */
+        .st-emotion-cache-1v0mbdj {
+            padding-top: 0rem !important;
+        }
+        
+        /* 让主内容区域紧贴顶部 */
+        .stApp > div:first-child {
+            padding-top: 0rem !important;
+        }
+        
+        /* 隐藏所有可能产生空白的元素 */
+        .st-emotion-cache-6qob1r {
+            padding-top: 0rem !important;
         }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-# 更强的 JavaScript 删除
-hide_deploy_js = """
-    <script>
-        (function() {
-            // 定时器 ID 数组
-            const intervals = [];
-            
-            function removeStreamlitBranding() {
-                // 删除所有可能包含部署按钮的元素
-                const selectors = [
-                    '.stAppDeployButton',
-                    '.stDeployButton', 
-                    '.st-emotion-cache-1v0mbdj',
-                    '.st-emotion-cache-ocqkz7',
-                    '[data-testid="stDeployButton"]',
-                    '[data-testid="stStatusWidget"]'
-                ];
-                
-                selectors.forEach(selector => {
-                    document.querySelectorAll(selector).forEach(el => {
-                        if (el && el.parentNode) {
-                            el.parentNode.removeChild(el);
-                        }
-                    });
-                });
-                
-                // 删除所有 iframe
-                document.querySelectorAll('iframe').forEach(iframe => {
-                    if (iframe.src && iframe.src.includes('streamlit')) {
-                        iframe.remove();
-                    }
-                });
-                
-                // 查找并删除底部固定元素
-                const allDivs = document.querySelectorAll('div');
-                allDivs.forEach(div => {
-                    const style = window.getComputedStyle(div);
-                    if (style.position === 'fixed' && 
-                        (style.bottom === '0px' || style.bottom === '0')) {
-                        div.remove();
-                    }
-                });
-            }
-            
-            // 立即执行
-            removeStreamlitBranding();
-            
-            // 每 0.5 秒执行一次，持续 5 秒
-            for (let i = 0; i < 10; i++) {
-                setTimeout(removeStreamlitBranding, i * 500);
-            }
-            
-            // 使用 MutationObserver 监控 DOM 变化
-            const observer = new MutationObserver(() => {
-                removeStreamlitBranding();
-            });
-            observer.observe(document.body, { 
-                childList: true, 
-                subtree: true,
-                attributes: true 
-            });
-        })();
-    </script>
-"""
-st.markdown(hide_deploy_js, unsafe_allow_html=True)
-
-# 使用 JavaScript 精确隐藏部署按钮
-hide_deploy_js = """
-    <script>
-        function hideDeployButtons() {
-            // 查找所有包含部署按钮的元素
-            const buttons = document.querySelectorAll('.stAppDeployButton, [data-testid="stDeployButton"], button[aria-label="Deploy"], button[aria-label="Share"], .st-emotion-cache-ocqkz7');
-            buttons.forEach(btn => {
-                btn.style.display = 'none';
-                btn.style.visibility = 'hidden';
-                btn.style.opacity = '0';
-            });
-            
-            // 查找右下角固定的 div
-            const fixedDivs = document.querySelectorAll('.stApp > div:last-child, .stApp > div:last-of-type');
-            fixedDivs.forEach(div => {
-                if (div.children.length === 0 || div.children[0]?.className?.includes('Deploy')) {
-                    div.style.display = 'none';
-                }
-            });
-        }
-        
-        // 立即执行
-        hideDeployButtons();
-        
-        // 持续监控
-        const observer = new MutationObserver(function() {
-            hideDeployButtons();
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-        
-        // 延迟多次执行确保覆盖
-        setTimeout(hideDeployButtons, 100);
-        setTimeout(hideDeployButtons, 500);
-        setTimeout(hideDeployButtons, 1000);
-        setTimeout(hideDeployButtons, 2000);
-    </script>
-"""
-st.markdown(hide_deploy_js, unsafe_allow_html=True)
-
-# 使用 JavaScript 强制删除部署相关元素
-hide_deploy_js = """
-    <script>
-        // 等待 DOM 完全加载
-        function removeDeployElements() {
-            // 选择所有可能的部署按钮元素
-            const selectors = [
-                '.stAppDeployButton',
-                '.stDeployButton', 
-                '.stStatusWidget',
-                '[data-testid="stStatusWidget"]',
-                '[data-testid="stToolbar"]',
-                '[data-testid="stDecoration"]',
-                'footer',
-                'header',
-                '.st-emotion-cache-1y4p8pa',
-                '.st-emotion-cache-1incye8',
-                '.st-emotion-cache-18ni7ap'
-            ];
-            
-            selectors.forEach(selector => {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(el => {
-                    if (el) el.style.display = 'none';
-                });
-            });
-            
-            // 删除所有 iframe（通常是 Streamlit 的品牌图标）
-            const iframes = document.querySelectorAll('iframe');
-            iframes.forEach(iframe => {
-                iframe.style.display = 'none';
-            });
-            
-            // 删除底部固定区域
-            const appElement = document.querySelector('.stApp');
-            if (appElement) {
-                const children = appElement.children;
-                for (let i = children.length - 1; i >= 0; i--) {
-                    const child = children[i];
-                    if (child.tagName === 'DIV' && child.children.length === 0) {
-                        child.style.display = 'none';
-                    }
-                }
-            }
-        }
-        
-        // 立即执行一次
-        removeDeployElements();
-        
-        // 使用 MutationObserver 监视 DOM 变化，确保新添加的元素也被隐藏
-        const observer = new MutationObserver(function(mutations) {
-            removeDeployElements();
-        });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-        
-        // 延迟再执行一次，确保覆盖动态加载的内容
-        setTimeout(removeDeployElements, 500);
-        setTimeout(removeDeployElements, 1000);
-    </script>
-"""
-st.markdown(hide_deploy_js, unsafe_allow_html=True)
 
 # ==================== 多语言文本 ====================
 TEXT = {
@@ -626,26 +444,28 @@ if "user_id" not in st.session_state:
 T = TEXT[st.session_state.lang]
 
 # ==================== 顶部登录栏（替代侧边栏登录） ====================
+# ==================== 顶部登录栏（紧凑版） ====================
 def render_top_login_bar():
-    """渲染顶部登录栏"""
+    """渲染顶部登录栏 - 紧凑版"""
     T = TEXT[st.session_state.lang]
     
-    col_status, col_lang, col_login = st.columns([1, 1, 2])
+    # 使用更紧凑的列宽比例
+    col_status, col_lang, col_login = st.columns([1, 1, 3])
     
-    # 左侧：系统状态
+    # 左侧：系统状态（更紧凑）
     with col_status:
         user_id = st.session_state.get("user_id")
         lic = get_user_license(user_id) if user_id else None
         if user_id and lic:
             if lic['plan_type'] == 'free':
                 remaining = lic['trial_limit'] - lic['trial_used']
-                st.caption(f"📊 {T['trial_version']} | {T['trial_used'].format(used=lic['trial_used'], total=lic['trial_limit'])}")
+                st.caption(f"📊 {remaining}次剩余")
             else:
-                st.caption(f"✅ {T['pro_version']}")
+                st.caption("✅ 正式版")
         else:
-            st.caption("🔓 未登录")
+            st.caption("🔓")
     
-    # 中间：语言切换
+    # 中间：语言切换（更紧凑）
     with col_lang:
         lang_option = st.selectbox(
             T["lang_label"],
@@ -659,41 +479,51 @@ def render_top_login_bar():
             st.session_state.lang = new_lang
             st.rerun()
     
-    # 右侧：登录/用户信息
+    # 右侧：登录/用户信息（更紧凑，去掉多余空白）
     with col_login:
         if not st.session_state.get("user_id"):
-            # 未登录状态 - 显示登录表单
-            with st.expander(f"🔑 {T['login_header']}", expanded=False):
+            # 未登录状态 - 紧凑的登录按钮
+            with st.popover("🔑 登录", use_container_width=True):
                 user_input = st.text_input(T["username_placeholder"], key="top_user_input", label_visibility="collapsed", placeholder=T["username_placeholder"])
-                col_btn1, col_btn2 = st.columns([1, 1])
+                col_btn1, col_btn2 = st.columns([1, 2])
                 with col_btn1:
-                    if st.button("🔓 登录 / 注册", use_container_width=True, key="top_login_btn"):
+                    if st.button("登录", use_container_width=True, key="top_login_btn"):
                         if user_input:
                             st.session_state.user_id = user_input
                             st.rerun()
                         else:
-                            st.error("请输入用户名/邮箱")
+                            st.error("请输入")
                 with col_btn2:
-                    st.caption(T["new_user_hint"])
+                    st.caption("👋 新用户注册得3次")
         else:
-            # 已登录状态 - 显示用户信息和操作
+            # 已登录状态 - 紧凑显示
             user_id = st.session_state.user_id
             lic = get_user_license(user_id)
-            col_user, col_logout, col_activate = st.columns([2, 1, 2])
+            
+            # 使用更紧凑的布局，减少空白
+            col_user, col_info, col_logout, col_activate = st.columns([2, 2, 1, 1])
+            
             with col_user:
-                st.caption(f"👤 {user_id[:20]}")
+                st.caption(f"👤 {user_id[:15]}")
+            
+            with col_info:
                 if lic and lic.get('license_expire'):
-                    exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                    exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%m/%d')
                     st.caption(f"📅 至 {exp_date}")
+                elif lic and lic['plan_type'] == 'free':
+                    remaining = lic['trial_limit'] - lic['trial_used']
+                    st.caption(f"📊 剩余{remaining}次")
+            
             with col_logout:
-                if st.button(T["logout"], key="top_logout_btn", use_container_width=True):
+                if st.button("🚪", key="top_logout_btn", help="退出登录", use_container_width=True):
                     st.session_state.user_id = None
                     st.session_state.current_result = ""
                     get_cached_license.clear()
                     st.rerun()
+            
             with col_activate:
-                with st.popover("🔑 激活码", use_container_width=True):
-                    activate_code = st.text_input(T["activate_code_hint"], type="password", key="top_act_code", placeholder="输入激活码")
+                with st.popover("🔑", help="激活码", use_container_width=True):
+                    activate_code = st.text_input(T["activate_code_hint"], type="password", key="top_act_code", placeholder="激活码", label_visibility="collapsed")
                     if st.button(T["activate_btn"], key="top_act_btn", use_container_width=True):
                         if activate_code and len(activate_code) >= 6:
                             success, msg = activate_license_code(user_id, activate_code)
@@ -703,14 +533,20 @@ def render_top_login_bar():
                             else:
                                 st.error(msg)
                         else:
-                            st.error("请输入有效的激活码（至少6位）")
+                            st.error("激活码无效")
 
+# ==================== 主页面 ====================
 # ==================== 主页面 ====================
 # 先渲染顶部登录栏
 render_top_login_bar()
 
+# 主标题和分隔线
 st.title(T["main_title"])
 st.markdown("---")
+
+col_input, col_preview = st.columns([1, 1.2])
+
+# ... 后续代码保持不变
 
 col_input, col_preview = st.columns([1, 1.2])
 
