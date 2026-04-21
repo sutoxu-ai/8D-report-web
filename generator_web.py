@@ -44,57 +44,56 @@ def clear_license_cache(user_id):
     get_cached_license.clear()
 
 # ==================== 页面配置 ====================
-st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="8D 报告 - 智能生成助手", 
+    page_icon="📊", 
+    layout="wide",
+    initial_sidebar_state="collapsed"  # 改为 collapsed，侧边栏默认折叠
+)
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏） ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（包括 GitHub 图标） ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（最强版本） ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏按钮） ====================
 hide_streamlit_style = """
     <style>
-        /* 隐藏所有右上角的元素 - 使用更精确的选择器 */
-        .stStatusWidget,
-        [data-testid="stStatusWidget"],
-        .stActionButton,
-        [data-testid="stActionButton"],
-        .st-emotion-cache-1y4p8pa,
-        .st-emotion-cache-1incye8,
-        .st-emotion-cache-1dp5vir,
-        .st-emotion-cache-18ni7ap {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            width: 0 !important;
-            height: 0 !important;
-            min-width: 0 !important;
-            min-height: 0 !important;
-            overflow: hidden !important;
-            pointer-events: none !important;
-        }
+        /* 隐藏右上角的菜单按钮（三个点） */
+        #MainMenu {visibility: hidden;}
         
-        /* 隐藏 header 右侧所有内容 */
-        header [data-testid="stToolbar"] {
+        /* 隐藏右下角的 "Made with Streamlit" 水印 */
+        footer {visibility: hidden;}
+        
+        /* 隐藏右下角的 Streamlit 品牌图标 */
+        .stAppDeployButton {display: none !important;}
+        .stDeployButton {display: none !important;}
+        
+        /* 只隐藏 GitHub 相关的状态图标（右上角头像和 Fork） */
+        .stStatusWidget {
+            display: none !important;
+        }
+        [data-testid="stStatusWidget"] {
             display: none !important;
         }
         
-        /* 隐藏右上角菜单按钮 */
-        #MainMenu {
-            display: none !important;
+        /* 确保侧边栏折叠按钮（双箭头）始终可见 */
+        [data-testid="stSidebarCollapseButton"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         
-        /* 隐藏右下角水印 */
-        footer {
-            display: none !important;
+        /* 调整主内容区域，让内容更靠左 */
+        .main .block-container {
+            padding-top: 0.5rem !important;
+            padding-left: 1rem !important;
         }
         
-        /* 隐藏部署按钮 */
-        .stAppDeployButton {
-            display: none !important;
-        }
-        
-        /* 确保侧边栏正常显示 */
-        [data-testid="stSidebar"] {
-            display: block !important;
+        /* 手机端适配 */
+        @media (max-width: 768px) {
+            [data-testid="stSidebarCollapseButton"] {
+                display: flex !important;
+            }
         }
     </style>
 """
