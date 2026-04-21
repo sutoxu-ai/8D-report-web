@@ -56,45 +56,27 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
-        /* ========== 顶部区域 - 精确隐藏，只隐藏菜单 ========== */
+        /* ========== 顶部区域 - 只隐藏菜单按钮，保留侧边栏折叠按钮 ========== */
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏工具栏按钮（保留侧边栏切换按钮） */
-        [data-testid="stToolbar"] button:not([data-testid="stSidebarCollapsedControl"]),
-        [data-testid="stToolbar"] > div:first-child > div:not([data-testid="stSidebarCollapsedControl"]) {
-            visibility: hidden !important;
-        }
+        /* 隐藏 GitHub 链接 */
+        [data-testid="stToolbar"] a[href*="github"] {display: none !important;}
         
         /* ========== 右下角元素 ========== */
-        /* 隐藏 "Made with Streamlit" 水印 */
         footer {visibility: hidden !important; display: none !important;}
-        [data-testid="stFooter"] {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏 Deploy 按钮 */
-        .stAppDeployButton,
-        .stDeployButton,
-        [data-testid="stDeployButton"] {
-            display: none !important;
-            visibility: hidden !important;
+        /* ========== 隐藏 Pages 切换器 (admin/web) - 只隐藏导航列表 ========== */
+        [data-testid="stSidebarNav"] ul {display: none !important;}
+        
+        /* ========== 确保侧边栏折叠按钮始终可见 ========== */
+        /* 侧边栏展开按钮（隐藏侧边栏后显示在左上角） */
+        [data-testid="stSidebarCollapsedControl"] {
+            visibility: visible !important;
+            display: flex !important;
         }
         
-        /* ========== 状态小部件 ========== */
-        .stStatusWidget,
-        [data-testid="stStatusWidget"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* ========== 隐藏 Pages 切换器 (admin/web) - 精确匹配 ========== */
-        [data-testid="stSidebarNav"] ul,
-        [data-testid="stSidebarNav"] li,
-        [data-testid="stSidebarNav"] a {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 调整主内容区域 */
+        /* ========== 调整主内容区域 ========== */
         .main .block-container {
             padding-top: 0.5rem !important;
         }
