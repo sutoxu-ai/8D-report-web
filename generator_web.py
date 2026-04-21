@@ -44,6 +44,22 @@ def clear_license_cache(user_id):
 # ==================== 页面配置 ====================
 st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊", layout="wide")
 
+
+# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
+hide_streamlit_style = """
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        .stActionButton {visibility: hidden;}
+        header {visibility: hidden;}
+        .main .block-container {
+            padding-top: 1rem;
+        }
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+
 # ==================== 多语言文本 ====================
 TEXT = {
     "zh": {
