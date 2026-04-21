@@ -369,19 +369,29 @@ SYSTEM_PROMPT = {
 至少追问 3-5 层，直到找到根本原因
 每层回答要具体，不能笼统
 
-输出格式示例：
+输出格式示例（注意换行）：
 【4M1E 分析】
-人：经检查，操作员持证上岗，培训记录完整，技能考核合格 → 排除
-机：经检查，设备参数偏移 0.05mm，超出公差范围 (±0.02mm) → 异常项 ⚠️
-料：经检查，原材料批次检验报告合格，供应商 COA 完整 → 排除
-法：经检查，作业指导书版本 V2.1 已过期，现行版本应为 V3.0 → 异常项 ⚠️
-环：经检查，车间温度 23±2°C，湿度 50±10%，符合要求 → 排除
+
+人：经检查，操作员持证上岗 → 排除
+
+机：经检查，设备参数偏移 0.05mm → 异常项 ⚠️
+
+料：经检查，原材料合格 → 排除
+
+法：经检查，作业指导书过期 → 异常项 ⚠️
+
+环：经检查，环境符合要求 → 排除
 
 【5-Why 分析】
-Why1：为什么设备参数偏移？→ 传感器校准过期 3 个月
-Why2：为什么传感器校准过期？→ 年度校准计划未执行
-Why3：为什么校准计划未执行？→ 维护人员不足，工作量饱和
-Why4：为什么维护人员不足？→ 未配置备用人员，单人负责
+
+Why1：为什么设备参数偏移？→ 传感器校准过期
+
+Why2：为什么校准过期？→ 年度校准计划未执行
+
+Why3：为什么计划未执行？→ 维护人员不足
+
+Why4：为什么人员不足？→ 未配置备用人员
+
 Why5：为什么未配置备用人员？→ 人员编制申请未获批 ← 根本原因
 
 【其他要求】
@@ -404,19 +414,29 @@ Start from abnormal items, continuously ask "why"
 At least 3-5 levels until finding root cause
 Each answer must be specific, not vague
 
-Output format example:
+Output format example (注意换行)：
 【4M1E Analysis】
-Man: Verified, operator certified, training complete, qualified → Excluded
-Machine: Verified, parameter offset 0.05mm, out of tolerance (±0.02mm) → Abnormal ⚠️
-Material: Verified, batch inspection passed, COA complete → Excluded
-Method: Verified, work instruction V2.1 outdated, current version V3.0 → Abnormal ⚠️
-Environment: Verified, temperature 23±2°C, humidity 50±10%, compliant → Excluded
+
+Man: Verified, operator certified → Excluded
+
+Machine: Verified, parameter offset 0.05mm → Abnormal ⚠️
+
+Material: Verified, material qualified → Excluded
+
+Method: Verified, work instruction outdated → Abnormal ⚠️
+
+Environment: Verified, environment compliant → Excluded
 
 【5-Why Analysis】
-Why1: Why parameter offset? → Sensor calibration expired 3 months
-Why2: Why calibration expired? → Annual calibration plan not executed
+
+Why1: Why parameter offset? → Sensor calibration expired
+
+Why2: Why calibration expired? → Annual plan not executed
+
 Why3: Why plan not executed? → Insufficient maintenance staff
-Why4: Why insufficient staff? → No backup personnel assigned
+
+Why4: Why insufficient staff? → No backup personnel
+
 Why5: Why no backup? → Staffing request not approved ← Root Cause
 
 【Other Requirements】
@@ -526,16 +546,31 @@ def clean_format(text):
     if not text:
         return ""
     text = text.replace("**", "").replace("#", "")
+    
+    # 处理 D1-D8 标题格式
     for i in range(1, 9):
         text = re.sub(rf'(D{i}[:：])\s*\n+\s*', rf'\1 ', text)
-    text = re.sub(r'([^，,]+[（(][^）)]+[）)])\s*[，,]\s*', r'\1\n', text)
-    for kw in ["What:", "Where:", "When:", "Who:", "Why:", "How many:", "How:"]:
-        text = re.sub(rf'([^\n])({kw})', r'\1\n\2', text)
-        text = re.sub(rf'({kw})([^\n])', r'\1\n\2', text)
+    
+    # 处理 4M1E 每个因子后换行（人、机、料、法、环）
+    text = re.sub(r'([人机料法环]：)', r'\n\1', text)  # 每个因子前加换行
+    text = re.sub(r'(→ 排除|→ 异常项[^，]*？)', r'\1\n', text)  # 排除/异常项后换行
+    
+    # 处理 5-Why 每个 Why 后换行
+    text = re.sub(r'(Why\d+：)', r'\n\1', text)  # Why 前加换行
+    text = re.sub(r'(→ [^\n]+)(?=Why\d+：|$)', r'\1\n', text)  # 每个回答后换行
+    
+    # 处理中文版本 5-Why
+    text = re.sub(r'(为什么\d+：)', r'\n\1', text)
+    text = re.sub(r'(→ [^\n]+)(?=为什么\d+：|$)', r'\1\n', text)
+    
+    # 处理措施格式
     for kw in ["人：", "机：", "料：", "法：", "环："]:
         text = re.sub(rf'([^\n])({kw})', r'\1\n\n\2', text)
         text = re.sub(rf'({kw})([^\n])', r'\1\n\2', text)
+    
+    # 清理多余空行（保留最多两个换行）
     text = re.sub(r'\n{3,}', '\n\n', text)
+    
     return text.strip()
 
 def export_to_word(content, product_name, lang):
