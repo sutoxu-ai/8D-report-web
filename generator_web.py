@@ -1,17 +1,7 @@
 #!/usr/bin/env python3
 """
 8D 报告智能生成助手 - 客户端
-修改说明：
-1. 修改页面标题
-2. 添加用户注册提示信息
-3. 修复英文翻译（用户登录、用户名/邮箱）
-4. 修复退出登录状态（清除缓存）
-5. 添加生成进度提示
-6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
-7. 隐藏 Streamlit 默认 UI 元素（右上角菜单、右下角水印和品牌图标、GitHub 图标）
-8. 优化布局：顶部极简状态栏 + 侧边栏完整登录功能
-9. 侧边栏默认展开，内部添加关闭按钮 (✕)
-10. 隐藏 Pages 切换器 (admin/web)
+最终优化版本
 """
 
 import streamlit as st
@@ -26,6 +16,7 @@ from docx.oxml import OxmlElement
 import openai
 from supabase import create_client
 import logging
+import time
 
 # ==================== 缓存配置 ====================
 @st.cache_data(ttl=60)
@@ -50,33 +41,61 @@ st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
     layout="wide",
-    initial_sidebar_state="expanded"  # 默认展开侧边栏
+    initial_sidebar_state="expanded"
 )
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
-    <style>
-        /* 隐藏右上角菜单 (三个点) */
-        #MainMenu {visibility: hidden !important; display: none !important;}
-        
-        /* 隐藏右上角工具栏按钮 - 但保留侧边栏折叠按钮 */
-        [data-testid="stToolbar"]:not([data-testid="stSidebarCollapsedControl"]) {
-            display: none !important;
-        }
-        
-        /* 隐藏右下角水印 */
-        footer {visibility: hidden !important; display: none !important;}
-        
-        /* 隐藏 Pages 切换器 (admin/web) - 只隐藏导航菜单 */
-        [data-testid="stSidebarNav"] > ul {display: none !important;}
-        
-        /* 调整主内容区域 */
-        .main .block-container {
-            padding-top: 0.5rem !important;
-        }
-    </style>
+<style>
+    /* 隐藏右上角菜单 */
+    #MainMenu {visibility: hidden !important; display: none !important;}
+    
+    /* 隐藏右下角水印 */
+    footer {visibility: hidden !important; display: none !important;}
+    
+    /* 隐藏 Pages 导航菜单 */
+    [data-testid="stSidebarNav"] > ul {display: none !important;}
+    
+    /* 调整主内容区域 */
+    .main .block-container {
+        padding-top: 0.5rem !important;
+    }
+</style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# ==================== 尝试隐藏右上角按钮（使用JavaScript） ====================
+hide_buttons_script = """
+<script>
+// 隐藏右上角工具栏按钮
+function hideToolbarButtons() {
+    // 隐藏 Fork 按钮
+    document.querySelectorAll('a[href*="fork"]').forEach(el => el.style.display = 'none');
+    // 隐藏 GitHub 按钮
+    document.querySelectorAll('a[href*="github.com"]').forEach(el => el.style.display = 'none');
+    // 隐藏 Streamlit 分享按钮
+    document.querySelectorAll('button[aria-label*="Share"]').forEach(el => el.style.display = 'none');
+    // 隐藏编辑按钮
+    document.querySelectorAll('button[aria-label*="Edit"]').forEach(el => el.style.display = 'none');
+    // 隐藏星标按钮
+    document.querySelectorAll('button[aria-label*="Star"]').forEach(el => el.style.display = 'none');
+}
+
+// 页面加载后执行，延迟执行确保元素已渲染
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(hideToolbarButtons, 1000));
+} else {
+    setTimeout(hideToolbarButtons, 1000);
+}
+
+// 监听 DOM 变化，持续隐藏新出现的按钮
+const observer = new MutationObserver(() => {
+    hideToolbarButtons();
+});
+observer.observe(document.body, { childList: true, subtree: true });
+</script>
+"""
+st.markdown(hide_buttons_script, unsafe_allow_html=True)
 
 # ==================== 多语言文本 ====================
 TEXT = {
@@ -100,22 +119,12 @@ TEXT = {
         "industry_std": "适用标准", "team_members": "团队成员（可选）",
         "team_placeholder": "例：张明 (组长), 李华 (工程)",
         "generate_btn": "🚀 生成 8D 报告", 
-        "generating": "8D 报告正在生成中...",
+        "generating": "8D 报告智能生成中，请稍候...",
         "preview_header": "📄 报告预览", "download_btn": "📥 导出 Word 报告",
         "export_disabled": "🔒 激活正式版后可导出 Word",
         "no_desc": "❌ 请输入不良现象描述",
         "trial_exhausted_error": "❌ 试用次数已用完", "api_error": "❌ 服务异常",
         "success": "✅ 报告生成完成！", "word_title": "8D 问题纠正与预防措施报告",
-        "progress_analyze": "🔍 正在分析问题...",
-        "progress_d2": "📋 正在生成 D2 问题描述...",
-        "progress_d3": "🛡️ 正在生成 D3 临时措施...",
-        "progress_d4": "🎯 正在生成 D4 根本原因分析 (4M1E)...",
-        "progress_d5": "💡 正在生成 D5 永久措施...",
-        "progress_d6": "✅ 正在生成 D6 实施与验证...",
-        "progress_d7": "📊 正在生成 D7 预防措施...",
-        "progress_d8": "🏆 正在生成 D8 总结与表彰...",
-        "progress_format": "📄 正在整理报告格式...",
-        "generating": "8D 报告智能生成中，请稍候..."
     },
     "en": {
         "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
@@ -137,25 +146,16 @@ TEXT = {
         "industry_std": "Standard", "team_members": "Team Members (Optional)",
         "team_placeholder": "e.g., Zhang(Leader), Li(Eng)",
         "generate_btn": "🚀 Generate 8D Report",
-        "generating": "Generating report...",
+        "generating": "Generating report, please wait...",
         "preview_header": "📄 Report Preview", "download_btn": "📥 Export Word",
         "export_disabled": "🔒 Activate to export",
         "no_desc": "❌ Please enter description",
         "trial_exhausted_error": "❌ Trial exhausted", "api_error": "❌ Service error",
         "success": "✅ Report generated!", "word_title": "8D Corrective Action Report",
-        "progress_analyze": "🔍 Analyzing problem...",
-        "progress_d2": "📋 Generating D2 Problem Description...",
-        "progress_d3": "🛡️ Generating D3 Interim Actions...",
-        "progress_d4": "🎯 Generating D4 Root Cause Analysis (4M1E)...",
-        "progress_d5": "💡 Generating D5 Permanent Actions...",
-        "progress_d6": "✅ Generating D6 Implementation...",
-        "progress_d7": "📊 Generating D7 Prevention...",
-        "progress_d8": "🏆 Generating D8 Conclusion...",
-        "progress_format": "📄 Formatting report..."
     }
 }
 
-# ==================== 系统提示词（改进 D4 4M1E 分析逻辑） ====================
+# ==================== 系统提示词 ====================
 SYSTEM_PROMPT = {
     "zh": """你是一位拥有 20 年经验的汽车电子行业高级质量工程师，精通 IATF 16949 标准和 8D 问题解决方法。请根据用户输入撰写专业、逻辑严密的 8D 报告。
 
@@ -215,37 +215,11 @@ Start from abnormal items, continuously ask "why"
 At least 3-5 levels until finding root cause
 Each answer must be specific, not vague
 
-Output format example (with line breaks):
-【4M1E Analysis】
-
-Man: Verified, operator certified → Excluded
-
-Machine: Verified, parameter offset 0.05mm → Abnormal ⚠️
-
-Material: Verified, material qualified → Excluded
-
-Method: Verified, work instruction outdated → Abnormal ⚠️
-
-Environment: Verified, environment compliant → Excluded
-
-【5-Why Analysis】
-
-Why1: Why parameter offset? → Sensor calibration expired
-
-Why2: Why calibration expired? → Annual plan not executed
-
-Why3: Why plan not executed? → Insufficient maintenance staff
-
-Why4: Why insufficient staff? → No backup personnel
-
-Why5: Why no backup? → Staffing request not approved ← Root Cause
-
 【Other Requirements】
 Professional tone
 Use [Owner|Date|Status] format for actions
 No Markdown
-Output D1-D8 directly
-4M1E must use declarative sentences, clearly state what's normal/abnormal"""
+Output D1-D8 directly"""
 }
 
 # ==================== 初始化配置 ====================
@@ -347,26 +321,15 @@ def clean_format(text):
     if not text:
         return ""
     text = text.replace("**", "").replace("#", "")
-    
-    # 处理 D1-D8 标题格式
     for i in range(1, 9):
         text = re.sub(rf'(D{i}[:：])\s*\n+\s*', rf'\1 ', text)
-    
-    # 处理 4M1E 每个因子后换行
     text = re.sub(r'([人机料法环]：)', r'\n\1', text)
     text = re.sub(r'(→ 排除|→ 异常项[^，]*？)', r'\1\n', text)
-    
-    # 处理 5-Why 每个 Why 后换行
     text = re.sub(r'(Why\d+：)', r'\n\1', text)
     text = re.sub(r'(→ [^\n]+)(?=Why\d+：|$)', r'\1\n', text)
-    
-    # 处理中文版本 5-Why
     text = re.sub(r'(为什么\d+：)', r'\n\1', text)
     text = re.sub(r'(→ [^\n]+)(?=为什么\d+：|$)', r'\1\n', text)
-    
-    # 清理多余空行（保留最多两个换行）
     text = re.sub(r'\n{3,}', '\n\n', text)
-    
     return text.strip()
 
 def export_to_word(content, product_name, lang):
@@ -421,74 +384,33 @@ if "user_id" not in st.session_state:
 
 T = TEXT[st.session_state.lang]
 
-# ==================== 顶部极简状态栏 ====================
-def render_top_status_bar():
-    """渲染顶部极简状态栏 - 显示状态、语言和移动端侧边栏按钮"""
+# ==================== 侧边栏（登录和用户管理） ====================
+def render_sidebar():
+    """渲染侧边栏 - 登录、用户信息、语言切换、激活码等"""
     T = TEXT[st.session_state.lang]
     
-    # 检测是否为移动端
-    is_mobile = """
-    <script>
-    if (window.innerWidth < 768) {
-        document.body.classList.add('mobile-view');
-    }
-    </script>
-    """
-    st.markdown(is_mobile, unsafe_allow_html=True)
-    
-    col_status, col_lang, col_menu = st.columns([5, 1, 1])
-    
-    with col_status:
-        user_id = st.session_state.get("user_id")
-        if user_id:
-            st.caption(f"👤 {user_id[:20]}")
-        else:
-            st.caption("🔓 未登录")
-    
-    with col_lang:
+    with st.sidebar:
+        # 语言切换（放在最上面）
+        st.markdown("### 🌐 语言 / Language")
         lang_option = st.selectbox(
-            T["lang_label"],
+            "选择语言 / Select Language",
             ["中文", "English"],
             index=0 if st.session_state.lang == "zh" else 1,
-            label_visibility="collapsed",
-            key="top_lang_select"
+            key="sidebar_lang_select",
+            label_visibility="collapsed"
         )
         new_lang = "zh" if lang_option == "中文" else "en"
         if new_lang != st.session_state.lang:
             st.session_state.lang = new_lang
             st.rerun()
-    
-    with col_menu:
-        # 移动端显示菜单按钮提示
-        st.markdown("""
-        <style>
-            @media (max-width: 768px) {
-                .mobile-sidebar-hint {
-                    display: block !important;
-                }
-            }
-            .mobile-sidebar-hint {
-                display: none;
-                font-size: 12px;
-                color: #666;
-            }
-        </style>
-        <div class="mobile-sidebar-hint">👈 点击左侧菜单登录</div>
-        """, unsafe_allow_html=True)
-
-# ==================== 侧边栏（登录和用户管理） ====================
-def render_sidebar():
-    """渲染侧边栏 - 登录、用户信息、激活码等"""
-    T = TEXT[st.session_state.lang]
-    
-    with st.sidebar:
-        st.markdown("## 🔐 账户管理")
+        
+        st.markdown("---")
+        st.markdown("### 🔐 账户管理 / Account")
         st.markdown("---")
         
         user_id = st.session_state.get("user_id")
         
         if not user_id:
-            # 未登录状态
             st.info(T["new_user_hint"])
             user_input = st.text_input(T["username_placeholder"], key="sidebar_user_input", placeholder="邮箱/用户名")
             
@@ -499,30 +421,33 @@ def render_sidebar():
                 else:
                     st.error("请输入用户名/邮箱")
         else:
-            # 已登录状态
             lic = get_user_license(user_id)
             
-            # 用户信息卡片
-            st.markdown(f"### 👤 {user_id[:30]}")
+            st.markdown(f"**👤 {user_id[:30]}**")
             
             if lic:
                 if lic.get('plan_type') == 'free':
                     remaining = lic['trial_limit'] - lic['trial_used']
                     st.info(f"📊 **试用版** | 剩余 {remaining} 次")
                     if lic.get('license_expire'):
-                        exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
-                        st.caption(f"⏰ 有效期至: {exp_date}")
+                        try:
+                            exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                            st.caption(f"⏰ 有效期至: {exp_date}")
+                        except:
+                            pass
                 else:
-                    st.success(f"✅ **正式版**")
+                    st.success("✅ **正式版**")
                     if lic.get('license_expire'):
-                        exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
-                        st.caption(f"📅 有效期至: {exp_date}")
+                        try:
+                            exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                            st.caption(f"📅 有效期至: {exp_date}")
+                        except:
+                            pass
                     else:
                         st.caption("♾️ 永久有效")
             
             st.markdown("---")
             
-            # 激活码输入
             with st.expander("🔑 输入激活码", expanded=False):
                 activate_code = st.text_input(T["activate_code_hint"], type="password", key="sidebar_act_code", placeholder="输入激活码")
                 if st.button(T["activate_btn"], key="sidebar_act_btn", use_container_width=True):
@@ -536,7 +461,6 @@ def render_sidebar():
                     else:
                         st.error("请输入有效的激活码")
             
-            # 退出登录
             if st.button(T["logout"], key="sidebar_logout_btn", use_container_width=True):
                 st.session_state.user_id = None
                 st.session_state.current_result = ""
@@ -547,10 +471,6 @@ def render_sidebar():
         st.caption("💡 试用版可免费使用 3 次")
 
 # ==================== 主页面 ====================
-# 先渲染顶部极简状态栏
-render_top_status_bar()
-
-# 渲染侧边栏（所有登录功能都在这里）
 render_sidebar()
 
 st.title(T["main_title"])
@@ -604,7 +524,6 @@ with col_input:
         if not problem_desc:
             st.error(T["no_desc"])
         else:
-            # 丰富的进度提示消息
             progress_phases = [
                 {"icon": "📝", "text": "正在整理您的输入信息...", "sub": f"产品：{product_name or '未提供'}"},
                 {"icon": "🤔", "text": "正在理解问题背景...", "sub": "运用 5W2H 方法分析"},
@@ -626,20 +545,22 @@ with col_input:
             
             with st.spinner(T["generating"]):
                 try:
-                    # 显示第一阶段
                     phase = progress_phases[0]
                     status_text.markdown(f"### {phase['icon']} {phase['text']}")
                     sub_text.caption(phase['sub'])
                     progress_bar.progress(1 / len(progress_phases))
                     
-                    # 短暂显示各阶段（给用户反馈）
-                    import time
-                    for i in range(1, len(progress_phases) - 2):  # 留2个给API和格式化
+                    for i in range(1, len(progress_phases) - 2):
                         phase = progress_phases[i]
                         status_text.markdown(f"### {phase['icon']} {phase['text']}")
                         sub_text.caption(phase['sub'])
                         progress_bar.progress((i + 1) / len(progress_phases))
-                        time.sleep(0.8)  # 每阶段停留约0.8秒
+                        time.sleep(5)  # 每阶段停留约5秒
+
+                    phase = progress_phases[-2]
+                    status_text.markdown(f"### {phase['icon']} {phase['text']}")
+                    sub_text.caption(phase['sub'])
+                    progress_bar.progress(0.9)
                     
                     client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
                     user_prompt = (
@@ -654,12 +575,6 @@ with col_input:
                         f"问题描述：{problem_desc}"
                     )
                     
-                    # API 调用阶段
-                    phase = progress_phases[-2]  # "正在优化报告格式..."
-                    status_text.markdown(f"### {phase['icon']} {phase['text']}")
-                    sub_text.caption(phase['sub'])
-                    progress_bar.progress(0.9)
-                    
                     response = client.chat.completions.create(
                         model="deepseek-chat",
                         messages=[
@@ -670,12 +585,11 @@ with col_input:
                         timeout=90
                     )
                     
-                    # 格式化阶段
                     phase = progress_phases[-1]
                     status_text.markdown(f"### {phase['icon']} 报告生成完成！")
                     sub_text.caption("正在美化格式...")
                     progress_bar.progress(1.0)
-                    time.sleep(0.5)  # 短暂停留让用户看到完成状态
+                    time.sleep(0.5)
                     
                     final_result = clean_format(response.choices[0].message.content)
                     st.session_state.current_result = final_result
