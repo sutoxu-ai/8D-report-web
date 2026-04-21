@@ -138,7 +138,8 @@ TEXT = {
         "progress_d6": "✅ 正在生成 D6 实施与验证...",
         "progress_d7": "📊 正在生成 D7 预防措施...",
         "progress_d8": "🏆 正在生成 D8 总结与表彰...",
-        "progress_format": "📄 正在整理报告格式..."
+        "progress_format": "📄 正在整理报告格式...",
+        "generating": "8D 报告智能生成中，请稍候..."
     },
     "en": {
         "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
@@ -627,26 +628,42 @@ with col_input:
         if not problem_desc:
             st.error(T["no_desc"])
         else:
-            progress_messages = [
-                T.get("progress_analyze", "🔍 正在分析问题..."),
-                T.get("progress_d2", "📋 正在生成 D2 问题描述..."),
-                T.get("progress_d3", "🛡️ 正在生成 D3 临时措施..."),
-                T.get("progress_d4", "🎯 正在生成 D4 根本原因分析..."),
-                T.get("progress_d5", "💡 正在生成 D5 永久措施..."),
-                T.get("progress_d6", "✅ 正在生成 D6 实施与验证..."),
-                T.get("progress_d7", "📊 正在生成 D7 预防措施..."),
-                T.get("progress_d8", "🏆 正在生成 D8 总结与表彰..."),
-                T.get("progress_format", "📄 正在整理报告格式...")
+            # 丰富的进度提示消息
+            progress_phases = [
+                {"icon": "📝", "text": "正在整理您的输入信息...", "sub": f"产品：{product_name or '未提供'}"},
+                {"icon": "🤔", "text": "正在理解问题背景...", "sub": "运用 5W2H 方法分析"},
+                {"icon": "📋", "text": "正在生成 D1 团队组建...", "sub": "确定责任人及时间节点"},
+                {"icon": "📋", "text": "正在生成 D2 问题描述...", "sub": "详细记录不良现象"},
+                {"icon": "🛡️", "text": "正在生成 D3 临时措施...", "sub": "遏制问题扩散"},
+                {"icon": "🔬", "text": "正在分析根本原因 (4M1E)...", "sub": "人、机、料、法、环逐一排查"},
+                {"icon": "🔍", "text": "正在进行 5-Why 追问...", "sub": "追溯至根本原因"},
+                {"icon": "💡", "text": "正在制定 D5 永久措施...", "sub": "根本性解决方案"},
+                {"icon": "✅", "text": "正在生成 D6 实施计划...", "sub": "验证措施有效性"},
+                {"icon": "📊", "text": "正在生成 D7 预防措施...", "sub": "防止问题复发"},
+                {"icon": "🏆", "text": "正在生成 D8 总结表彰...", "sub": "固化经验，分享成果"},
+                {"icon": "✨", "text": "正在优化报告格式...", "sub": "确保专业美观"},
             ]
             
             progress_bar = st.progress(0)
             status_text = st.empty()
+            sub_text = st.empty()
             
             with st.spinner(T["generating"]):
                 try:
-                    for i, msg in enumerate(progress_messages):
-                        status_text.text(msg)
-                        progress_bar.progress((i + 1) / len(progress_messages))
+                    # 显示第一阶段
+                    phase = progress_phases[0]
+                    status_text.markdown(f"### {phase['icon']} {phase['text']}")
+                    sub_text.caption(phase['sub'])
+                    progress_bar.progress(1 / len(progress_phases))
+                    
+                    # 短暂显示各阶段（给用户反馈）
+                    import time
+                    for i in range(1, len(progress_phases) - 2):  # 留2个给API和格式化
+                        phase = progress_phases[i]
+                        status_text.markdown(f"### {phase['icon']} {phase['text']}")
+                        sub_text.caption(phase['sub'])
+                        progress_bar.progress((i + 1) / len(progress_phases))
+                        time.sleep(0.8)  # 每阶段停留约0.8秒
                     
                     client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
                     user_prompt = (
@@ -661,6 +678,12 @@ with col_input:
                         f"问题描述：{problem_desc}"
                     )
                     
+                    # API 调用阶段
+                    phase = progress_phases[-2]  # "正在优化报告格式..."
+                    status_text.markdown(f"### {phase['icon']} {phase['text']}")
+                    sub_text.caption(phase['sub'])
+                    progress_bar.progress(0.9)
+                    
                     response = client.chat.completions.create(
                         model="deepseek-chat",
                         messages=[
@@ -671,8 +694,12 @@ with col_input:
                         timeout=90
                     )
                     
-                    status_text.empty()
-                    progress_bar.empty()
+                    # 格式化阶段
+                    phase = progress_phases[-1]
+                    status_text.markdown(f"### {phase['icon']} 报告生成完成！")
+                    sub_text.caption("正在美化格式...")
+                    progress_bar.progress(1.0)
+                    time.sleep(0.5)  # 短暂停留让用户看到完成状态
                     
                     final_result = clean_format(response.choices[0].message.content)
                     st.session_state.current_result = final_result
@@ -682,22 +709,27 @@ with col_input:
                     
                 except openai.APIConnectionError:
                     status_text.empty()
+                    sub_text.empty()
                     progress_bar.empty()
                     st.error("🌐 网络连接失败，请检查网络后重试")
                 except openai.RateLimitError:
                     status_text.empty()
+                    sub_text.empty()
                     progress_bar.empty()
                     st.error("⏱️ API 调用频率超限，请等待 30 秒后重试")
                 except openai.AuthenticationError:
                     status_text.empty()
+                    sub_text.empty()
                     progress_bar.empty()
                     st.error("🔑 API 密钥验证失败，请联系管理员")
                 except openai.APIError as e:
                     status_text.empty()
+                    sub_text.empty()
                     progress_bar.empty()
                     st.error(f"❌ 服务异常：{e.type}" if hasattr(e, 'type') else "❌ 服务异常，请稍后重试")
                 except Exception:
                     status_text.empty()
+                    sub_text.empty()
                     progress_bar.empty()
                     st.error(T["api_error"])
 
