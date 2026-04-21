@@ -54,95 +54,36 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # 保留侧边栏折叠
 )
 
-# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素（之前能用的版本） ====================
 hide_streamlit_style = """
     <style>
-        /* ========== 右上角工具栏 - 完整隐藏 ========== */
-        /* 隐藏整个顶部工具栏容器 */
-        header {visibility: hidden !important; display: none !important;}
+        /* 隐藏右上角的菜单按钮（三个点） */
+        #MainMenu {visibility: hidden;}
         
-        /* 隐藏工具栏 */
-        [data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
+        /* 隐藏右下角的 "Made with Streamlit" 水印 */
+        footer {visibility: hidden;}
         
-        /* 隐藏 Share 按钮 */
-        [data-testid="stToolbar"] button[kind="header"],
-        .stToolbar button[kind="header"] {
+        /* 隐藏右下角的 Streamlit 品牌图标 */
+        .stAppDeployButton {display: none !important;}
+        .stDeployButton {display: none !important;}
+        
+        /* 隐藏右上角的 GitHub 相关图标 */
+        .stStatusWidget {
             display: none !important;
-            visibility: hidden !important;
         }
-        
-        /* 隐藏星标按钮 (Star) */
-        [data-testid="stToolbar"] a[href*="github"],
-        .stToolbar a[href*="github"],
-        button[title*="Star"],
-        [data-testid="stStarButton"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 隐藏编辑按钮 */
-        button[title*="Edit"],
-        [data-testid="stEditButton"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 隐藏 GitHub 图标 */
-        .github-link,
-        [data-testid="stGithubButton"],
-        a[aria-label*="GitHub"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 隐藏菜单 (三个点) */
-        #MainMenu {visibility: hidden !important; display: none !important;}
-        
-        /* ========== 右下角元素 ========== */
-        /* 隐藏 "Made with Streamlit" 水印 */
-        footer {visibility: hidden !important; display: none !important;}
-        [data-testid="stFooter"] {visibility: hidden !important; display: none !important;}
-        
-        /* 隐藏 Deploy 按钮 */
-        .stAppDeployButton,
-        .stDeployButton,
-        [data-testid="stDeployButton"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* ========== 状态小部件 ========== */
-        .stStatusWidget,
         [data-testid="stStatusWidget"] {
             display: none !important;
-            visibility: hidden !important;
         }
         
-        /* ========== 保留可见元素 ========== */
         /* 确保侧边栏折叠按钮可见 */
         [data-testid="stSidebarCollapseButton"] {
             display: flex !important;
             visibility: visible !important;
-            opacity: 1 !important;
         }
         
         /* 调整主内容区域 */
         .main .block-container {
             padding-top: 0.5rem !important;
-        }
-        
-        /* ========== 核弹级隐藏 - 覆盖所有可能的元素 ========== */
-        header:has([data-testid="stToolbar"]),
-        header:has(.stToolbar),
-        div:has(button[title*="Share"]),
-        div:has(a[href*="github.com"]),
-        .element-container:has(button[aria-label]),
-        [data-testid="stTopBar"],
-        .stAppHeader {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            overflow: hidden !important;
         }
     </style>
 """
