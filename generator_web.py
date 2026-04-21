@@ -45,6 +45,7 @@ def clear_license_cache(user_id):
     get_cached_license.clear()
 
 # ==================== 页面配置 ====================
+# ==================== 页面配置 ====================
 st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
@@ -52,7 +53,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # 侧边栏默认折叠
 )
 
-# ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏按钮） ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素（之前能用的版本） ====================
 hide_streamlit_style = """
     <style>
         /* 隐藏右上角的菜单按钮（三个点） */
@@ -65,7 +66,7 @@ hide_streamlit_style = """
         .stAppDeployButton {display: none !important;}
         .stDeployButton {display: none !important;}
         
-        /* 只隐藏 GitHub 相关的状态图标（右上角头像和 Fork） */
+        /* 隐藏右上角的 GitHub 相关图标 */
         .stStatusWidget {
             display: none !important;
         }
@@ -73,29 +74,15 @@ hide_streamlit_style = """
             display: none !important;
         }
         
-        /* 确保侧边栏折叠按钮（双箭头）始终可见 */
+        /* 确保侧边栏折叠按钮可见 */
         [data-testid="stSidebarCollapseButton"] {
             display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        
-        /* 确保侧边栏可见 */
-        [data-testid="stSidebar"] {
-            display: block !important;
             visibility: visible !important;
         }
         
         /* 调整主内容区域 */
         .main .block-container {
             padding-top: 0.5rem !important;
-        }
-        
-        /* 手机端适配 */
-        @media (max-width: 768px) {
-            [data-testid="stSidebarCollapseButton"] {
-                display: flex !important;
-            }
         }
     </style>
 """
