@@ -645,7 +645,7 @@ with col_input:
                         status_text.markdown(f"### {phase['icon']} {phase['text']}")
                         sub_text.caption(phase['sub'])
                         progress_bar.progress((i + 1) / len(progress_phases))
-                        time.sleep(4.0)  # 每阶段停留约4.0秒
+                        time.sleep(5.0)  # 每阶段停留约5.0秒
                     
                     client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
                     user_prompt = (
