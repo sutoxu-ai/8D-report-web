@@ -118,10 +118,31 @@ hide_streamlit_style = """
             visibility: hidden !important;
         }
         
-        /* ========== 保留可见元素 ========== */
-        /* 确保侧边栏折叠按钮可见 */
-        [data-testid="stSidebarCollapseButton"] {
+        /* ========== 隐藏 Pages 切换器 (admin/web) ========== */
+        [data-testid="stSidebarNav"],
+        .stSidebarNav,
+        nav[data-testid="stSidebarNav"],
+        div[data-testid="stSidebarNav"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* ========== 侧边栏折叠按钮 - 强制显示 ========== */
+        /* 侧边栏折叠按钮容器 */
+        [data-testid="stSidebarContent"] [data-testid="stSidebarCollapseButton"],
+        button[aria-label="Collapse sidebar"],
+        button[aria-label="Expand sidebar"],
+        .stSidebarCollapseButton {
             display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 9999 !important;
+            position: relative !important;
+        }
+        
+        /* 确保折叠按钮的图标可见 */
+        [data-testid="stSidebarCollapseButton"] svg {
+            display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
         }
