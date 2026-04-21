@@ -46,8 +46,6 @@ def clear_license_cache(user_id):
     get_cached_license.clear()
 
 # ==================== 页面配置 ====================
-# ==================== 页面配置 ====================
-# ==================== 页面配置 ====================
 st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
@@ -58,46 +56,15 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
-        /* ========== 右上角工具栏 - 完整隐藏 ========== */
-        /* 隐藏整个顶部工具栏容器 */
-        header {visibility: hidden !important; display: none !important;}
-        
-        /* 隐藏工具栏 */
-        [data-testid="stToolbar"] {visibility: hidden !important; display: none !important;}
-        
-        /* 隐藏 Share 按钮 */
-        [data-testid="stToolbar"] button[kind="header"],
-        .stToolbar button[kind="header"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 隐藏星标按钮 (Star) */
-        [data-testid="stToolbar"] a[href*="github"],
-        .stToolbar a[href*="github"],
-        button[title*="Star"],
-        [data-testid="stStarButton"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 隐藏编辑按钮 */
-        button[title*="Edit"],
-        [data-testid="stEditButton"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 隐藏 GitHub 图标 */
-        .github-link,
-        [data-testid="stGithubButton"],
-        a[aria-label*="GitHub"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* 隐藏菜单 (三个点) */
+        /* ========== 顶部区域 - 精确隐藏，只隐藏菜单 ========== */
+        /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
+        
+        /* 隐藏工具栏按钮（保留侧边栏切换按钮） */
+        [data-testid="stToolbar"] button:not([data-testid="stSidebarCollapsedControl"]),
+        [data-testid="stToolbar"] > div:first-child > div:not([data-testid="stSidebarCollapsedControl"]) {
+            visibility: hidden !important;
+        }
         
         /* ========== 右下角元素 ========== */
         /* 隐藏 "Made with Streamlit" 水印 */
@@ -119,14 +86,10 @@ hide_streamlit_style = """
             visibility: hidden !important;
         }
         
-        /* ========== 隐藏 Pages 切换器 (admin/web) - 精确匹配，避免隐藏折叠按钮 ========== */
-        /* 只隐藏具体的导航菜单组件，不隐藏侧边栏本身 */
+        /* ========== 隐藏 Pages 切换器 (admin/web) - 精确匹配 ========== */
         [data-testid="stSidebarNav"] ul,
         [data-testid="stSidebarNav"] li,
-        [data-testid="stSidebarNav"] a,
-        .stSidebarNav ul,
-        .stSidebarNav li,
-        .stSidebarNav a {
+        [data-testid="stSidebarNav"] a {
             display: none !important;
             visibility: hidden !important;
         }
@@ -134,20 +97,6 @@ hide_streamlit_style = """
         /* 调整主内容区域 */
         .main .block-container {
             padding-top: 0.5rem !important;
-        }
-        
-        /* ========== 核弹级隐藏 - 覆盖所有可能的元素 ========== */
-        header:has([data-testid="stToolbar"]),
-        header:has(.stToolbar),
-        div:has(button[title*="Share"]),
-        div:has(a[href*="github.com"]),
-        .element-container:has(button[aria-label]),
-        [data-testid="stTopBar"],
-        .stAppHeader {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            overflow: hidden !important;
         }
     </style>
 """
@@ -497,10 +446,20 @@ T = TEXT[st.session_state.lang]
 
 # ==================== 顶部极简状态栏 ====================
 def render_top_status_bar():
-    """渲染顶部极简状态栏 - 只显示状态和语言"""
+    """渲染顶部极简状态栏 - 显示状态、语言和移动端侧边栏按钮"""
     T = TEXT[st.session_state.lang]
     
-    col_status, col_lang = st.columns([6, 1])
+    # 检测是否为移动端
+    is_mobile = """
+    <script>
+    if (window.innerWidth < 768) {
+        document.body.classList.add('mobile-view');
+    }
+    </script>
+    """
+    st.markdown(is_mobile, unsafe_allow_html=True)
+    
+    col_status, col_lang, col_menu = st.columns([5, 1, 1])
     
     with col_status:
         user_id = st.session_state.get("user_id")
@@ -521,6 +480,24 @@ def render_top_status_bar():
         if new_lang != st.session_state.lang:
             st.session_state.lang = new_lang
             st.rerun()
+    
+    with col_menu:
+        # 移动端显示菜单按钮提示
+        st.markdown("""
+        <style>
+            @media (max-width: 768px) {
+                .mobile-sidebar-hint {
+                    display: block !important;
+                }
+            }
+            .mobile-sidebar-hint {
+                display: none;
+                font-size: 12px;
+                color: #666;
+            }
+        </style>
+        <div class="mobile-sidebar-hint">👈 点击左侧菜单登录</div>
+        """, unsafe_allow_html=True)
 
 # ==================== 侧边栏（登录和用户管理） ====================
 def render_sidebar():
@@ -528,22 +505,6 @@ def render_sidebar():
     T = TEXT[st.session_state.lang]
     
     with st.sidebar:
-        # 添加关闭侧边栏按钮（在侧边栏内部右上角）
-        col_close, col_space = st.columns([1, 5])
-        with col_close:
-            if st.button("✕", key="sidebar_close_btn", help="关闭侧边栏"):
-                # 使用 JavaScript 折叠侧边栏
-                st.javascript("""
-                    try {
-                        const sidebar = document.querySelector('[data-testid="stSidebar"]');
-                        if (sidebar) {
-                            const closeBtn = sidebar.querySelector('button[aria-label*="Collapse"]');
-                            if (closeBtn) closeBtn.click();
-                        }
-                    } catch(e) {}
-                """)
-                st.rerun()
-        
         st.markdown("## 🔐 账户管理")
         st.markdown("---")
         
