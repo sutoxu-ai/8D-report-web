@@ -8,6 +8,8 @@
 4. 修复退出登录状态（清除缓存）
 5. 添加生成进度提示
 6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
+7. 隐藏 Streamlit 默认 UI 元素（右上角菜单、右下角水印和品牌图标）
+8. 将登录界面从侧边栏移到顶部，解决手机端显示问题
 """
 
 import streamlit as st
@@ -44,26 +46,40 @@ def clear_license_cache(user_id):
 # ==================== 页面配置 ====================
 st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊", layout="wide")
 
-
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
     <style>
+        /* 隐藏右上角的菜单按钮（三个点） */
         #MainMenu {visibility: hidden;}
+        /* 隐藏右下角的 "Made with Streamlit" 水印 */
         footer {visibility: hidden;}
+        /* 隐藏右下角的 Streamlit 品牌图标 */
+        .stAppDeployButton {display: none !important;}
+        .stDeployButton {display: none !important;}
+        /* 隐藏右上角的 Share 按钮和 Action 按钮 */
         .stActionButton {visibility: hidden;}
+        .stActionButton button {display: none !important;}
+        /* 隐藏顶部工具栏 */
         header {visibility: hidden;}
+        /* 隐藏部署相关的所有元素 */
+        .stStatusWidget {display: none !important;}
+        [data-testid="stStatusWidget"] {display: none !important;}
+        [data-testid="stToolbar"] {display: none !important;}
+        /* 调整页面顶部空白 */
         .main .block-container {
-            padding-top: 1rem;
+            padding-top: 0.5rem;
         }
+        /* 确保所有隐藏元素彻底不可见 */
+        .st-emotion-cache-1y4p8pa {display: none !important;}
+        .st-emotion-cache-1incye8 {display: none !important;}
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-
 # ==================== 多语言文本 ====================
 TEXT = {
     "zh": {
-        "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
+        "lang_label": "语言", "lang_zh": "中文", "lang_en": "English",
         "system_status": "系统状态", "pro_version": "✅ 正式版", "trial_version": "⚠️ 试用版",
         "license_valid_until": "📅 有效期至 {exp}", "trial_used": "📊 已使用 {used} 次 / 共 {total} 次",
         "trial_exhausted": "❌ 试用次数已用完", "activate_title": "🔑 授权 / 续费",
@@ -298,7 +314,6 @@ def activate_license_code(user_id, code):
             "used_at": datetime.now().isoformat()
         }).eq("code", code.strip().upper()).execute()
         clear_license_cache(user_id)
-        # 使用显式日期格式化，更清晰明确
         formatted_date = exp_date[:10] if len(exp_date) >= 10 else exp_date
         return True, f"激活成功！有效期至 {formatted_date}"
     except Exception as e:
@@ -311,7 +326,6 @@ def clean_format(text):
     text = text.replace("**", "").replace("#", "")
     for i in range(1, 9):
         text = re.sub(rf'(D{i}[:：])\s*\n+\s*', rf'\1 ', text)
-    # 修复：统一使用中文括号，避免中英文括号混用
     text = re.sub(r'([^，,]+[（(][^）)]+[）)])\s*[，,]\s*', r'\1\n', text)
     for kw in ["What:", "Where:", "When:", "Who:", "Why:", "How many:", "How:"]:
         text = re.sub(rf'([^\n])({kw})', r'\1\n\2', text)
@@ -372,68 +386,95 @@ if "current_result" not in st.session_state:
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
 
-def on_lang_change():
-    new_lang = "zh" if st.session_state.lang_radio == "中文" else "en"
-    if new_lang != st.session_state.lang:
-        st.session_state.lang = new_lang
-        st.rerun()
-
 T = TEXT[st.session_state.lang]
 
-# ==================== 侧边栏 ====================
-with st.sidebar:
-    st.radio(
-        T["lang_label"], 
-        ["中文", "English"], 
-        index=0 if st.session_state.lang == "zh" else 1, 
-        horizontal=True, 
-        key="lang_radio", 
-        on_change=on_lang_change
-    )
-    st.markdown("---")
-    st.header(T["login_header"])
-    st.info(T["new_user_hint"])
-    user_input = st.text_input(T["username_placeholder"], key="user_input")
+# ==================== 顶部登录栏（替代侧边栏登录） ====================
+def render_top_login_bar():
+    """渲染顶部登录栏"""
+    T = TEXT[st.session_state.lang]
     
-    if user_input:
-        st.session_state.user_id = user_input
-        st.success(f"欢迎，{user_input}")
-        lic = get_user_license(user_input)
-        if lic:
+    col_status, col_lang, col_login = st.columns([1, 1, 2])
+    
+    # 左侧：系统状态
+    with col_status:
+        user_id = st.session_state.get("user_id")
+        lic = get_user_license(user_id) if user_id else None
+        if user_id and lic:
             if lic['plan_type'] == 'free':
-                st.warning(f"⚠️ 试用版：剩余 {lic['trial_limit'] - lic['trial_used']} 次")
+                remaining = lic['trial_limit'] - lic['trial_used']
+                st.caption(f"📊 {T['trial_version']} | {T['trial_used'].format(used=lic['trial_used'], total=lic['trial_limit'])}")
             else:
-                st.success("✅ 专业版")
-            if lic.get('license_expire'):
-                st.caption(f"有效期至：{datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')}")
-        
-        if st.button(T["logout"]):
-            st.session_state.user_id = None
-            st.session_state.current_result = ""
-            get_cached_license.clear()
+                st.caption(f"✅ {T['pro_version']}")
+        else:
+            st.caption("🔓 未登录")
+    
+    # 中间：语言切换
+    with col_lang:
+        lang_option = st.selectbox(
+            T["lang_label"],
+            ["中文", "English"],
+            index=0 if st.session_state.lang == "zh" else 1,
+            label_visibility="collapsed",
+            key="top_lang_select"
+        )
+        new_lang = "zh" if lang_option == "中文" else "en"
+        if new_lang != st.session_state.lang:
+            st.session_state.lang = new_lang
             st.rerun()
-        
-        st.markdown("---")
-        st.subheader(T["activate_title"])
-        activate_code = st.text_input(T["activate_code_hint"], type="password", key="act_code")
-        if st.button(T["activate_btn"], use_container_width=True):
-            if not activate_code:
-                st.error("请输入激活码")
-            elif len(activate_code) < 6:
-                st.error("激活码格式错误")
-            else:
-                success, msg = activate_license_code(user_input, activate_code)
-                if success:
-                    st.success(msg)
+    
+    # 右侧：登录/用户信息
+    with col_login:
+        if not st.session_state.get("user_id"):
+            # 未登录状态 - 显示登录表单
+            with st.expander(f"🔑 {T['login_header']}", expanded=False):
+                user_input = st.text_input(T["username_placeholder"], key="top_user_input", label_visibility="collapsed", placeholder=T["username_placeholder"])
+                col_btn1, col_btn2 = st.columns([1, 1])
+                with col_btn1:
+                    if st.button("🔓 登录 / 注册", use_container_width=True, key="top_login_btn"):
+                        if user_input:
+                            st.session_state.user_id = user_input
+                            st.rerun()
+                        else:
+                            st.error("请输入用户名/邮箱")
+                with col_btn2:
+                    st.caption(T["new_user_hint"])
+        else:
+            # 已登录状态 - 显示用户信息和操作
+            user_id = st.session_state.user_id
+            lic = get_user_license(user_id)
+            col_user, col_logout, col_activate = st.columns([2, 1, 2])
+            with col_user:
+                st.caption(f"👤 {user_id[:20]}")
+                if lic and lic.get('license_expire'):
+                    exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                    st.caption(f"📅 至 {exp_date}")
+            with col_logout:
+                if st.button(T["logout"], key="top_logout_btn", use_container_width=True):
+                    st.session_state.user_id = None
+                    st.session_state.current_result = ""
+                    get_cached_license.clear()
                     st.rerun()
-                else:
-                    st.error(msg)
-    else:
-        st.info(T["login_required"])
+            with col_activate:
+                with st.popover("🔑 激活码", use_container_width=True):
+                    activate_code = st.text_input(T["activate_code_hint"], type="password", key="top_act_code", placeholder="输入激活码")
+                    if st.button(T["activate_btn"], key="top_act_btn", use_container_width=True):
+                        if activate_code and len(activate_code) >= 6:
+                            success, msg = activate_license_code(user_id, activate_code)
+                            if success:
+                                st.success(msg)
+                                st.rerun()
+                            else:
+                                st.error(msg)
+                        else:
+                            st.error("请输入有效的激活码（至少6位）")
 
 # ==================== 主页面 ====================
+# 先渲染顶部登录栏
+render_top_login_bar()
+
 st.title(T["main_title"])
 st.markdown("---")
+
 col_input, col_preview = st.columns([1, 1.2])
 
 with col_input:
