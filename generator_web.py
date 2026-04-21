@@ -59,9 +59,12 @@ hide_streamlit_style = """
         /* 隐藏右上角菜单 (三个点) */
         #MainMenu {visibility: hidden !important; display: none !important;}
         
-        /* 隐藏右上角工具栏 - 只针对 header 区域 */
-        header .stToolbar {
+        /* 隐藏右上角所有按钮和链接 */
+        [data-testid="stHeader"] button,
+        [data-testid="stHeader"] a,
+        [data-testid="stToolbar"] {
             display: none !important;
+            visibility: hidden !important;
         }
         
         /* 隐藏右下角水印 */
