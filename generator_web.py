@@ -48,6 +48,7 @@ st.set_page_config(page_title="8D 报告 - 智能生成助手", page_icon="📊"
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素（保留侧边栏） ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素（包括 GitHub 图标） ====================
 hide_streamlit_style = """
     <style>
         /* 隐藏右上角的菜单按钮（三个点） */
@@ -60,13 +61,23 @@ hide_streamlit_style = """
         .stAppDeployButton {display: none !important;}
         .stDeployButton {display: none !important;}
         
-        /* 只隐藏 header 的内容，但保留结构以支持侧边栏 */
-        header {
-            background: transparent !important;
-            box-shadow: none !important;
+        /* 隐藏右上角的 GitHub 相关图标（Fork 和头像） */
+        .stStatusWidget {
+            display: none !important;
+        }
+        [data-testid="stStatusWidget"] {
+            display: none !important;
         }
         
-        /* 隐藏 header 中的按钮，但保留侧边栏按钮 */
+        /* 隐藏所有可能包含 GitHub 头像的元素 */
+        .st-emotion-cache-1y4p8pa {
+            display: none !important;
+        }
+        .st-emotion-cache-1incye8 {
+            display: none !important;
+        }
+        
+        /* 隐藏 header 中的所有按钮，但保留侧边栏功能 */
         header .stActionButton {
             display: none !important;
         }
@@ -77,19 +88,65 @@ hide_streamlit_style = """
             visibility: visible !important;
         }
         
-        /* 移除主内容区域的顶部 padding */
+        /* 调整主内容区域 */
         .main .block-container {
-            padding-top: 0rem !important;
-            padding-bottom: 0rem !important;
+            padding-top: 0.5rem !important;
         }
         
-        /* 调整顶部状态栏的间距 */
-        .st-emotion-cache-1v0mbdj {
-            padding-top: 0rem !important;
+        /* 手机端侧边栏适配 */
+        @media (max-width: 768px) {
+            [data-testid="stSidebar"] {
+                position: relative !important;
+                width: 280px !important;
+                transform: none !important;
+                visibility: visible !important;
+            }
+            [data-testid="stSidebarCollapseButton"] {
+                display: none !important;
+            }
         }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# 使用 JavaScript 强制隐藏 GitHub 图标
+hide_github_js = """
+    <script>
+        function hideGitHubWidgets() {
+            // 隐藏所有状态小部件（包含 GitHub 头像）
+            const widgets = document.querySelectorAll('.stStatusWidget, [data-testid="stStatusWidget"]');
+            widgets.forEach(w => {
+                w.style.display = 'none';
+                w.style.visibility = 'hidden';
+            });
+            
+            // 查找所有包含 GitHub 相关内容的元素
+            const allDivs = document.querySelectorAll('div');
+            allDivs.forEach(div => {
+                if (div.innerHTML && (div.innerHTML.includes('github') || div.innerHTML.includes('GitHub') || div.innerHTML.includes('fork'))) {
+                    if (div.className && !div.className.includes('sidebar')) {
+                        div.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // 立即执行
+        hideGitHubWidgets();
+        
+        // 监控 DOM 变化
+        const observer = new MutationObserver(function() {
+            hideGitHubWidgets();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        // 延迟执行确保覆盖
+        setTimeout(hideGitHubWidgets, 100);
+        setTimeout(hideGitHubWidgets, 500);
+        setTimeout(hideGitHubWidgets, 1000);
+    </script>
+"""
+st.markdown(hide_github_js, unsafe_allow_html=True)
 
 # ==================== 多语言文本 ====================
 TEXT = {
