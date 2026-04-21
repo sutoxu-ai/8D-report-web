@@ -10,7 +10,8 @@
 6. 改进 D4 4M1E 分析逻辑（使用确定句而非疑问句）
 7. 隐藏 Streamlit 默认 UI 元素（右上角菜单、右下角水印和品牌图标、GitHub 图标）
 8. 优化布局：顶部极简状态栏 + 侧边栏完整登录功能
-9. 侧边栏默认折叠，点击双箭头可展开
+9. 侧边栏默认展开，内部添加关闭按钮 (✕)
+10. 隐藏 Pages 切换器 (admin/web)
 """
 
 import streamlit as st
@@ -51,7 +52,7 @@ st.set_page_config(
     page_title="8D 报告 - 智能生成助手", 
     page_icon="📊", 
     layout="wide",
-    initial_sidebar_state="collapsed"  # 保留侧边栏折叠
+    initial_sidebar_state="expanded"  # 默认展开侧边栏
 )
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
@@ -125,89 +126,6 @@ hide_streamlit_style = """
         div[data-testid="stSidebarNav"] {
             display: none !important;
             visibility: hidden !important;
-        }
-        
-        /* ========== 侧边栏折叠按钮 - Streamlit 1.54.0+ 强制显示 ========== */
-        
-        /* 确保侧边栏本身可见 */
-        [data-testid="stSidebar"],
-        section[data-testid="stSidebar"],
-        .stSidebar {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        
-        /* 侧边栏内容区域 */
-        [data-testid="stSidebarContent"],
-        .stSidebarContent {
-            display: block !important;
-            visibility: visible !important;
-        }
-        
-        /* 折叠按钮 - 针对 Streamlit 1.54.0+ 的所有可能选择器 */
-        [data-testid="stSidebarCollapseButton"],
-        button[aria-label*="Collapse"],
-        button[aria-label*="Expand"],
-        button[aria-label*="sidebar"],
-        button[title*="Collapse"],
-        button[title*="Expand"],
-        .stSidebarCollapseButton,
-        [data-testid="stSidebar"] button,
-        [data-testid="stSidebar"] > div:last-child > button,
-        div[data-baseweb="tooltip"] > button,
-        .stApp > div > div > div > button[aria-label],
-        header + div button[aria-label*="sidebar"],
-        [data-testid="stSidebar"] + div button {
-            display: inline-flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            z-index: 999999 !important;
-            position: fixed !important;
-            right: 280px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            background: rgba(240, 242, 246, 0.95) !important;
-            border: 1px solid #d0d5dd !important;
-            border-radius: 6px !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-            width: 32px !important;
-            height: 32px !important;
-            min-width: 32px !important;
-            min-height: 32px !important;
-            padding: 6px !important;
-            margin: 0 !important;
-            cursor: pointer !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        /* 按钮悬停效果 */
-        [data-testid="stSidebarCollapseButton"]:hover,
-        button[aria-label*="Collapse"]:hover,
-        button[aria-label*="Expand"]:hover {
-            background: rgba(232, 235, 241, 1) !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-        }
-        
-        /* 确保折叠按钮的 SVG 图标可见 */
-        [data-testid="stSidebarCollapseButton"] svg,
-        [data-testid="stSidebar"] button svg,
-        button[aria-label*="Collapse"] svg,
-        button[aria-label*="Expand"] svg,
-        button[aria-label*="sidebar"] svg {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            width: 18px !important;
-            height: 18px !important;
-            fill: #5d6978 !important;
-            stroke: #5d6978 !important;
-        }
-        
-        /* 侧边栏展开时按钮位置调整 */
-        [data-testid="stSidebar"][style*="width: 300px"] + [data-testid="stSidebarCollapseButton"],
-        [data-testid="stSidebar"] + div [data-testid="stSidebarCollapseButton"] {
-            right: 300px !important;
         }
         
         /* 调整主内容区域 */
@@ -607,6 +525,22 @@ def render_sidebar():
     T = TEXT[st.session_state.lang]
     
     with st.sidebar:
+        # 添加关闭侧边栏按钮（在侧边栏内部右上角）
+        col_close, col_space = st.columns([1, 5])
+        with col_close:
+            if st.button("✕", key="sidebar_close_btn", help="关闭侧边栏"):
+                # 使用 JavaScript 折叠侧边栏
+                st.javascript("""
+                    try {
+                        const sidebar = document.querySelector('[data-testid="stSidebar"]');
+                        if (sidebar) {
+                            const closeBtn = sidebar.querySelector('button[aria-label*="Collapse"]');
+                            if (closeBtn) closeBtn.click();
+                        }
+                    } catch(e) {}
+                """)
+                st.rerun()
+        
         st.markdown("## 🔐 账户管理")
         st.markdown("---")
         
