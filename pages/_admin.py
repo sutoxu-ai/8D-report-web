@@ -408,7 +408,7 @@ elif menu == "📦 渠道管理":
     with col4:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🚀 快速生成", use_container_width=True):
-            st.switch_page("pages/生成激活码")  # 跳转到生成页面
+            st.switch_page("pages/_admin.py")  # 跳转到改名后的文件
 
 # ==================== 页面 4：查询激活码 ====================
 elif menu == "🔍 查询激活码":
