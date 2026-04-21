@@ -127,67 +127,87 @@ hide_streamlit_style = """
             visibility: hidden !important;
         }
         
-        /* ========== 侧边栏折叠按钮 - 强制显示 ========== */
-        /* 侧边栏区域 */
+        /* ========== 侧边栏折叠按钮 - Streamlit 1.54.0+ 强制显示 ========== */
+        
+        /* 确保侧边栏本身可见 */
         [data-testid="stSidebar"],
-        section[data-testid="stSidebar"] {
+        section[data-testid="stSidebar"],
+        .stSidebar {
             display: block !important;
             visibility: visible !important;
+            opacity: 1 !important;
         }
         
         /* 侧边栏内容区域 */
-        [data-testid="stSidebarContent"] {
+        [data-testid="stSidebarContent"],
+        .stSidebarContent {
             display: block !important;
             visibility: visible !important;
         }
         
-        /* 折叠按钮 - 使用所有可能的选择器 */
+        /* 折叠按钮 - 针对 Streamlit 1.54.0+ 的所有可能选择器 */
         [data-testid="stSidebarCollapseButton"],
-        button[aria-label="Collapse sidebar"],
-        button[aria-label="Expand sidebar"],
-        button[title="Collapse sidebar"],
-        button[title="Expand sidebar"],
+        button[aria-label*="Collapse"],
+        button[aria-label*="Expand"],
+        button[aria-label*="sidebar"],
+        button[title*="Collapse"],
+        button[title*="Expand"],
         .stSidebarCollapseButton,
-        [data-testid="stSidebar"] button[aria-label],
-        [data-testid="stSidebar"] > div > button {
+        [data-testid="stSidebar"] button,
+        [data-testid="stSidebar"] > div:last-child > button,
+        div[data-baseweb="tooltip"] > button,
+        .stApp > div > div > div > button[aria-label],
+        header + div button[aria-label*="sidebar"],
+        [data-testid="stSidebar"] + div button {
             display: inline-flex !important;
             visibility: visible !important;
             opacity: 1 !important;
-            z-index: 99999 !important;
-            position: absolute !important;
-            right: -40px !important;
+            z-index: 999999 !important;
+            position: fixed !important;
+            right: 280px !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
-            background: rgba(255, 255, 255, 0.9) !important;
-            border: 1px solid #ddd !important;
-            border-radius: 0 4px 4px 0 !important;
-            box-shadow: -2px 0 8px rgba(0,0,0,0.1) !important;
-            width: 24px !important;
-            height: 24px !important;
-            min-width: 24px !important;
-            min-height: 24px !important;
-            padding: 0 !important;
+            background: rgba(240, 242, 246, 0.95) !important;
+            border: 1px solid #d0d5dd !important;
+            border-radius: 6px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            padding: 6px !important;
             margin: 0 !important;
             cursor: pointer !important;
+            transition: all 0.2s ease !important;
         }
         
-        /* 确保折叠按钮的图标可见 */
+        /* 按钮悬停效果 */
+        [data-testid="stSidebarCollapseButton"]:hover,
+        button[aria-label*="Collapse"]:hover,
+        button[aria-label*="Expand"]:hover {
+            background: rgba(232, 235, 241, 1) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+        }
+        
+        /* 确保折叠按钮的 SVG 图标可见 */
         [data-testid="stSidebarCollapseButton"] svg,
         [data-testid="stSidebar"] button svg,
-        button[aria-label="Collapse sidebar"] svg,
-        button[aria-label="Expand sidebar"] svg {
+        button[aria-label*="Collapse"] svg,
+        button[aria-label*="Expand"] svg,
+        button[aria-label*="sidebar"] svg {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
-            width: 16px !important;
-            height: 16px !important;
-            fill: #333 !important;
+            width: 18px !important;
+            height: 18px !important;
+            fill: #5d6978 !important;
+            stroke: #5d6978 !important;
         }
         
-        /* 侧边栏展开时的按钮位置 */
-        [data-testid="stSidebar"][aria-expanded="true"] + [data-testid="stSidebarCollapseButton"],
-        [data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] {
-            right: -40px !important;
+        /* 侧边栏展开时按钮位置调整 */
+        [data-testid="stSidebar"][style*="width: 300px"] + [data-testid="stSidebarCollapseButton"],
+        [data-testid="stSidebar"] + div [data-testid="stSidebarCollapseButton"] {
+            right: 300px !important;
         }
         
         /* 调整主内容区域 */
