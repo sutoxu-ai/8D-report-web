@@ -98,11 +98,38 @@ TEXT = {
         "trial_exhausted": "❌ 试用次数已用完", "activate_title": "🔑 授权 / 续费",
         "activate_code_hint": "激活码", "activate_btn": "立即激活",
         "activate_success": "✅ 激活成功，有效期一年", "activate_fail": "❌ 激活码无效",
+        "invalid_activate_code": "请输入有效的激活码",
+        "license_expired": "❌ 授权已过期",
         "login_required": "🔒 请先登录", "logout": "退出登录",
         "login_header": "👤 用户登录",
         "username_placeholder": "用户名/邮箱",
+        "login_register_btn": "🔓 登录 / 注册",
+        "enter_username_error": "请输入用户名/邮箱",
+        "expander_activate_code": "🔑 输入激活码",
+        "enter_activate_code_placeholder": "输入激活码",
+        "trial_remaining": "📊 **试用版** | 剩余 {n} 次",
+        "trial_free_hint": "💡 试用版可免费使用 3 次",
+        "valid_until": "⏰ 有效期至: {date}",
+        "valid_until_date": "📅 有效期至: {date}",
+        "permanent_valid": "♾️ 永久有效",
+        "account_manager": "🔐 账户管理 / Account",
+        "contact_service": "📱 联系客服 / Contact",
         "new_user_hint": "👋 新用户？直接输入邮箱/用户名即可注册，首次登录赠送 3 次免费试用！",
-        "main_title": "📊 8D 报告智能生成助手", "input_header": "📝 输入基本信息",
+        "main_title": "📊 8D 报告智能生成助手",
+        "progress_phases": [
+            {"icon": "📝", "text": "正在整理您的输入信息...", "sub": "产品：{product}"},
+            {"icon": "🤔", "text": "正在理解问题背景...", "sub": "运用 5W2H 方法分析"},
+            {"icon": "📋", "text": "正在生成 D1 团队组建...", "sub": "确定责任人及时间节点"},
+            {"icon": "📋", "text": "正在生成 D2 问题描述...", "sub": "详细记录不良现象"},
+            {"icon": "🛡️", "text": "正在生成 D3 临时措施...", "sub": "遏制问题扩散"},
+            {"icon": "🔬", "text": "正在分析根本原因 (4M1E)...", "sub": "人、机、料、法、环逐一排查"},
+            {"icon": "🔍", "text": "正在进行 5-Why 追问...", "sub": "追溯至根本原因"},
+            {"icon": "💡", "text": "正在制定 D5 永久措施...", "sub": "根本性解决方案"},
+            {"icon": "✅", "text": "正在生成 D6 实施计划...", "sub": "验证措施有效性"},
+            {"icon": "📊", "text": "正在生成 D7 预防措施...", "sub": "防止问题复发"},
+            {"icon": "🏆", "text": "正在生成 D8 总结表彰...", "sub": "固化经验，分享成果"},
+            {"icon": "✨", "text": "正在优化报告格式...", "sub": "确保专业美观"},
+        ], "input_header": "📝 输入基本信息",
         "product_name": "产品型号 / 名称", "customer": "客户名称",
         "problem_desc": "不良现象描述",
         "problem_placeholder": "请使用 5W2H 方法描述问题",
@@ -116,7 +143,8 @@ TEXT = {
         "export_disabled": "🔒 激活正式版后可导出 Word",
         "no_desc": "❌ 请输入不良现象描述",
         "trial_exhausted_error": "❌ 试用次数已用完", "api_error": "❌ 服务异常",
-        "success": "✅ 报告生成完成！", "word_title": "8D 问题纠正与预防措施报告",
+        "success": "✅ 报告生成完成！", "report_complete": "报告生成完成！",
+        "beautifying": "正在美化格式...", "word_title": "8D 问题纠正与预防措施报告",
     },
     "en": {
         "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
@@ -125,11 +153,38 @@ TEXT = {
         "trial_exhausted": "❌ Trial exhausted", "activate_title": "🔑 License / Renew",
         "activate_code_hint": "Activation Code", "activate_btn": "Activate",
         "activate_success": "✅ Activated successfully", "activate_fail": "❌ Invalid code",
+        "invalid_activate_code": "Please enter a valid activation code",
+        "license_expired": "❌ License expired",
         "login_required": "🔒 Please login", "logout": "Logout",
         "login_header": "👤 User Login",
         "username_placeholder": "Username/Email",
+        "login_register_btn": "🔓 Login / Register",
+        "enter_username_error": "Please enter username/email",
+        "expander_activate_code": "🔑 Enter Activation Code",
+        "enter_activate_code_placeholder": "Enter activation code",
+        "trial_remaining": "📊 **Trial** | {n} remaining",
+        "trial_free_hint": "💡 Free trial: 3 uses",
+        "valid_until": "⏰ Valid until: {date}",
+        "valid_until_date": "📅 Valid until: {date}",
+        "permanent_valid": "♾️ Permanent",
+        "account_manager": "🔐 Account Manager",
+        "contact_service": "📱 Contact Service",
         "new_user_hint": "👋 New user? Enter email/username to register, get 3 free trials!",
-        "main_title": "📊 8D Report Generator", "input_header": "📝 Input Information",
+        "main_title": "📊 8D Report Generator",
+        "progress_phases": [
+            {"icon": "📝", "text": "Organizing your input...", "sub": "Product: {product}"},
+            {"icon": "🤔", "text": "Analyzing context...", "sub": "Using 5W2H method"},
+            {"icon": "📋", "text": "Generating D1 Team...", "sub": "Defining responsibilities"},
+            {"icon": "📋", "text": "Generating D2 Description...", "sub": "Recording defect details"},
+            {"icon": "🛡️", "text": "Generating D3 Containment...", "sub": "Preventing spread"},
+            {"icon": "🔬", "text": "Analyzing root cause (4M1E)...", "sub": "Checking all factors"},
+            {"icon": "🔍", "text": "Performing 5-Why analysis...", "sub": "Finding root cause"},
+            {"icon": "💡", "text": "Developing D5 Actions...", "sub": "Long-term solutions"},
+            {"icon": "✅", "text": "Generating D6 Implementation...", "sub": "Verifying effectiveness"},
+            {"icon": "📊", "text": "Generating D7 Prevention...", "sub": "Preventing recurrence"},
+            {"icon": "🏆", "text": "Generating D8 Closure...", "sub": "Documenting lessons"},
+            {"icon": "✨", "text": "Formatting report...", "sub": "Professional output"},
+        ], "input_header": "📝 Input Information",
         "product_name": "Product Name / Model", "customer": "Customer Name",
         "problem_desc": "Problem Description",
         "problem_placeholder": "Please use 5W2H method",
@@ -143,7 +198,8 @@ TEXT = {
         "export_disabled": "🔒 Activate to export",
         "no_desc": "❌ Please enter description",
         "trial_exhausted_error": "❌ Trial exhausted", "api_error": "❌ Service error",
-        "success": "✅ Report generated!", "word_title": "8D Corrective Action Report",
+        "success": "✅ Report generated!", "report_complete": "Report generated!",
+        "beautifying": "Formatting...", "word_title": "8D Corrective Action Report",
     }
 }
 
@@ -397,21 +453,21 @@ def render_sidebar():
             st.rerun()
         
         st.markdown("---")
-        st.markdown("### 🔐 账户管理 / Account")
+        st.markdown(f"### {T['account_manager']}")
         st.markdown("---")
         
         user_id = st.session_state.get("user_id")
         
         if not user_id:
             st.info(T["new_user_hint"])
-            user_input = st.text_input(T["username_placeholder"], key="sidebar_user_input", placeholder="邮箱/用户名")
+            user_input = st.text_input(T["username_placeholder"], key="sidebar_user_input", placeholder=T["username_placeholder"])
             
-            if st.button("🔓 登录 / 注册", use_container_width=True, key="sidebar_login_btn"):
+            if st.button(T["login_register_btn"], use_container_width=True, key="sidebar_login_btn"):
                 if user_input:
                     st.session_state.user_id = user_input
                     st.rerun()
                 else:
-                    st.error("请输入用户名/邮箱")
+                    st.error(T["enter_username_error"])
         else:
             lic = get_user_license(user_id)
             
@@ -420,28 +476,28 @@ def render_sidebar():
             if lic:
                 if lic.get('plan_type') == 'free':
                     remaining = lic['trial_limit'] - lic['trial_used']
-                    st.info(f"📊 **试用版** | 剩余 {remaining} 次")
+                    st.info(T["trial_remaining"].format(n=remaining))
                     if lic.get('license_expire'):
                         try:
                             exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
-                            st.caption(f"⏰ 有效期至: {exp_date}")
+                            st.caption(T["valid_until"].format(date=exp_date))
                         except:
                             pass
                 else:
-                    st.success("✅ **正式版**")
+                    st.success(T["pro_version"])
                     if lic.get('license_expire'):
                         try:
                             exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
-                            st.caption(f"📅 有效期至: {exp_date}")
+                            st.caption(T["valid_until_date"].format(date=exp_date))
                         except:
                             pass
                     else:
-                        st.caption("♾️ 永久有效")
+                        st.caption(T["permanent_valid"])
             
             st.markdown("---")
             
-            with st.expander("🔑 输入激活码", expanded=False):
-                activate_code = st.text_input(T["activate_code_hint"], type="password", key="sidebar_act_code", placeholder="输入激活码")
+            with st.expander(T["expander_activate_code"], expanded=False):
+                activate_code = st.text_input(T["activate_code_hint"], type="password", key="sidebar_act_code", placeholder=T["enter_activate_code_placeholder"])
                 if st.button(T["activate_btn"], key="sidebar_act_btn", use_container_width=True):
                     if activate_code and len(activate_code) >= 6:
                         success, msg = activate_license_code(user_id, activate_code)
@@ -451,7 +507,7 @@ def render_sidebar():
                         else:
                             st.error(msg)
                     else:
-                        st.error("请输入有效的激活码")
+                        st.error(T["invalid_activate_code"])
             
             if st.button(T["logout"], key="sidebar_logout_btn", use_container_width=True):
                 st.session_state.user_id = None
@@ -460,7 +516,17 @@ def render_sidebar():
                 st.rerun()
         
         st.markdown("---")
-        st.caption("💡 试用版可免费使用 3 次")
+        st.caption(T["trial_free_hint"])
+        
+        # ========== 微信联系区域 ==========
+        st.markdown("---")
+        st.markdown(f"**{T['contact_service']}**")
+        try:
+            st.image("wechat_qrcode.jpg", width=180)
+        except:
+            st.info("微信二维码：907749064")
+        st.caption("微信号：907749064")
+        st.markdown("---")
 
 # ==================== 主页面 ====================
 render_sidebar()
@@ -472,8 +538,8 @@ col_input, col_preview = st.columns([1, 1.2])
 
 with col_input:
     st.header(T["input_header"])
-    product_name = st.text_input(T["product_name"], placeholder="例：PCB-A123")
-    customer = st.text_input(T["customer"], placeholder="例：比亚迪汽车")
+    product_name = st.text_input(T["product_name"], placeholder="e.g., PCB-A123" if st.session_state.lang == "en" else "例：PCB-A123")
+    customer = st.text_input(T["customer"], placeholder="e.g., BYD" if st.session_state.lang == "en" else "例：比亚迪汽车")
     problem_desc = st.text_area(T["problem_desc"], height=150, placeholder=T["problem_placeholder"])
     
     col1, col2, col3 = st.columns(3)
@@ -501,7 +567,7 @@ with col_input:
     
     if st.button(T["generate_btn"], type="primary", use_container_width=True):
         if not st.session_state.get("user_id"):
-            st.error("请先登录")
+            st.error(T["login_required"])
             st.stop()
         
         user_id = st.session_state.user_id
@@ -510,26 +576,17 @@ with col_input:
             if lic and lic['plan_type'] == 'free':
                 st.error(T["trial_exhausted_error"])
             else:
-                st.error("❌ 授权已过期")
+                st.error(T["license_expired"])
             st.stop()
         
         if not problem_desc:
             st.error(T["no_desc"])
         else:
-            progress_phases = [
-                {"icon": "📝", "text": "正在整理您的输入信息...", "sub": f"产品：{product_name or '未提供'}"},
-                {"icon": "🤔", "text": "正在理解问题背景...", "sub": "运用 5W2H 方法分析"},
-                {"icon": "📋", "text": "正在生成 D1 团队组建...", "sub": "确定责任人及时间节点"},
-                {"icon": "📋", "text": "正在生成 D2 问题描述...", "sub": "详细记录不良现象"},
-                {"icon": "🛡️", "text": "正在生成 D3 临时措施...", "sub": "遏制问题扩散"},
-                {"icon": "🔬", "text": "正在分析根本原因 (4M1E)...", "sub": "人、机、料、法、环逐一排查"},
-                {"icon": "🔍", "text": "正在进行 5-Why 追问...", "sub": "追溯至根本原因"},
-                {"icon": "💡", "text": "正在制定 D5 永久措施...", "sub": "根本性解决方案"},
-                {"icon": "✅", "text": "正在生成 D6 实施计划...", "sub": "验证措施有效性"},
-                {"icon": "📊", "text": "正在生成 D7 预防措施...", "sub": "防止问题复发"},
-                {"icon": "🏆", "text": "正在生成 D8 总结表彰...", "sub": "固化经验，分享成果"},
-                {"icon": "✨", "text": "正在优化报告格式...", "sub": "确保专业美观"},
-            ]
+            # 使用多语言进度条
+            progress_phases = T["progress_phases"]
+            # 替换产品名称占位符
+            for phase in progress_phases:
+                phase["sub"] = phase["sub"].replace("{product}", product_name or "未提供" if st.session_state.lang == "zh" else "Not provided")
             
             progress_bar = st.progress(0)
             status_text = st.empty()
@@ -578,8 +635,8 @@ with col_input:
                     )
                     
                     phase = progress_phases[-1]
-                    status_text.markdown(f"### {phase['icon']} 报告生成完成！")
-                    sub_text.caption("正在美化格式...")
+                    status_text.markdown(f"### {phase['icon']} {T['report_complete']}")
+                    sub_text.caption(T["beautifying"])
                     progress_bar.progress(1.0)
                     time.sleep(0.5)
                     
