@@ -606,8 +606,7 @@ def render_sidebar():
                     else:
                         st.caption(T["permanent_valid"])
             
-            st.markdown("---")
-            
+                        
             with st.expander(T["expander_activate_code"], expanded=False):
                 activate_code = st.text_input(
                     T["activate_code_hint"],
@@ -647,7 +646,6 @@ def render_sidebar():
 render_sidebar()
 
 st.title(T["main_title"])
-st.markdown("---")
 
 col_input, col_preview = st.columns([1, 1.2])
 
@@ -678,8 +676,7 @@ with col_input:
     with col5:
         team_members = st.text_input(T["team_members"], placeholder=T["team_placeholder"])
     
-    st.markdown("---")
-    
+        
     if st.button(T["generate_btn"], type="primary", use_container_width=True):
         if not st.session_state.get("user_id"):
             st.error(T["login_required"])
