@@ -438,7 +438,7 @@ def render_sidebar():
     T = TEXT[st.session_state.lang]
     
     with st.sidebar:
-        # 语言切换（放在最上面）
+        # ==================== 语言切换 ====================
         st.markdown("### 🌐 语言 / Language")
         lang_option = st.selectbox(
             "选择语言 / Select Language",
@@ -456,18 +456,75 @@ def render_sidebar():
         st.markdown(f"### {T['account_manager']}")
         st.markdown("---")
         
+        # ==================== 登录 / 注册区域 ====================
         user_id = st.session_state.get("user_id")
         
         if not user_id:
             st.info(T["new_user_hint"])
-            user_input = st.text_input(T["username_placeholder"], key="sidebar_user_input", placeholder=T["username_placeholder"])
+            
+            user_input = st.text_input(
+                "📧 邮箱 / 📱 手机号",
+                key="sidebar_user_input",
+                placeholder="例：zhangsan@163.com 或 13812345678"
+            )
+            
+            # ========== 格式校验函数 ==========
+            def validate_contact(contact):
+                """校验邮箱或手机号格式"""
+                email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                phone_pattern = r'^1[3-9]\d{9}$'
+                
+                if re.match(email_pattern, contact):
+                    return True, "email"
+                elif re.match(phone_pattern, contact):
+                    return True, "phone"
+                else:
+                    return False, None
             
             if st.button(T["login_register_btn"], use_container_width=True, key="sidebar_login_btn"):
-                if user_input:
-                    st.session_state.user_id = user_input
-                    st.rerun()
-                else:
+                if not user_input:
                     st.error(T["enter_username_error"])
+                    st.stop()
+                
+                # 检查是否为已注册的老用户
+                existing_user = False
+                if supabase:
+                    try:
+                        existing = supabase.table("licenses").select("user_id").eq("user_id", user_input).execute()
+                        existing_user = existing.data is not None and len(existing.data) > 0
+                    except Exception as e:
+                        st.error(f"系统错误：{str(e)}")
+                        st.stop()
+                
+                # 校验格式
+                is_valid, contact_type = validate_contact(user_input)
+                
+                # 老用户不受格式限制，直接放行
+                if not existing_user and not is_valid:
+                    if "@" in user_input:
+                        st.error("❌ 邮箱格式不正确，示例：zhangsan@163.com")
+                    elif user_input.startswith("1") and len(user_input) == 11:
+                        st.error("❌ 手机号格式不正确，请输入11位大陆手机号（1开头，第二位3-9）")
+                    else:
+                        st.error("❌ 请输入有效的邮箱或11位大陆手机号")
+                    st.stop()
+                
+                # 新用户注册（格式验证通过 且 无历史记录）
+                if not existing_user and supabase:
+                    try:
+                        supabase.table("licenses").insert({
+                            "user_id": user_input,
+                            "plan_type": "free",
+                            "trial_used": 0,
+                            "trial_limit": 3
+                        }).execute()
+                    except Exception:
+                        pass
+                
+                st.session_state.user_id = user_input
+                st.rerun()
+        
+        # ==================== 已登录用户区域 ====================
         else:
             lic = get_user_license(user_id)
             
@@ -497,7 +554,12 @@ def render_sidebar():
             st.markdown("---")
             
             with st.expander(T["expander_activate_code"], expanded=False):
-                activate_code = st.text_input(T["activate_code_hint"], type="password", key="sidebar_act_code", placeholder=T["enter_activate_code_placeholder"])
+                activate_code = st.text_input(
+                    T["activate_code_hint"],
+                    type="password",
+                    key="sidebar_act_code",
+                    placeholder=T["enter_activate_code_placeholder"]
+                )
                 if st.button(T["activate_btn"], key="sidebar_act_btn", use_container_width=True):
                     if activate_code and len(activate_code) >= 6:
                         success, msg = activate_license_code(user_id, activate_code)
@@ -515,10 +577,10 @@ def render_sidebar():
                 get_cached_license.clear()
                 st.rerun()
         
+        # ==================== 底部信息 ====================
         st.markdown("---")
         st.caption(T["trial_free_hint"])
         
-        # ========== 微信联系区域 ==========
         st.markdown("---")
         st.markdown(f"**{T['contact_service']}**")
         try:
