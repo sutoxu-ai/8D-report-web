@@ -122,9 +122,9 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 # ==================== JavaScript 隐藏右上角按钮 ====================
 hide_buttons_script = """
 <script>
-// 只隐藏明确的右上角工具按钮，保留 sidebar toggle
+// Hide top-right toolbar buttons, keep sidebar toggle
 function hideTopRightButtons() {
-    // 隐藏含有 fork, github, star 等的链接
+    // Hide links containing fork, github, star
     document.querySelectorAll('a').forEach(el => {
         const href = (el.href || '').toLowerCase();
         const text = (el.textContent || '').toLowerCase();
