@@ -642,6 +642,7 @@ def render_sidebar():
             st.image("wechat_qrcode.jpg", width=180)
         except:
             st.info("微信二维码：907749064")
+        st.caption("淘宝店铺Taobao shop: 效率工坊铺")
         st.caption("微信号Wechat: 907749064")
         st.caption("Email: 907749064@qq.com")
         st.markdown("---")
