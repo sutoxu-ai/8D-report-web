@@ -9,6 +9,7 @@ import streamlit as st
 from io import BytesIO
 from datetime import datetime, timedelta
 import re
+import copy
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.oxml.ns import qn
@@ -45,7 +46,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
 <style>
@@ -121,10 +121,11 @@ hide_streamlit_style = """
         input, textarea { font-size: 0.85rem !important; }
         button { font-size: 0.9rem !important; }
         label, .stMarkdown p, .stMarkdown span { font-size: 0.85rem !important; }
-                /* 手机端缩小文本输入框高度 */
+        /* 手机端缩小文本输入框高度 */
         textarea {
             height: 80px !important;
             min-height: 80px !important;
+        }
     }
 </style>
 """
@@ -700,7 +701,7 @@ with col_input:
             st.error(T["no_desc"])
         else:
             # 使用多语言进度条
-            progress_phases = T["progress_phases"]
+            progress_phases = copy.deepcopy(T["progress_phases"])
             # 替换产品名称占位符
             for phase in progress_phases:
                 phase["sub"] = phase["sub"].replace("{product}", product_name or "未提供" if st.session_state.lang == "zh" else "Not provided")
@@ -729,17 +730,30 @@ with col_input:
                     progress_bar.progress(0.9)
                     
                     client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
-                    user_prompt = (
-                        f"请根据以下信息生成 8D 报告："
-                        f"产品：{product_name or '未提供'}, "
-                        f"客户：{customer or '未提供'}, "
-                        f"日期：{occur_date}, "
-                        f"数量：{defect_qty}, "
-                        f"严重程度：{severity}, "
-                        f"标准：{industry_std}, "
-                        f"团队：{team_members or '未提供'}\n\n"
-                        f"问题描述：{problem_desc}"
-                    )
+                    if st.session_state.lang == "zh":
+                        user_prompt = (
+                            f"请根据以下信息生成 8D 报告："
+                            f"产品：{product_name or '未提供'}, "
+                            f"客户：{customer or '未提供'}, "
+                            f"日期：{occur_date}, "
+                            f"数量：{defect_qty}, "
+                            f"严重程度：{severity}, "
+                            f"标准：{industry_std}, "
+                            f"团队：{team_members or '未提供'}\n\n"
+                            f"问题描述：{problem_desc}"
+                        )
+                    else:
+                        user_prompt = (
+                            f"Generate 8D report based on:\n"
+                            f"Product: {product_name or 'N/A'}\n"
+                            f"Customer: {customer or 'N/A'}\n"
+                            f"Date: {occur_date}\n"
+                            f"Quantity: {defect_qty}\n"
+                            f"Severity: {severity}\n"
+                            f"Standard: {industry_std}\n"
+                            f"Team: {team_members or 'N/A'}\n\n"
+                            f"Problem Description: {problem_desc}"
+                        )
                     
                     response = client.chat.completions.create(
                         model="deepseek-chat",
@@ -748,7 +762,8 @@ with col_input:
                             {"role": "user", "content": user_prompt}
                         ],
                         temperature=0.2,
-                        timeout=90
+                        timeout=120,
+                        max_tokens=4096
                     )
                     
                     phase = progress_phases[-1]
