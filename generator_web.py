@@ -173,7 +173,7 @@ TEXT = {
         "permanent_valid": "♾️ 永久有效",
         "account_manager": "🔐 账户管理 / Account",
         "contact_service": "📱 联系客服 / Contact",
-        "new_user_hint": "👋 新用户首次登录赠送3次免费试用！",
+        "new_user_hint": "👋 新用户登录赠送3次免费试用！",
         "main_title": "📊 8D 报告智能生成助手",
         "progress_phases": [
             {"icon": "📝", "text": "正在整理您的输入信息...", "sub": "产品：{product}"},
