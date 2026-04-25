@@ -157,7 +157,7 @@ TEXT = {
         "license_expired": "❌ 授权已过期",
         "login_required": "🔒 请先登录", "logout": "退出登录",
         "login_header": "👤 用户登录",
-        "username_label": "📧 邮箱 / 📱 手机号",
+        "username_label": "邮箱或手机号",
         "username_placeholder": "例：zhangsan@163.com 或 13812345678",
         "login_register_btn": "🔓 登录 / 注册",
         "enter_username_error": "请输入邮箱或手机号",
@@ -173,7 +173,7 @@ TEXT = {
         "permanent_valid": "♾️ 永久有效",
         "account_manager": "🔐 账户管理 / Account",
         "contact_service": "📱 联系客服 / Contact",
-        "new_user_hint": "👋 新用户？输入邮箱或手机号即可注册，首次登录赠送 3 次免费试用！",
+        "new_user_hint": "👋 新用户首次登录赠送3次免费试用！",
         "main_title": "📊 8D 报告智能生成助手",
         "progress_phases": [
             {"icon": "📝", "text": "正在整理您的输入信息...", "sub": "产品：{product}"},
