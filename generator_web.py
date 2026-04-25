@@ -629,8 +629,7 @@ def render_sidebar():
         
         # ==================== 底部信息 ====================
         st.markdown("---")
-        st.caption(T["trial_free_hint"])
-        
+              
         st.markdown("---")
         st.markdown(f"**{T['contact_service']}**")
         try:
