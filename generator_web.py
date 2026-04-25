@@ -102,9 +102,13 @@ TEXT = {
         "license_expired": "❌ 授权已过期",
         "login_required": "🔒 请先登录", "logout": "退出登录",
         "login_header": "👤 用户登录",
-        "username_placeholder": "用户名/邮箱",
+        "username_label": "📧 邮箱 / 📱 手机号",
+        "username_placeholder": "例：zhangsan@163.com 或 13812345678",
         "login_register_btn": "🔓 登录 / 注册",
-        "enter_username_error": "请输入用户名/邮箱",
+        "enter_username_error": "请输入邮箱或手机号",
+        "invalid_email": "❌ 邮箱格式不正确，示例：zhangsan@163.com",
+        "invalid_phone": "❌ 手机号格式不正确，请输入11位大陆手机号（1开头，第二位3-9）",
+        "invalid_contact": "❌ 请输入有效的邮箱或11位大陆手机号",
         "expander_activate_code": "🔑 输入激活码",
         "enter_activate_code_placeholder": "输入激活码",
         "trial_remaining": "📊 **试用版** | 剩余 {n} 次",
@@ -114,7 +118,7 @@ TEXT = {
         "permanent_valid": "♾️ 永久有效",
         "account_manager": "🔐 账户管理 / Account",
         "contact_service": "📱 联系客服 / Contact",
-        "new_user_hint": "👋 新用户？直接输入邮箱/用户名即可注册，首次登录赠送 3 次免费试用！",
+        "new_user_hint": "👋 新用户？输入邮箱或手机号即可注册，首次登录赠送 3 次免费试用！",
         "main_title": "📊 8D 报告智能生成助手",
         "progress_phases": [
             {"icon": "📝", "text": "正在整理您的输入信息...", "sub": "产品：{product}"},
@@ -145,6 +149,7 @@ TEXT = {
         "trial_exhausted_error": "❌ 试用次数已用完", "api_error": "❌ 服务异常",
         "success": "✅ 报告生成完成！", "report_complete": "报告生成完成！",
         "beautifying": "正在美化格式...", "word_title": "8D 问题纠正与预防措施报告",
+        "system_error": "❌ 系统错误，请稍后重试",
     },
     "en": {
         "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
@@ -157,9 +162,13 @@ TEXT = {
         "license_expired": "❌ License expired",
         "login_required": "🔒 Please login", "logout": "Logout",
         "login_header": "👤 User Login",
-        "username_placeholder": "Username/Email",
+        "username_label": "📧 Email / 📱 Phone",
+        "username_placeholder": "e.g., name@example.com or 13812345678",
         "login_register_btn": "🔓 Login / Register",
-        "enter_username_error": "Please enter username/email",
+        "enter_username_error": "Please enter email or phone number",
+        "invalid_email": "❌ Invalid email format, e.g., name@example.com",
+        "invalid_phone": "❌ Invalid phone number, enter 11-digit mainland China number",
+        "invalid_contact": "❌ Please enter a valid email or 11-digit phone number",
         "expander_activate_code": "🔑 Enter Activation Code",
         "enter_activate_code_placeholder": "Enter activation code",
         "trial_remaining": "📊 **Trial** | {n} remaining",
@@ -169,7 +178,7 @@ TEXT = {
         "permanent_valid": "♾️ Permanent",
         "account_manager": "🔐 Account Manager",
         "contact_service": "📱 Contact Service",
-        "new_user_hint": "👋 New user? Enter email/username to register, get 3 free trials!",
+        "new_user_hint": "👋 New user? Enter email or phone to register, get 3 free trials!",
         "main_title": "📊 8D Report Generator",
         "progress_phases": [
             {"icon": "📝", "text": "Organizing your input...", "sub": "Product: {product}"},
@@ -200,6 +209,7 @@ TEXT = {
         "trial_exhausted_error": "❌ Trial exhausted", "api_error": "❌ Service error",
         "success": "✅ Report generated!", "report_complete": "Report generated!",
         "beautifying": "Formatting...", "word_title": "8D Corrective Action Report",
+        "system_error": "❌ System error, please try again later",
     }
 }
 
@@ -463,9 +473,9 @@ def render_sidebar():
             st.info(T["new_user_hint"])
             
             user_input = st.text_input(
-                "📧 邮箱 / 📱 手机号",
+                T["username_label"],
                 key="sidebar_user_input",
-                placeholder="例：zhangsan@163.com 或 13812345678"
+                placeholder=T["username_placeholder"]
             )
             
             # ========== 格式校验函数 ==========
@@ -492,8 +502,8 @@ def render_sidebar():
                     try:
                         existing = supabase.table("licenses").select("user_id").eq("user_id", user_input).execute()
                         existing_user = existing.data is not None and len(existing.data) > 0
-                    except Exception as e:
-                        st.error(f"系统错误：{str(e)}")
+                    except Exception:
+                        st.error(T["system_error"])
                         st.stop()
                 
                 # 校验格式
@@ -502,11 +512,11 @@ def render_sidebar():
                 # 老用户不受格式限制，直接放行
                 if not existing_user and not is_valid:
                     if "@" in user_input:
-                        st.error("❌ 邮箱格式不正确，示例：zhangsan@163.com")
+                        st.error(T["invalid_email"])
                     elif user_input.startswith("1") and len(user_input) == 11:
-                        st.error("❌ 手机号格式不正确，请输入11位大陆手机号（1开头，第二位3-9）")
+                        st.error(T["invalid_phone"])
                     else:
-                        st.error("❌ 请输入有效的邮箱或11位大陆手机号")
+                        st.error(T["invalid_contact"])
                     st.stop()
                 
                 # 新用户注册（格式验证通过 且 无历史记录）
