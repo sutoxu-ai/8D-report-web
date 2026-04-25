@@ -121,6 +121,10 @@ hide_streamlit_style = """
         input, textarea { font-size: 0.85rem !important; }
         button { font-size: 0.9rem !important; }
         label, .stMarkdown p, .stMarkdown span { font-size: 0.85rem !important; }
+                /* 手机端缩小文本输入框高度 */
+        textarea {
+            height: 80px !important;
+            min-height: 80px !important;
     }
 </style>
 """
