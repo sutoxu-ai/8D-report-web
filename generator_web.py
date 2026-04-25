@@ -46,6 +46,7 @@ st.set_page_config(
 )
 
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
+# ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
 <style>
     /* 只隐藏右上角菜单（不要隐藏整个 header！） */
@@ -63,62 +64,73 @@ hide_streamlit_style = """
     }
     
     /* ========== 缩小侧边栏间距 ========== */
-    /* 侧边栏内所有元素的上下间距 */
     [data-testid="stSidebar"] .block-container {
         padding-top: 1rem !important;
         padding-bottom: 1rem !important;
     }
     
-    /* 缩小标题间距 */
     [data-testid="stSidebar"] h3 {
         margin-top: 0.5rem !important;
         margin-bottom: 0.3rem !important;
     }
     
-    /* 缩小段落间距 */
     [data-testid="stSidebar"] p {
         margin-top: 0.2rem !important;
         margin-bottom: 0.2rem !important;
     }
     
-    /* 缩小分割线间距 */
-    [data-testid="stSidebar"] hr {
-        margin-top: 0.5rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    /* 缩小按钮间距 */
     [data-testid="stSidebar"] .stButton {
         margin-top: 0.2rem !important;
         margin-bottom: 0.2rem !important;
     }
     
-    /* 缩小输入框间距 */
     [data-testid="stSidebar"] .stTextInput {
         margin-top: 0.2rem !important;
         margin-bottom: 0.2rem !important;
     }
     
-    /* 缩小 expander 间距 */
     [data-testid="stSidebar"] .streamlit-expanderHeader {
         padding-top: 0.3rem !important;
         padding-bottom: 0.3rem !important;
     }
     
-    /* 缩小 caption 间距 */
     [data-testid="stSidebar"] .stCaption {
         margin-top: 0.1rem !important;
         margin-bottom: 0.1rem !important;
     }
     
-       /* 侧边栏内所有容器的纵向间距 */
     [data-testid="stSidebar"] .stMarkdown {
         margin-bottom: 0.3rem !important;
     }
     
-    /* 强制缩小侧边栏所有元素的垂直间距 */
     [data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {
-        gap: 0rem !important;
+        gap: 0.15rem !important;
+    }
+    
+    [data-testid="stSidebar"] hr {
+        display: none !important;
+    }
+    
+    /* ========== 手机端字体缩小 ========== */
+    @media screen and (max-width: 768px) {
+        .main h1 {
+            font-size: 1.3rem !important;
+        }
+        .main h2 {
+            font-size: 1.1rem !important;
+        }
+        .main h3 {
+            font-size: 1rem !important;
+        }
+        .main p, .main label {
+            font-size: 0.85rem !important;
+        }
+        .main .stTextInput input, .main .stTextArea textarea {
+            font-size: 0.85rem !important;
+        }
+        .main .stButton button {
+            font-size: 0.9rem !important;
+        }
     }
 </style>
 """
