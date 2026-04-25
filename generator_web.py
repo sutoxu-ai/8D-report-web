@@ -111,9 +111,14 @@ hide_streamlit_style = """
         margin-bottom: 0.1rem !important;
     }
     
-    /* 侧边栏内所有容器的纵向间距 */
+       /* 侧边栏内所有容器的纵向间距 */
     [data-testid="stSidebar"] .stMarkdown {
         margin-bottom: 0.3rem !important;
+    }
+    
+    /* 强制缩小侧边栏所有元素的垂直间距 */
+    [data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {
+        gap: 0.15rem !important;
     }
 </style>
 """
