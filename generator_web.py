@@ -49,7 +49,7 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
 <style>
-    /* 只隐藏右上角菜单（不要隐藏整个 header！） */
+    /* 只隐藏右上角菜单 */
     #MainMenu {visibility: hidden !important; display: none !important;}
     
     /* 隐藏 footer 水印 */
@@ -113,24 +113,14 @@ hide_streamlit_style = """
     
     /* ========== 手机端字体缩小 ========== */
     @media screen and (max-width: 768px) {
-        .main h1 {
-            font-size: 1.3rem !important;
-        }
-        .main h2 {
-            font-size: 1.1rem !important;
-        }
-        .main h3 {
-            font-size: 1rem !important;
-        }
-        .main p, .main label {
-            font-size: 0.85rem !important;
-        }
-        .main .stTextInput input, .main .stTextArea textarea {
-            font-size: 0.85rem !important;
-        }
-        .main .stButton button {
-            font-size: 0.9rem !important;
-        }
+        h1 { font-size: 1.3rem !important; }
+        h2 { font-size: 1.1rem !important; }
+        h3 { font-size: 1rem !important; }
+        h4 { font-size: 0.95rem !important; }
+        body { font-size: 0.85rem !important; }
+        input, textarea { font-size: 0.85rem !important; }
+        button { font-size: 0.9rem !important; }
+        label, .stMarkdown p, .stMarkdown span { font-size: 0.85rem !important; }
     }
 </style>
 """
