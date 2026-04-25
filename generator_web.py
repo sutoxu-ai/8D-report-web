@@ -118,7 +118,7 @@ hide_streamlit_style = """
     
     /* 强制缩小侧边栏所有元素的垂直间距 */
     [data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {
-        gap: 0.01rem !important;
+        gap: 0rem !important;
     }
 </style>
 """
