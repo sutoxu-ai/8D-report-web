@@ -221,7 +221,7 @@ TEXT = {
         "license_expired": "❌ License expired",
         "login_required": "🔒 Please login", "logout": "Logout",
         "login_header": "👤 User Login",
-        "username_label": "📧 Email / 📱 Phone",
+        "username_label": "Email or Phone",
         "username_placeholder": "e.g., name@example.com or 13812345678",
         "login_register_btn": "🔓 Login / Register",
         "enter_username_error": "Please enter email or phone number",
@@ -507,10 +507,8 @@ def render_sidebar():
             st.session_state.lang = new_lang
             st.rerun()
         
-        st.markdown("---")
         st.markdown(f"### {T['account_manager']}")
-        st.markdown("---")
-        
+                
         # ==================== 登录 / 注册区域 ====================
         user_id = st.session_state.get("user_id")
         
@@ -633,9 +631,7 @@ def render_sidebar():
                 st.rerun()
         
         # ==================== 底部信息 ====================
-        st.markdown("---")
-              
-        st.markdown("---")
+        
         st.markdown(f"**{T['contact_service']}**")
         try:
             st.image("wechat_qrcode.jpg", width=180)
