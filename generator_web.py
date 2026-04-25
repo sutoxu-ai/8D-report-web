@@ -60,7 +60,62 @@ hide_streamlit_style = """
     .main .block-container {
         padding-top: 0.5rem !important;
     }
+    
+    /* ========== 缩小侧边栏间距 ========== */
+    /* 侧边栏内所有元素的上下间距 */
+    [data-testid="stSidebar"] .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    /* 缩小标题间距 */
+    [data-testid="stSidebar"] h3 {
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.3rem !important;
+    }
+    
+    /* 缩小段落间距 */
+    [data-testid="stSidebar"] p {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+    
+    /* 缩小分割线间距 */
+    [data-testid="stSidebar"] hr {
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* 缩小按钮间距 */
+    [data-testid="stSidebar"] .stButton {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+    
+    /* 缩小输入框间距 */
+    [data-testid="stSidebar"] .stTextInput {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+    
+    /* 缩小 expander 间距 */
+    [data-testid="stSidebar"] .streamlit-expanderHeader {
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
+    }
+    
+    /* 缩小 caption 间距 */
+    [data-testid="stSidebar"] .stCaption {
+        margin-top: 0.1rem !important;
+        margin-bottom: 0.1rem !important;
+    }
+    
+    /* 侧边栏内所有容器的纵向间距 */
+    [data-testid="stSidebar"] .stMarkdown {
+        margin-bottom: 0.3rem !important;
+    }
 </style>
+"""
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
