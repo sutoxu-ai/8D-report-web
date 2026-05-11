@@ -9,7 +9,6 @@ import streamlit as st
 from io import BytesIO
 from datetime import datetime, timedelta
 import re
-import copy
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.oxml.ns import qn
@@ -18,7 +17,6 @@ from docx.oxml import OxmlElement
 import openai
 from supabase import create_client
 import logging
-import time
 
 # ==================== 缓存配置 ====================
 @st.cache_data(ttl=60)
@@ -216,6 +214,14 @@ TEXT = {
         "success": "✅ 报告生成完成！", "report_complete": "报告生成完成！",
         "beautifying": "正在美化格式...", "word_title": "8D 问题纠正与预防措施报告",
         "system_error": "❌ 系统错误，请稍后重试",
+        "history_header": "📋 生成历史",
+        "load_report": "加载此报告",
+        "delete_report": "删除",
+        "no_history": "暂无历史记录",
+        "edit_mode": "✏️ 编辑模式",
+        "save_edit": "💾 保存修改",
+        "edit_placeholder": "在此编辑报告内容...",
+        "history_loaded": "已从历史记录加载",
     },
     "en": {
         "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
@@ -275,6 +281,14 @@ TEXT = {
         "success": "✅ Report generated!", "report_complete": "Report generated!",
         "beautifying": "Formatting...", "word_title": "8D Corrective Action Report",
         "system_error": "❌ System error, please try again later",
+        "history_header": "📋 Generation History",
+        "load_report": "Load this report",
+        "delete_report": "Delete",
+        "no_history": "No history yet",
+        "edit_mode": "✏️ Edit Mode",
+        "save_edit": "💾 Save Changes",
+        "edit_placeholder": "Edit report content here...",
+        "history_loaded": "Loaded from history",
     }
 }
 
@@ -512,6 +526,46 @@ def export_to_word(content, product_name, lang):
     doc.save(bio)
     return bio.getvalue()
 
+# ==================== 历史记录功能 ====================
+def save_report_history(user_id, product_name, customer, problem_desc, report_content, lang):
+    """保存报告到历史记录"""
+    if not supabase or not user_id:
+        return
+    try:
+        supabase.table("reports").insert({
+            "user_id": user_id,
+            "product_name": product_name or "",
+            "customer": customer or "",
+            "problem_desc": (problem_desc or "")[:500],
+            "report_content": report_content,
+            "lang": lang,
+            "created_at": datetime.now().isoformat()
+        }).execute()
+    except Exception as e:
+        logging.warning(f"保存历史记录失败：{e}")
+
+def load_report_history(user_id, limit=10):
+    """加载用户历史记录"""
+    if not supabase or not user_id:
+        return []
+    try:
+        r = supabase.table("reports").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(limit).execute()
+        return r.data or []
+    except Exception as e:
+        logging.warning(f"加载历史记录失败：{e}")
+        return []
+
+def delete_report_history(report_id):
+    """删除单条历史记录"""
+    if not supabase:
+        return False
+    try:
+        supabase.table("reports").delete().eq("id", report_id).execute()
+        return True
+    except Exception as e:
+        logging.warning(f"删除历史记录失败：{e}")
+        return False
+
 # ==================== 会话状态初始化 ====================
 if "lang" not in st.session_state:
     st.session_state.lang = "zh"
@@ -664,6 +718,29 @@ def render_sidebar():
                 get_cached_license.clear()
                 st.rerun()
         
+        # ==================== 历史记录 ====================
+        if lic:
+            st.markdown(f"**{T['history_header']}**")
+            history = load_report_history(user_id)
+            if not history:
+                st.caption(T["no_history"])
+            else:
+                for report in history[:5]:
+                    with st.expander(f"{(report.get('product_name') or 'N/A')[:20]} | {report['created_at'][:10]}"):
+                        st.caption((report.get('problem_desc') or '')[:80])
+                        col_load, col_del = st.columns([3, 1])
+                        with col_load:
+                            if st.button(T["load_report"], key=f"load_{report['id']}", use_container_width=True):
+                                st.session_state.current_result = report['report_content']
+                                st.success(T["history_loaded"])
+                                st.rerun()
+                        with col_del:
+                            if st.button("🗑️", key=f"del_{report['id']}", use_container_width=True):
+                                if delete_report_history(report['id']):
+                                    st.rerun()
+
+        st.markdown("---")
+
         # ==================== 底部信息 ====================
         
         st.markdown(f"**{T['contact_service']}**")
@@ -715,7 +792,7 @@ with col_input:
         if not st.session_state.get("user_id"):
             st.error(T["login_required"])
             st.stop()
-        
+
         user_id = st.session_state.user_id
         if not can_generate_report(user_id):
             lic = get_user_license(user_id)
@@ -724,40 +801,14 @@ with col_input:
             else:
                 st.error(T["license_expired"])
             st.stop()
-        
+
         if not problem_desc:
             st.error(T["no_desc"])
         else:
-            # 使用多语言进度条
-            progress_phases = copy.deepcopy(T["progress_phases"])
-            # 替换产品名称占位符
-            for phase in progress_phases:
-                phase["sub"] = phase["sub"].replace("{product}", product_name or "未提供" if st.session_state.lang == "zh" else "Not provided")
-            
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            sub_text = st.empty()
-            
-            with st.spinner(T["generating"]):
+            with st.status(T["generating"], expanded=True) as status:
                 try:
-                    phase = progress_phases[0]
-                    status_text.markdown(f"### {phase['icon']} {phase['text']}")
-                    sub_text.caption(phase['sub'])
-                    progress_bar.progress(1 / len(progress_phases))
-                    
-                    for i in range(1, len(progress_phases) - 2):
-                        phase = progress_phases[i]
-                        status_text.markdown(f"### {phase['icon']} {phase['text']}")
-                        sub_text.caption(phase['sub'])
-                        progress_bar.progress((i + 1) / len(progress_phases))
-                        time.sleep(5)  # 每阶段停留约5秒
-
-                    phase = progress_phases[-2]
-                    status_text.markdown(f"### {phase['icon']} {phase['text']}")
-                    sub_text.caption(phase['sub'])
-                    progress_bar.progress(0.9)
-                    
                     client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
+
                     if st.session_state.lang == "zh":
                         user_prompt = (
                             f"请根据以下信息生成 8D 报告："
@@ -782,68 +833,72 @@ with col_input:
                             f"Team: {team_members or 'N/A'}\n\n"
                             f"Problem Description: {problem_desc}"
                         )
-                    
+
                     response = client.chat.completions.create(
                         model="deepseek-chat",
                         messages=[
                             {"role": "system", "content": SYSTEM_PROMPT[st.session_state.lang]},
                             {"role": "user", "content": user_prompt}
                         ],
+                        stream=True,
                         temperature=0.2,
-                        timeout=120,
                         max_tokens=4096
                     )
-                    
-                    phase = progress_phases[-1]
-                    status_text.markdown(f"### {phase['icon']} {T['report_complete']}")
-                    sub_text.caption(T["beautifying"])
-                    progress_bar.progress(1.0)
-                    time.sleep(0.5)
-                    
-                    final_result = clean_format(response.choices[0].message.content)
+
+                    full_content = ""
+                    stream_placeholder = st.empty()
+
+                    for chunk in response:
+                        delta = chunk.choices[0].delta.content
+                        if delta:
+                            full_content += delta
+                            stream_placeholder.markdown(full_content)
+
+                    status.update(label="✅ " + T["success"], state="complete", expanded=False)
+
+                    final_result = clean_format(full_content)
                     st.session_state.current_result = final_result
                     inc_trial_used(user_id)
-                    st.success(T["success"])
-                    st.rerun()
-                    
+                    save_report_history(user_id, product_name, customer, problem_desc, final_result, st.session_state.lang)
+
                 except openai.APIConnectionError:
-                    status_text.empty()
-                    sub_text.empty()
-                    progress_bar.empty()
+                    status.update(label="❌ 网络连接失败", state="error")
                     st.error("🌐 网络连接失败，请检查网络后重试")
                 except openai.RateLimitError:
-                    status_text.empty()
-                    sub_text.empty()
-                    progress_bar.empty()
+                    status.update(label="❌ API 频率超限", state="error")
                     st.error("⏱️ API 调用频率超限，请等待 30 秒后重试")
                 except openai.AuthenticationError:
-                    status_text.empty()
-                    sub_text.empty()
-                    progress_bar.empty()
+                    status.update(label="❌ API 密钥验证失败", state="error")
                     st.error("🔑 API 密钥验证失败，请联系管理员")
                 except openai.APIError as e:
-                    status_text.empty()
-                    sub_text.empty()
-                    progress_bar.empty()
-                    st.error(f"❌ 服务异常：{e.type}" if hasattr(e, 'type') else "❌ 服务异常，请稍后重试")
-                except Exception:
-                    status_text.empty()
-                    sub_text.empty()
-                    progress_bar.empty()
+                    status.update(label="❌ 服务异常", state="error")
+                    st.error(f"❌ 服务异常：{getattr(e, 'type', '')}" if hasattr(e, 'type') else "❌ 服务异常，请稍后重试")
+                except Exception as e:
+                    status.update(label="❌ 系统错误", state="error")
+                    logging.error(f"生成报告未知错误：{e}", exc_info=True)
                     st.error(T["api_error"])
 
 with col_preview:
     st.header(T["preview_header"])
     if st.session_state.current_result:
-        st.markdown(st.session_state.current_result.replace("**", "").replace("#", ""))
-        st.markdown("---")
+        edit_mode = st.checkbox(T["edit_mode"], key="edit_mode_toggle")
+        if edit_mode:
+            edited = st.text_area(T["edit_placeholder"], value=st.session_state.current_result, height=600, key="edit_area")
+            if st.button(T["save_edit"], use_container_width=True, key="save_edit_btn"):
+                st.session_state.current_result = edited
+                st.session_state.edit_mode_toggle = False
+                st.success("✅ 修改已保存" if st.session_state.lang == "zh" else "✅ Changes saved")
+                st.rerun()
+        else:
+            st.markdown(st.session_state.current_result.replace("**", "").replace("#", ""))
         
+        st.markdown("---")
         user_id = st.session_state.get("user_id")
         lic = get_user_license(user_id) if user_id else None
         if lic and lic['plan_type'] != 'free':
             word_data = export_to_word(
-                st.session_state.current_result, 
-                product_name or "8D_Report", 
+                st.session_state.current_result,
+                product_name or "8D_Report",
                 st.session_state.lang
             )
             st.download_button(
