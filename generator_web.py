@@ -763,7 +763,7 @@ def render_sidebar():
                 st.rerun()
         
         # ==================== 历史记录 ====================
-        if lic:
+        if user_id:
             st.markdown(f"**{T['history_header']}**")
             history = load_report_history(user_id)
             if not history:
