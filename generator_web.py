@@ -593,6 +593,8 @@ if "current_result" not in st.session_state:
     st.session_state.current_result = ""
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
+if "registration_attempted" not in st.session_state:
+    st.session_state.registration_attempted = False
 
 T = TEXT[st.session_state.lang]
 
@@ -647,7 +649,12 @@ def render_sidebar():
                 if not user_input:
                     st.error(T["enter_username_error"])
                     st.stop()
-                
+
+                # ========== 方案1：会话级注册限制 ==========
+                if st.session_state.registration_attempted:
+                    st.error("⚠️ 当前会话已注册过，请勿重复操作" if st.session_state.lang == "zh" else "⚠️ Already registered in this session")
+                    st.stop()
+
                 # 检查是否为已注册的老用户
                 existing_user = False
                 if supabase:
@@ -657,10 +664,10 @@ def render_sidebar():
                     except Exception:
                         st.error(T["system_error"])
                         st.stop()
-                
+
                 # 校验格式
                 is_valid, contact_type = validate_contact(user_input)
-                
+
                 # 老用户不受格式限制，直接放行
                 if not existing_user and not is_valid:
                     if "@" in user_input:
@@ -670,7 +677,23 @@ def render_sidebar():
                     else:
                         st.error(T["invalid_contact"])
                     st.stop()
-                
+
+                # ========== 方案2：相似账号检测（仅新用户） ==========
+                if not existing_user and supabase and user_input.isdigit() and len(user_input) >= 10:
+                    try:
+                        prefix_len = len(user_input) - 2
+                        prefix = user_input[:prefix_len]
+                        similar = supabase.table("licenses").select("user_id").like("user_id", prefix + "%").limit(5).execute()
+                        if similar.data and len(similar.data) > 0:
+                            st.error(
+                                "⚠️ 检测到可疑注册行为，已被拒绝。请联系客服。"
+                                if st.session_state.lang == "zh" else
+                                "⚠️ Suspicious registration detected. Please contact support."
+                            )
+                            st.stop()
+                    except Exception as e:
+                        logging.warning(f"相似账号检测失败：{e}")
+
                 # 新用户注册（格式验证通过 且 无历史记录）
                 if not existing_user and supabase:
                     try:
@@ -680,9 +703,10 @@ def render_sidebar():
                             "trial_used": 0,
                             "trial_limit": 3
                         }).execute()
+                        st.session_state.registration_attempted = True  # 标记会话已注册
                     except Exception:
                         pass
-                
+
                 st.session_state.user_id = user_input
                 st.rerun()
         
