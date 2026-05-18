@@ -177,12 +177,13 @@ TEXT = {
         "expander_activate_code": "🔑 输入激活码",
         "enter_activate_code_placeholder": "输入激活码",
         "trial_remaining": "📊 **试用版** | 剩余 {n} 次",
+        "no_trial_hint": "💡 试用次数用完了？",
         "valid_until": "⏰ 有效期至: {date}",
         "valid_until_date": "📅 有效期至: {date}",
         "permanent_valid": "♾️ 永久有效",
         "account_manager": "🔐 账户管理 / Account",
         "contact_service": "📱 联系客服 / Contact",
-        "new_user_hint": "👋 新用户登录赠送3次免费试用！",
+        "new_user_hint": "👋 注册后可购买试用券",
         "main_title": "📊 8D 报告智能生成助手",
         "progress_phases": [
             {"icon": "📝", "text": "正在整理您的输入信息...", "sub": "产品：{product}"},
@@ -244,12 +245,13 @@ TEXT = {
         "expander_activate_code": "🔑 Enter Activation Code",
         "enter_activate_code_placeholder": "Enter activation code",
         "trial_remaining": "📊 **Trial** | {n} remaining",
+        "no_trial_hint": "💡 Run out of trials?",
         "valid_until": "⏰ Valid until: {date}",
         "valid_until_date": "📅 Valid until: {date}",
         "permanent_valid": "♾️ Permanent",
         "account_manager": "🔐 Account Manager",
         "contact_service": "📱 Contact Service",
-        "new_user_hint": "👋 New user? Enter email or phone to register, get 3 free trials!",
+        "new_user_hint": "👋 Register to get started, then purchase trial",
         "main_title": "📊 8D Report Generator",
         "progress_phases": [
             {"icon": "📝", "text": "Organizing your input...", "sub": "Product: {product}"},
@@ -419,7 +421,7 @@ def create_free_license(user_id):
             "user_id": user_id,
             "plan_type": "free",
             "trial_used": 0,
-            "trial_limit": 3
+            "trial_limit": 0
         }).execute()
         return r.data[0] if r.data else None
     except Exception:
@@ -487,6 +489,34 @@ def activate_license_code(user_id, code):
         return True, f"激活成功！有效期至 {formatted_date}"
     except Exception as e:
         logging.error(f"激活失败：{e}")
+        return False, f"激活失败：{str(e)}"
+
+def activate_trial_code(user_id, code):
+    """激活试用码：0.99元获得2次试用"""
+    if not supabase:
+        return False, "系统错误"
+    try:
+        r = supabase.table("trial_codes").select("*").eq("code", code.strip().upper()).execute()
+        if not r.data:
+            return False, "无效的试用码"
+        tc = r.data[0]
+        if tc.get('is_used'):
+            return False, "试用码已被使用"
+        # 标记试用码已用
+        supabase.table("trial_codes").update({
+            "is_used": True,
+            "used_by": user_id,
+            "used_at": datetime.now().isoformat()
+        }).eq("code", code.strip().upper()).execute()
+        # 给用户2次试用机会
+        supabase.table("licenses").update({
+            "trial_limit": 2,
+            "trial_used": 0
+        }).eq("user_id", user_id).execute()
+        clear_license_cache(user_id)
+        return True, "✅ 试用码激活成功！获得 2 次试用机会"
+    except Exception as e:
+        logging.error(f"试用码激活失败：{e}")
         return False, f"激活失败：{str(e)}"
 
 def clean_format(text):
@@ -701,7 +731,7 @@ def render_sidebar():
                             "user_id": user_input,
                             "plan_type": "free",
                             "trial_used": 0,
-                            "trial_limit": 3
+                            "trial_limit": 0
                         }).execute()
                         st.session_state.registration_attempted = True  # 标记会话已注册
                     except Exception:
@@ -718,14 +748,39 @@ def render_sidebar():
             
             if lic:
                 if lic.get('plan_type') == 'free':
-                    remaining = lic['trial_limit'] - lic['trial_used']
-                    st.info(T["trial_remaining"].format(n=remaining))
-                    if lic.get('license_expire'):
-                        try:
-                            exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
-                            st.caption(T["valid_until"].format(date=exp_date))
-                        except:
-                            pass
+                    remaining = (lic.get('trial_limit') or 0) - (lic.get('trial_used') or 0)
+                    if remaining > 0:
+                        st.info(T["trial_remaining"].format(n=remaining))
+                    else:
+                        st.error("❌ 试用次数已用完")
+                        # 试用购买引导
+                        st.markdown("---")
+                        st.markdown("### 💰 购买试用券")
+                        st.caption("¥0.99 = 2 次试用")
+                        st.info("""
+**购买步骤：**
+1. 微信转账 **¥0.99** 到客服
+2. 截图发给微信 **907749064**
+3. 客服发送**试用码**
+4. 输入试用码获得 2 次试用
+                        """)
+                        # 试用码输入
+                        trial_code_input = st.text_input(
+                            "输入试用码",
+                            type="password",
+                            key="sidebar_trial_code",
+                            placeholder="例：8DT1-XXXX-XXXX-X"
+                        )
+                        if st.button("激活试用码", key="sidebar_trial_btn", use_container_width=True):
+                            if trial_code_input and len(trial_code_input) >= 6:
+                                success, msg = activate_trial_code(user_id, trial_code_input)
+                                if success:
+                                    st.success(msg)
+                                    st.rerun()
+                                else:
+                                    st.error(msg)
+                            else:
+                                st.error("请输入有效的试用码")
                 else:
                     st.success(T["pro_version"])
                     if lic.get('license_expire'):
