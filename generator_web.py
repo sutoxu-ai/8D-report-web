@@ -183,7 +183,6 @@ TEXT = {
         "permanent_valid": "♾️ 永久有效",
         "account_manager": "🔐 账户管理 / Account",
         "contact_service": "📱 联系客服 / Contact",
-        
         "main_title": "📊 8D 报告智能生成助手",
         "progress_phases": [
             {"icon": "📝", "text": "正在整理您的输入信息...", "sub": "产品：{product}"},
@@ -251,7 +250,7 @@ TEXT = {
         "permanent_valid": "♾️ Permanent",
         "account_manager": "🔐 Account Manager",
         "contact_service": "📱 Contact Service",
-        "new_user_hint": "👋 Register to get started, then purchase trial",
+
         "main_title": "📊 8D Report Generator",
         "progress_phases": [
             {"icon": "📝", "text": "Organizing your input...", "sub": "Product: {product}"},
@@ -654,8 +653,6 @@ def render_sidebar():
         user_id = st.session_state.get("user_id")
         
         if not user_id:
-            st.info(T["new_user_hint"])
-            
             user_input = st.text_input(
                 T["username_label"],
                 key="sidebar_user_input",
@@ -757,11 +754,15 @@ def render_sidebar():
                         st.markdown("---")
                         st.markdown("### 💰 购买试用券")
                         st.caption("¥0.99 = 2 次试用")
+                        try:
+                            st.image("paid.jpg", width=200)
+                        except:
+                            st.info("请上传 paid.jpg 到项目目录")
                         st.info("""
 **购买步骤：**
-1. 微信转账 **¥0.99** 到客服
-2. 截图发给微信 **907749064**
-3. 客服发送**试用码**
+1. 截图上面的二维码
+2. 微信扫码转账 **¥0.99**
+3. 转账后联系微信 **907749064** 发试用码
 4. 输入试用码获得 2 次试用
                         """)
                         # 试用码输入
