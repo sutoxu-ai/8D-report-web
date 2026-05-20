@@ -205,7 +205,7 @@ TEXT = {
         "severity_low": "低", "severity_medium": "中", "severity_high": "高", "severity_critical": "危急",
         "industry_std": "适用标准", "team_members": "团队成员（可选）",
         "team_placeholder": "例：张明 (组长), 李华 (工程)",
-        "generate_btn": "🚀 生成 8D 报告", 
+        "generate_btn": "🚀 一键生成 8D 报告", 
         "generating": "8D 报告智能生成中，请稍候...",
         "preview_header": "📄 报告预览", "download_btn": "📥 导出 Word 报告",
         "export_disabled": "🔒 激活正式版后可导出 Word",
