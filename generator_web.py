@@ -472,22 +472,38 @@ def activate_license_code(user_id, code):
             if datetime.now().date() > datetime.fromisoformat(ac['expire_date']).date():
                 return False, "激活码已过期"
         
-        # ========== 关键修复 ==========
+        # 关键修复：处理 duration_days 为 None 的情况
         duration = ac.get('duration_days')
         if duration is None:
             # 根据 plan_type 设置默认值
             plan_defaults = {'trial': 7, 'pro': 365, 'enterprise': 9999}
             duration = plan_defaults.get(ac.get('plan_type', 'pro'), 365)
-        # ============================
         
         exp_date = (datetime.now() + timedelta(days=duration)).isoformat()
         
+        # 更新用户许可证
         supabase.table("licenses").upsert({
             "user_id": user_id,
             "plan_type": ac.get('plan_type', 'pro'),
             "license_expire": exp_date
         }, on_conflict="user_id").execute()
-        # ... 后续代码
+        
+        # 标记激活码已使用
+        supabase.table("activation_codes").update({
+            "is_used": True,
+            "used_by": user_id,
+            "used_at": datetime.now().isoformat()
+        }).eq("code", code.strip().upper()).execute()
+        
+        # 清除缓存
+        clear_license_cache(user_id)
+        
+        formatted_date = exp_date[:10] if len(exp_date) >= 10 else exp_date
+        return True, f"激活成功！有效期至 {formatted_date}"
+        
+    except Exception as e:
+        logging.error(f"激活失败：{e}")
+        return False, f"激活失败：{str(e)}"
 
 def activate_trial_code(user_id, code):
     """激活试用码：0.99元获得2次试用"""
