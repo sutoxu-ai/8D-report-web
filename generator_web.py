@@ -792,10 +792,10 @@ def render_sidebar():
                         code_upper = activate_code.strip().upper()
                         if code_upper.startswith("8DT1"):
                             success, msg = activate_trial_code(user_id, activate_code)
-                        elif code_upper.startswith("8D8P"):
+                        elif code_upper.startswith(("8D8P", "8D30", "8D8E")):
                             success, msg = activate_license_code(user_id, activate_code)
                         else:
-                            success, msg = False, "请输入有效的激活码（8DT1 或 8D8P 开头）"
+                            success, msg = False, "请输入有效的激活码（8DT1 / 8D8P / 8D30 / 8D8E 开头）"
                         if success:
                             st.success(msg)
                             st.rerun()
