@@ -158,9 +158,9 @@ st.markdown(hide_buttons_script, unsafe_allow_html=True)
 TEXT = {
     "zh": {
         "lang_label": "语言", "lang_zh": "中文", "lang_en": "English",
-        "system_status": "系统状态", "pro_version": "✅ 正式版", "trial_version": "⚠️ 试用版",
+        "system_status": "系统状态", "pro_version": "✅ 正式版", "free_version": "⚠️ 未激活",
         "license_valid_until": "📅 有效期至 {exp}", "trial_used": "📊 已使用 {used} 次 / 共 {total} 次",
-        "trial_exhausted": "❌ 试用次数已用完", "activate_title": "🔑 授权 / 续费",
+        "no_license": "⚠️ 未激活，请购买激活码", "activate_title": "🔑 授权 / 续费",
         "activate_code_hint": "激活码", "activate_btn": "立即激活",
         "activate_success": "✅ 激活成功，有效期一年", "activate_fail": "❌ 激活码无效",
         "invalid_activate_code": "请输入有效的激活码",
@@ -176,8 +176,7 @@ TEXT = {
         "invalid_contact": "❌ 请输入有效的邮箱或11位大陆手机号",
         "expander_activate_code": "🔑 输入激活码",
         "enter_activate_code_placeholder": "输入激活码",
-        "trial_remaining": "📊 **试用版** | 剩余 {n} 次",
-        "no_trial_hint": "💡 试用次数用完了？",
+        "no_license_hint": "💡 未激活，请扫码购买激活码",
         "valid_until": "⏰ 有效期至: {date}",
         "valid_until_date": "📅 有效期至: {date}",
         "permanent_valid": "♾️ 永久有效",
@@ -205,12 +204,12 @@ TEXT = {
         "severity_low": "低", "severity_medium": "中", "severity_high": "高", "severity_critical": "危急",
         "industry_std": "适用标准", "team_members": "团队成员（可选）",
         "team_placeholder": "例：张明 (组长), 李华 (工程)",
-        "generate_btn": "🚀 生成 8D 报告", 
+        "generate_btn": "🚀 自动生成 8D 报告", 
         "generating": "8D 报告智能生成中，请稍候...",
         "preview_header": "📄 报告预览", "download_btn": "📥 导出 Word 报告",
         "export_disabled": "🔒 激活正式版后可导出 Word",
         "no_desc": "❌ 请输入不良现象描述",
-        "trial_exhausted_error": "❌ 试用次数已用完", "api_error": "❌ 服务异常",
+        "no_license_error": "❌ 未激活，请购买激活码", "api_error": "❌ 服务异常",
         "success": "✅ 报告生成完成！", "report_complete": "报告生成完成！",
         "beautifying": "正在美化格式...", "word_title": "8D 问题纠正与预防措施报告",
         "system_error": "❌ 系统错误，请稍后重试",
@@ -225,9 +224,9 @@ TEXT = {
     },
     "en": {
         "lang_label": "Language", "lang_zh": "中文", "lang_en": "English",
-        "system_status": "System Status", "pro_version": "✅ Pro Version", "trial_version": "⚠️ Trial Version",
+        "system_status": "System Status", "pro_version": "✅ Pro Version", "free_version": "⚠️ Not Activated",
         "license_valid_until": "📅 Valid until {exp}", "trial_used": "📊 Used {used} / {total}",
-        "trial_exhausted": "❌ Trial exhausted", "activate_title": "🔑 License / Renew",
+        "no_license": "⚠️ Not activated, please purchase activation code", "activate_title": "🔑 License / Renew",
         "activate_code_hint": "Activation Code", "activate_btn": "Activate",
         "activate_success": "✅ Activated successfully", "activate_fail": "❌ Invalid code",
         "invalid_activate_code": "Please enter a valid activation code",
@@ -243,8 +242,7 @@ TEXT = {
         "invalid_contact": "❌ Please enter a valid email or 11-digit phone number",
         "expander_activate_code": "🔑 Enter Activation Code",
         "enter_activate_code_placeholder": "Enter activation code",
-        "trial_remaining": "📊 **Trial** | {n} remaining",
-        "no_trial_hint": "💡 Run out of trials?",
+        "no_license_hint": "💡 Not activated, please scan QR code to purchase activation code",
         "valid_until": "⏰ Valid until: {date}",
         "valid_until_date": "📅 Valid until: {date}",
         "permanent_valid": "♾️ Permanent",
@@ -278,7 +276,7 @@ TEXT = {
         "preview_header": "📄 Report Preview", "download_btn": "📥 Export Word",
         "export_disabled": "🔒 Activate to export",
         "no_desc": "❌ Please enter description",
-        "trial_exhausted_error": "❌ Trial exhausted", "api_error": "❌ Service error",
+        "no_license_error": "❌ Not activated, please purchase activation code", "api_error": "❌ Service error",
         "success": "✅ Report generated!", "report_complete": "Report generated!",
         "beautifying": "Formatting...", "word_title": "8D Corrective Action Report",
         "system_error": "❌ System error, please try again later",
@@ -430,8 +428,8 @@ def can_generate_report(user_id):
     lic = get_user_license(user_id)
     if not lic:
         return False
-    if lic['plan_type'] in ['free', 'trial']:
-        return lic['trial_used'] < lic['trial_limit']
+    if lic['plan_type'] == 'free':
+        return False  # 未激活，不能生成
     if lic['plan_type'] in ['pro', 'enterprise']:
         if lic.get('license_expire'):
             try:
@@ -672,6 +670,8 @@ def render_sidebar():
                 else:
                     return False, None
             
+            st.caption("💡 首次输入将自动创建账号，无需单独注册")
+            
             if st.button(T["login_register_btn"], use_container_width=True, key="sidebar_login_btn"):
                 if not user_input:
                     st.error(T["enter_username_error"])
@@ -745,26 +745,29 @@ def render_sidebar():
             
             if lic:
                 if lic.get('plan_type') == 'free':
-                    remaining = (lic.get('trial_limit') or 0) - (lic.get('trial_used') or 0)
-                    if remaining > 0:
-                        st.info(T["trial_remaining"].format(n=remaining))
-                    else:
-                        st.error("❌ 试用次数已用完")
-                        # 试用购买引导
-                        st.markdown("---")
-                        st.markdown("### 💰 购买试用券")
-                        st.caption("¥0.99 = 2 次试用")
-                        try:
-                            st.image("paid.jpg", width=200)
-                        except:
-                            st.info("请上传 paid.jpg 到项目目录")
-                        st.info("""
+                    st.warning(T["no_license"])
+                    # 购买引导
+                    st.markdown("---")
+                    st.markdown("### 💰 购买正式版")
+                    try:
+                        st.image("paid.jpg", width=200)
+                    except:
+                        st.info("请上传 paid.jpg 到项目目录")
+                    st.markdown("""
+**版本与价格：**
+
+| 版本 | 原价 | 优惠价 |
+|------|------|--------|
+| 月卡 | ~~¥29~~ | **¥6.9/月** |
+| 年卡 | ~~¥99~~ | **¥39/年** |
+| 5年卡 | ~~¥299~~ | **¥99/5年** |
+
 **购买步骤：**
 1. 截图上面的二维码
-2. 微信扫码转账 **¥0.99**
-3. 转账后联系微信 **907749064** 发试用码
-4. 在下方"🔑 输入激活码"中输入试用码获得 2 次试用
-                        """)
+2. 微信扫码转账（选对应金额）
+3. 转账后联系微信 **907749064** 获取激活码
+4. 在下方"🔑 输入激活码"中输入激活码
+                    """)
                 else:
                     st.success(T["pro_version"])
                     if lic.get('license_expire'):
@@ -782,7 +785,7 @@ def render_sidebar():
                     "输入激活码",
                     type="password",
                     key="sidebar_act_code",
-                    placeholder="例：8DT1-XXXX-XXXX-X 或 8D8P-XXXX-XXXX-X"
+                    placeholder="输入激活码"
                 )
                 if st.button("激活", key="sidebar_act_btn", use_container_width=True):
                     if activate_code and len(activate_code) >= 6:
@@ -886,7 +889,7 @@ with col_input:
         if not can_generate_report(user_id):
             lic = get_user_license(user_id)
             if lic and lic['plan_type'] == 'free':
-                st.error(T["trial_exhausted_error"])
+                st.error(T["no_license"])
             else:
                 st.error(T["license_expired"])
             st.stop()
