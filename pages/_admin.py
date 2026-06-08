@@ -89,9 +89,9 @@ def get_channel_name(channel_code):
 def get_plan_name(plan_code):
     """获取版本中文名称"""
     plan_map = {
-        'trial': '试用版（7天）',
-        'pro': '专业版（1年）',
-        'enterprise': '企业版（永久）'
+        'trial': '月卡（1个月）',
+        'pro': '年卡（1年）',
+        'enterprise': '5年卡（5年）'
     }
     return plan_map.get(plan_code, plan_code)
 
@@ -113,11 +113,11 @@ if menu == "📊 数据统计":
     unused = total - used
     
     # 计算各版本收入（估算）
-    price_map = {'trial': 0, 'pro': 299, 'enterprise': 999}
+    price_map = {'trial': 6.9, 'pro': 39, 'enterprise': 99}
     revenue = 0
     for c in codes:
         if c.get('is_used', False):
-            revenue += price_map.get(c.get('plan_type', 'pro'), 299)
+            revenue += price_map.get(c.get('plan_type', 'pro'), 39)
     
     with col1:
         st.metric("📦 总激活码", total)
@@ -143,7 +143,7 @@ if menu == "📊 数据统计":
         channel_stats[ch]['total'] += 1
         if c.get('is_used', False):
             channel_stats[ch]['used'] += 1
-            channel_stats[ch]['revenue'] += price_map.get(c.get('plan_type', 'pro'), 299)
+            channel_stats[ch]['revenue'] += price_map.get(c.get('plan_type', 'pro'), 39)
     
     # 构建表格数据
     table_data = []
@@ -209,9 +209,9 @@ elif menu == "➕ 生成激活码":
         )
         
         duration_map = {
-            'trial': 7,
+            'trial': 31,
             'pro': 365,
-            'enterprise': 9999
+            'enterprise': 1825
         }
         
         count = st.number_input(
@@ -495,3 +495,5 @@ elif menu == "🔍 查询激活码":
 # ==================== 页脚 ====================
 st.markdown("---")
 st.caption(f"📊 8D 报告系统 - 多平台管理后台 | 最后更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
