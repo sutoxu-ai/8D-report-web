@@ -205,7 +205,7 @@ TEXT = {
         "severity_low": "低", "severity_medium": "中", "severity_high": "高", "severity_critical": "危急",
         "industry_std": "适用标准", "team_members": "团队成员（可选）",
         "team_placeholder": "例：张明 (组长), 李华 (工程)",
-        "generate_btn": "🚀 一键生成 8D 报告", 
+        "generate_btn": "🚀 生成 8D 报告", 
         "generating": "8D 报告智能生成中，请稍候...",
         "preview_header": "📄 报告预览", "download_btn": "📥 导出 Word 报告",
         "export_disabled": "🔒 激活正式版后可导出 Word",
@@ -471,36 +471,21 @@ def activate_license_code(user_id, code):
         if ac.get('expire_date'):
             if datetime.now().date() > datetime.fromisoformat(ac['expire_date']).date():
                 return False, "激活码已过期"
-        
-        # 关键修复：处理 duration_days 为 None 的情况
-        duration = ac.get('duration_days')
-        if duration is None:
-            # 根据 plan_type 设置默认值
-            plan_defaults = {'trial': 7, 'pro': 365, 'enterprise': 9999}
-            duration = plan_defaults.get(ac.get('plan_type', 'pro'), 365)
-        
+        duration = ac.get('duration_days') or 365
         exp_date = (datetime.now() + timedelta(days=duration)).isoformat()
-        
-        # 更新用户许可证
         supabase.table("licenses").upsert({
             "user_id": user_id,
             "plan_type": ac.get('plan_type', 'pro'),
             "license_expire": exp_date
         }, on_conflict="user_id").execute()
-        
-        # 标记激活码已使用
         supabase.table("activation_codes").update({
             "is_used": True,
             "used_by": user_id,
             "used_at": datetime.now().isoformat()
         }).eq("code", code.strip().upper()).execute()
-        
-        # 清除缓存
         clear_license_cache(user_id)
-        
         formatted_date = exp_date[:10] if len(exp_date) >= 10 else exp_date
         return True, f"激活成功！有效期至 {formatted_date}"
-        
     except Exception as e:
         logging.error(f"激活失败：{e}")
         return False, f"激活失败：{str(e)}"
@@ -778,25 +763,8 @@ def render_sidebar():
 1. 截图上面的二维码
 2. 微信扫码转账 **¥0.99**
 3. 转账后联系微信 **907749064** 发试用码
-4. 输入试用码获得 2 次试用
+4. 在下方"🔑 输入激活码"中输入试用码获得 2 次试用
                         """)
-                        # 试用码输入
-                        trial_code_input = st.text_input(
-                            "输入试用码",
-                            type="password",
-                            key="sidebar_trial_code",
-                            placeholder="例：8DT1-XXXX-XXXX-X"
-                        )
-                        if st.button("激活试用码", key="sidebar_trial_btn", use_container_width=True):
-                            if trial_code_input and len(trial_code_input) >= 6:
-                                success, msg = activate_trial_code(user_id, trial_code_input)
-                                if success:
-                                    st.success(msg)
-                                    st.rerun()
-                                else:
-                                    st.error(msg)
-                            else:
-                                st.error("请输入有效的试用码")
                 else:
                     st.success(T["pro_version"])
                     if lic.get('license_expire'):
@@ -811,21 +779,27 @@ def render_sidebar():
                         
             with st.expander(T["expander_activate_code"], expanded=False):
                 activate_code = st.text_input(
-                    T["activate_code_hint"],
+                    "输入激活码",
                     type="password",
                     key="sidebar_act_code",
-                    placeholder=T["enter_activate_code_placeholder"]
+                    placeholder="例：8DT1-XXXX-XXXX-X 或 8D8P-XXXX-XXXX-X"
                 )
-                if st.button(T["activate_btn"], key="sidebar_act_btn", use_container_width=True):
+                if st.button("激活", key="sidebar_act_btn", use_container_width=True):
                     if activate_code and len(activate_code) >= 6:
-                        success, msg = activate_license_code(user_id, activate_code)
+                        code_upper = activate_code.strip().upper()
+                        if code_upper.startswith("8DT1"):
+                            success, msg = activate_trial_code(user_id, activate_code)
+                        elif code_upper.startswith("8D8P"):
+                            success, msg = activate_license_code(user_id, activate_code)
+                        else:
+                            success, msg = False, "请输入有效的激活码（8DT1 或 8D8P 开头）"
                         if success:
                             st.success(msg)
                             st.rerun()
                         else:
                             st.error(msg)
                     else:
-                        st.error(T["invalid_activate_code"])
+                        st.error("请输入有效的激活码")
             
             if st.button(T["logout"], key="sidebar_logout_btn", use_container_width=True):
                 st.session_state.user_id = None
