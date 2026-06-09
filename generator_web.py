@@ -428,14 +428,18 @@ def can_generate_report(user_id):
     lic = get_user_license(user_id)
     if not lic:
         return False
-    if lic['plan_type'] == 'free':
-        return False  # 未激活，不能生成
-    if lic['plan_type'] in ['pro', 'enterprise']:
-        if lic.get('license_expire'):
-            try:
-                return datetime.now() < datetime.fromisoformat(lic['license_expire'])
-            except Exception:
-                return True
+    plan = lic.get('plan_type', 'free')
+    if plan == 'free':
+        return False  # 未激活
+    # trial / pro / enterprise 统一只检查有效期
+    expire = lic.get('license_expire')
+    if expire:
+        try:
+            return datetime.now() < datetime.fromisoformat(expire)
+        except Exception:
+            return True
+    # 没有设置有效期的正式版，允许使用
+    if plan in ['pro', 'enterprise']:
         return True
     return False
 
@@ -474,7 +478,9 @@ def activate_license_code(user_id, code):
         supabase.table("licenses").upsert({
             "user_id": user_id,
             "plan_type": ac.get('plan_type', 'pro'),
-            "license_expire": exp_date
+            "license_expire": exp_date,
+            "trial_used": 0,
+            "trial_limit": 0
         }, on_conflict="user_id").execute()
         supabase.table("activation_codes").update({
             "is_used": True,
