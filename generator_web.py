@@ -6,6 +6,7 @@
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 from io import BytesIO
 from datetime import datetime, timedelta
 import re
@@ -1007,11 +1008,12 @@ with col_preview:
         # ========== 一键复制按钮 ==========
         copy_b64 = base64.b64encode(st.session_state.current_result.encode('utf-8')).decode('ascii')
         copy_label = "📋 一键复制报告" if st.session_state.lang == "zh" else "📋 Copy Report"
-        copied_label = "✅ 已复制到剪贴板" if st.session_state.lang == "zh" else "✅ Copied to clipboard"
-        fail_label = "复制失败，请手动选择文本复制" if st.session_state.lang == "zh" else "Copy failed, please select text manually"
-        
+        copied_label = "✅ 已复制到剪贴板" if st.session_state.lang == "zh" else "✅ Copied!"
+        fail_label = "复制失败，请手动选择文本复制" if st.session_state.lang == "zh" else "Copy failed"
+
         copy_html = f'''
-        <button id="copy-report-btn" style="
+        <div style="width:100%;">
+        <button id="copy-btn" style="
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -1020,31 +1022,33 @@ with col_preview:
             cursor: pointer;
             font-size: 0.9rem;
             width: 100%;
-            margin-bottom: 0.5rem;
-            transition: all 0.3s;
-        " onclick='
+        " onclick="
             try {{
-                const b64 = "{copy_b64}";
+                const b64 = '{copy_b64}';
                 const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-                const text = new TextDecoder("utf-8").decode(bytes);
-                navigator.clipboard.writeText(text).then(() => {{
-                    const btn = document.getElementById("copy-report-btn");
-                    const orig = btn.textContent;
-                    btn.textContent = "{copied_label}";
-                    btn.style.background = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
-                    setTimeout(() => {{
-                        btn.textContent = orig;
-                        btn.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
-                    }}, 2000);
-                }}).catch(() => {{
-                    alert("{fail_label}");
-                }});
+                const text = new TextDecoder('utf-8').decode(bytes);
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                const btn = document.getElementById('copy-btn');
+                btn.textContent = '{copied_label}';
+                btn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+                setTimeout(function() {{
+                    btn.textContent = '{copy_label}';
+                    btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                }}, 2000);
             }} catch(e) {{
-                alert("{fail_label}");
+                alert('{fail_label}');
             }}
-        '>{copy_label}</button>
+        ">{copy_label}</button>
+        </div>
         '''
-        st.markdown(copy_html, unsafe_allow_html=True)
+        components.html(copy_html, height=50)
         
         user_id = st.session_state.get("user_id")
         lic = get_user_license(user_id) if user_id else None
