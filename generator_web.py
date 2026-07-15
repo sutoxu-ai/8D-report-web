@@ -9,6 +9,7 @@ import streamlit as st
 from io import BytesIO
 from datetime import datetime, timedelta
 import re
+import base64
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.oxml.ns import qn
@@ -464,7 +465,8 @@ def activate_license_code(user_id, code):
     if not supabase:
         return False, "系统错误"
     try:
-        r = supabase.table("activation_codes").select("*").eq("code", code.strip().upper()).execute()
+        code_clean = code.strip().upper()
+        r = supabase.table("activation_codes").select("*").eq("code", code_clean).execute()
         if not r.data:
             return False, "无效的激活码"
         ac = r.data[0]
@@ -473,6 +475,15 @@ def activate_license_code(user_id, code):
         if ac.get('expire_date'):
             if datetime.now().date() > datetime.fromisoformat(ac['expire_date']).date():
                 return False, "激活码已过期"
+        # 原子抢码：仅当 is_used=False 时才更新，防止并发激活
+        claim = supabase.table("activation_codes").update({
+            "is_used": True,
+            "used_by": user_id,
+            "used_at": datetime.now().isoformat()
+        }).eq("code", code_clean).eq("is_used", False).execute()
+        # 如果没有行被更新，说明已被别人抢走
+        if not claim.data or len(claim.data) == 0:
+            return False, "激活码已被使用"
         duration = ac.get('duration_days') or 365
         exp_date = (datetime.now() + timedelta(days=duration)).isoformat()
         supabase.table("licenses").upsert({
@@ -482,11 +493,6 @@ def activate_license_code(user_id, code):
             "trial_used": 0,
             "trial_limit": 0
         }, on_conflict="user_id").execute()
-        supabase.table("activation_codes").update({
-            "is_used": True,
-            "used_by": user_id,
-            "used_at": datetime.now().isoformat()
-        }).eq("code", code.strip().upper()).execute()
         clear_license_cache(user_id)
         formatted_date = exp_date[:10] if len(exp_date) >= 10 else exp_date
         return True, f"激活成功！有效期至 {formatted_date}"
@@ -499,18 +505,22 @@ def activate_trial_code(user_id, code):
     if not supabase:
         return False, "系统错误"
     try:
-        r = supabase.table("trial_codes").select("*").eq("code", code.strip().upper()).execute()
+        code_clean = code.strip().upper()
+        r = supabase.table("trial_codes").select("*").eq("code", code_clean).execute()
         if not r.data:
             return False, "无效的试用码"
         tc = r.data[0]
         if tc.get('is_used'):
             return False, "试用码已被使用"
-        # 标记试用码已用
-        supabase.table("trial_codes").update({
+        # 原子抢码：仅当 is_used=False 时才更新，防止并发激活
+        claim = supabase.table("trial_codes").update({
             "is_used": True,
             "used_by": user_id,
             "used_at": datetime.now().isoformat()
-        }).eq("code", code.strip().upper()).execute()
+        }).eq("code", code_clean).eq("is_used", False).execute()
+        # 如果没有行被更新，说明已被别人抢走
+        if not claim.data or len(claim.data) == 0:
+            return False, "试用码已被使用"
         # 给用户2次试用机会
         supabase.table("licenses").update({
             "trial_limit": 2,
@@ -764,9 +774,9 @@ def render_sidebar():
 
 | 版本 | 原价 | 优惠价 |
 |------|------|--------|
-| 月卡 | ~~¥29~~ | **¥9.9** |
-| 年卡 | ~~¥99~~ | **¥29** |
-| 永久卡 | ~~¥299~~ | **¥99** |
+| 月卡 | ~~¥29~~ | **¥6.9/月** |
+| 年卡 | ~~¥99~~ | **¥39/年** |
+| 5年卡 | ~~¥299~~ | **¥99/5年** |
 
 **购买步骤：**
 1. 截图上面的二维码
@@ -861,7 +871,7 @@ col_input, col_preview = st.columns([1, 1.2])
 with col_input:
     st.header(T["input_header"])
     product_name = st.text_input(T["product_name"], placeholder="e.g., PCB-A123" if st.session_state.lang == "en" else "例：PCB-A123")
-    customer = st.text_input(T["customer"], placeholder="e.g., YYDS" if st.session_state.lang == "en" else "例：五星科技")
+    customer = st.text_input(T["customer"], placeholder="e.g., BYD" if st.session_state.lang == "en" else "例：比亚迪汽车")
     problem_desc = st.text_area(T["problem_desc"], height=150, placeholder=T["problem_placeholder"])
     
     col1, col2, col3 = st.columns(3)
@@ -970,7 +980,9 @@ with col_input:
                     st.error("🔑 API 密钥验证失败，请联系管理员")
                 except openai.APIError as e:
                     status.update(label="❌ 服务异常", state="error")
-                    st.error(f"❌ 服务异常：{getattr(e, 'type', '')}" if hasattr(e, 'type') else "❌ 服务异常，请稍后重试")
+                    err_detail = str(e) if str(e) else "未知错误"
+                    logging.error(f"APIError 详情：{e}", exc_info=True)
+                    st.error(f"❌ 服务异常：{err_detail}")
                 except Exception as e:
                     status.update(label="❌ 系统错误", state="error")
                     logging.error(f"生成报告未知错误：{e}", exc_info=True)
@@ -991,6 +1003,49 @@ with col_preview:
             st.markdown(st.session_state.current_result.replace("**", "").replace("#", ""))
         
         st.markdown("---")
+        
+        # ========== 一键复制按钮 ==========
+        copy_b64 = base64.b64encode(st.session_state.current_result.encode('utf-8')).decode('ascii')
+        copy_label = "📋 一键复制报告" if st.session_state.lang == "zh" else "📋 Copy Report"
+        copied_label = "✅ 已复制到剪贴板" if st.session_state.lang == "zh" else "✅ Copied to clipboard"
+        fail_label = "复制失败，请手动选择文本复制" if st.session_state.lang == "zh" else "Copy failed, please select text manually"
+        
+        copy_html = f'''
+        <button id="copy-report-btn" style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        " onclick='
+            try {{
+                const b64 = "{copy_b64}";
+                const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+                const text = new TextDecoder("utf-8").decode(bytes);
+                navigator.clipboard.writeText(text).then(() => {{
+                    const btn = document.getElementById("copy-report-btn");
+                    const orig = btn.textContent;
+                    btn.textContent = "{copied_label}";
+                    btn.style.background = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
+                    setTimeout(() => {{
+                        btn.textContent = orig;
+                        btn.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+                    }}, 2000);
+                }}).catch(() => {{
+                    alert("{fail_label}");
+                }});
+            }} catch(e) {{
+                alert("{fail_label}");
+            }}
+        '>{copy_label}</button>
+        '''
+        st.markdown(copy_html, unsafe_allow_html=True)
+        
         user_id = st.session_state.get("user_id")
         lic = get_user_license(user_id) if user_id else None
         if lic and lic['plan_type'] != 'free':
