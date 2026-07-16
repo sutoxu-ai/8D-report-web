@@ -872,7 +872,7 @@ col_input, col_preview = st.columns([1, 1.2])
 with col_input:
     st.header(T["input_header"])
     product_name = st.text_input(T["product_name"], placeholder="e.g., PCB-A123" if st.session_state.lang == "en" else "例：PCB-A123")
-    customer = st.text_input(T["customer"], placeholder="e.g., BYD" if st.session_state.lang == "en" else "例：比亚迪汽车")
+    customer = st.text_input(T["customer"], placeholder="e.g., Wuxing technology" if st.session_state.lang == "en" else "例：五星科技")
     problem_desc = st.text_area(T["problem_desc"], height=150, placeholder=T["problem_placeholder"])
     
     col1, col2, col3 = st.columns(3)
