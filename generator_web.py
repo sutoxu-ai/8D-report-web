@@ -944,7 +944,7 @@ with col_input:
                         )
 
                     response = client.chat.completions.create(
-                        model="deepseek-chat",
+                        model="deepseek-v4-flash",
                         messages=[
                             {"role": "system", "content": SYSTEM_PROMPT[st.session_state.lang]},
                             {"role": "user", "content": user_prompt}
