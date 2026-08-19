@@ -127,6 +127,370 @@ hide_streamlit_style = """
             min-height: 80px !important;
         }
     }
+    
+    /* ========== 品牌头部 ========== */
+    .brand-header {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.5rem 0 0.8rem 0;
+        border-bottom: 3px solid #2563eb;
+        margin-bottom: 1rem;
+    }
+    .brand-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+    }
+    .brand-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin: 0;
+        line-height: 1.2;
+    }
+    .brand-subtitle {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.2;
+    }
+    @media screen and (max-width: 768px) {
+        .brand-logo { width: 38px; height: 38px; font-size: 1rem; }
+        .brand-title { font-size: 1.1rem; }
+        .brand-subtitle { font-size: 0.7rem; }
+    }
+    
+    /* ========== 输入卡片样式 ========== */
+    div[data-testid="stVerticalBlock"] .input-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.6rem;
+        overflow: hidden;
+        margin-bottom: 0.8rem;
+        background: #ffffff;
+    }
+    .input-card-header {
+        background: #f1f5f9;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .input-card-body {
+        padding: 0.6rem 0.8rem;
+    }
+    
+    /* ========== D 章节彩色边框 ========== */
+    .d-section {
+        border-left: 4px solid #cbd5e1;
+        padding: 0.5rem 0.8rem;
+        margin-bottom: 0.6rem;
+        border-radius: 0 0.4rem 0.4rem 0;
+        background: #f8fafc;
+    }
+    .d-section-d1 { border-left-color: #2563eb; }
+    .d-section-d2 { border-left-color: #16a34a; }
+    .d-section-d3 { border-left-color: #ea580c; }
+    .d-section-d4 { border-left-color: #db2777; }
+    .d-section-d5 { border-left-color: #9333ea; }
+    .d-section-d6 { border-left-color: #0891b2; }
+    .d-section-d7 { border-left-color: #ca8a04; }
+    .d-section-d8 { border-left-color: #64748b; }
+    .d-section-map { border-left-color: #475569; background: #f1f5f9; }
+    .d-section-map .d-section-title { color: #475569; }
+    .d-section-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.3rem;
+    }
+    .d-section-d1 .d-section-title { color: #2563eb; }
+    .d-section-d2 .d-section-title { color: #16a34a; }
+    .d-section-d3 .d-section-title { color: #ea580c; }
+    .d-section-d4 .d-section-title { color: #db2777; }
+    .d-section-d5 .d-section-title { color: #9333ea; }
+    .d-section-d6 .d-section-title { color: #0891b2; }
+    .d-section-d7 .d-section-title { color: #ca8a04; }
+    .d-section-d8 .d-section-title { color: #64748b; }
+    .d-section-body {
+        font-size: 0.85rem;
+        color: #334155;
+        line-height: 1.5;
+    }
+    /* 正文中若残留 h1-h6，强制压成正文字号。
+       多重保险：双类选择器 (0,2,0) + 属性选择器 + !important，稳压 Streamlit 后加载的 .stMarkdown h1。 */
+    .d-section-body.d-section-body h1, .d-section-body.d-section-body h2,
+    .d-section-body.d-section-body h3, .d-section-body.d-section-body h4,
+    .d-section-body.d-section-body h5, .d-section-body.d-section-body h6 {
+        font-size: 0.85rem !important;
+        font-weight: normal !important;
+        line-height: 1.5 !important;
+        margin: 0 !important;
+        color: inherit !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+    /* 保险栓 2：scope 化 —— 直接命中任何包含 markdown 的容器，避免 Streamlit 包装层干扰 */
+    section[data-testid="stMarkdownContainer"] .d-section-body h1,
+    section[data-testid="stMarkdownContainer"] .d-section-body h2,
+    section[data-testid="stMarkdownContainer"] .d-section-body h3,
+    section[data-testid="stMarkdownContainer"] .d-section-body h4,
+    section[data-testid="stMarkdownContainer"] .d-section-body h5,
+    section[data-testid="stMarkdownContainer"] .d-section-body h6 {
+        font-size: 0.85rem !important;
+        font-weight: normal !important;
+        line-height: 1.5 !important;
+        margin: 0 !important;
+        color: inherit !important;
+    }
+    /* 保险栓 3：拦截 horizontal rule <hr> —— 章节体内不应该出现分页线 */
+    .d-section-body hr {
+        display: none !important;
+    }
+    .d-section-body table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 0.4rem 0;
+        font-size: 0.82rem;
+        line-height: 1.4;
+    }
+    .d-section-body table th,
+    .d-section-body table td {
+        border: 1px solid #cbd5e1;
+        padding: 0.3rem 0.5rem;
+        text-align: left;
+        white-space: pre-wrap;
+    }
+    .d-section-body table th {
+        background: #e2e8f0;
+        font-weight: 700;
+    }
+    
+    /* ========== 进度圆点 ========== */
+    .progress-dots {
+        display: flex;
+        gap: 0.3rem;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0;
+    }
+    .progress-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: white;
+        transition: all 0.3s;
+    }
+    .dot-done { background: #22c55e; }
+    .dot-active { background: #2563eb; animation: pulse 1.2s infinite; }
+    .dot-pending { background: #cbd5e1; color: #94a3b8; }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37,99,235,0.4); }
+        50% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(37,99,235,0); }
+    }
+    
+    /* ========== 全局背景与字体 ========== */
+    .stApp {
+        background: #f4f6fb;
+    }
+    html, body, [class*="css"] {
+        font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    }
+
+    /* ========== 品牌头部升级 ========== */
+    .brand-header {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 1.1rem 1.3rem;
+        border-radius: 1rem;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 55%, #4338ca 100%);
+        border-bottom: none;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 10px 28px rgba(37,99,235,0.28);
+        color: #fff;
+    }
+    .brand-logo {
+        width: 54px;
+        height: 54px;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.18);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,0.3);
+    }
+    .brand-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.2;
+        letter-spacing: 0.5px;
+    }
+    .brand-subtitle {
+        font-size: 0.82rem;
+        color: rgba(255,255,255,0.85);
+        margin: 0.15rem 0 0 0;
+        line-height: 1.2;
+    }
+
+    /* ========== 面板标题 ========== */
+    .panel-title {
+        font-size: 1.12rem;
+        font-weight: 800;
+        color: #1e3a5f;
+        margin: 0 0 0.9rem 0;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid #e2e8f0;
+        letter-spacing: 0.3px;
+    }
+
+    /* ========== 输入卡片头部（彩色标签） ========== */
+    .input-card-header {
+        display: inline-block;
+        margin: 0 0 0.7rem 0;
+        padding: 0.42rem 0.7rem;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        font-size: 0.86rem;
+        border: none;
+        border-left: 4px solid #2563eb;
+        background: #eff6ff;
+        color: #1e40af;
+    }
+    .input-card-header.accent-blue { border-left-color: #2563eb; background: #eff6ff; color: #1e40af; }
+    .input-card-header.accent-orange { border-left-color: #ea580c; background: #fff7ed; color: #c2410c; }
+    .input-card-header.accent-teal { border-left-color: #0891b2; background: #ecfeff; color: #0e7490; }
+
+    /* ========== D 章节卡片升级 ========== */
+    .d-section {
+        border-left: 4px solid #cbd5e1;
+        padding: 0.6rem 0.9rem;
+        margin-bottom: 0.7rem;
+        border-radius: 0.5rem;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+    }
+    .d-section-title {
+        font-weight: 700;
+        font-size: 0.98rem;
+        margin-bottom: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .d-section-title::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+
+    /* ========== D0 前置诊断卡片 ========== */
+    .d0-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.7rem;
+        padding: 0.9rem 1rem;
+        margin: 0.5rem 0 0.3rem 0;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+    }
+    .d0-card-header {
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: #1e3a5f;
+        margin-bottom: 0.6rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px dashed #e2e8f0;
+    }
+    .d0-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        margin: 0.4rem 0;
+    }
+    .d0-row > span {
+        color: #64748b;
+        min-width: 6rem;
+        flex-shrink: 0;
+    }
+    .d0-bar {
+        flex: 1;
+        height: 9px;
+        background: #e2e8f0;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .d0-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width .4s ease;
+    }
+    .d0-tip {
+        margin-top: 0.6rem;
+        padding: 0.5rem 0.7rem;
+        background: #fffbeb;
+        border-left: 3px solid #f59e0b;
+        border-radius: 0 0.4rem 0.4rem 0;
+        font-size: 0.8rem;
+        color: #92400e;
+        line-height: 1.4;
+    }
+
+    /* ========== 生成按钮 ========== */
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #2563eb, #4338ca) !important;
+        border: none !important;
+        border-radius: 0.6rem !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 14px rgba(37,99,235,0.35) !important;
+        transition: all .2s !important;
+    }
+    button[kind="primary"]:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(37,99,235,0.45) !important;
+    }
+
+    /* ========== 下载按钮 ========== */
+    .stDownloadButton button {
+        border-radius: 0.6rem !important;
+        font-weight: 600 !important;
+        border: 1px solid #cbd5e1 !important;
+        transition: all .2s !important;
+    }
+    .stDownloadButton button:hover {
+        border-color: #2563eb !important;
+        color: #2563eb !important;
+    }
+
+    /* ========== 按钮行 ========== */
+    .btn-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
@@ -185,6 +549,7 @@ TEXT = {
         "account_manager": "🔐 账户管理 / Account",
         "contact_service": "📱 联系客服 / Contact",
         "main_title": "📊 8D 报告智能生成助手",
+        "main_subtitle": "AI 驱动的纠正预防措施报告",
         "progress_phases": [
             {"icon": "📝", "text": "正在整理您的输入信息...", "sub": "产品：{product}"},
             {"icon": "🤔", "text": "正在理解问题背景...", "sub": "运用 5W2H 方法分析"},
@@ -198,7 +563,10 @@ TEXT = {
             {"icon": "📊", "text": "正在生成 D7 预防措施...", "sub": "防止问题复发"},
             {"icon": "🏆", "text": "正在生成 D8 总结表彰...", "sub": "固化经验，分享成果"},
             {"icon": "✨", "text": "正在优化报告格式...", "sub": "确保专业美观"},
-        ], "input_header": "📝 输入基本信息",
+        ],         "input_header": "📝 输入基本信息",
+        "card_product": "📋 产品信息",
+        "card_problem": "⚠️ 问题描述",
+        "card_details": "🔍 事件详情",
         "product_name": "产品型号 / 名称", "customer": "客户名称",
         "problem_desc": "不良现象描述",
         "problem_placeholder": "请使用 5W2H 方法描述问题",
@@ -209,7 +577,9 @@ TEXT = {
         "generate_btn": "🚀 自动生成 8D 报告", 
         "generating": "8D 报告智能生成中，请稍候...",
         "preview_header": "📄 报告预览", "download_btn": "📥 导出 Word 报告",
-        "export_disabled": "🔒 激活正式版后可导出 Word",
+        "download_ppt": "📊 导出 PPT 报告",
+        "ppt_title": "8D 纠正措施报告",
+        "export_disabled": "🔒 激活正式版后可导出 Word / PPT",
         "no_desc": "❌ 请输入不良现象描述",
         "no_license_error": "❌ 未激活，请购买激活码", "api_error": "❌ 服务异常",
         "success": "✅ 报告生成完成！", "report_complete": "报告生成完成！",
@@ -252,6 +622,7 @@ TEXT = {
         "contact_service": "📱 Contact Service",
 
         "main_title": "📊 8D Report Generator",
+        "main_subtitle": "AI-Powered Corrective Action Reports",
         "progress_phases": [
             {"icon": "📝", "text": "Organizing your input...", "sub": "Product: {product}"},
             {"icon": "🤔", "text": "Analyzing context...", "sub": "Using 5W2H method"},
@@ -265,7 +636,10 @@ TEXT = {
             {"icon": "📊", "text": "Generating D7 Prevention...", "sub": "Preventing recurrence"},
             {"icon": "🏆", "text": "Generating D8 Closure...", "sub": "Documenting lessons"},
             {"icon": "✨", "text": "Formatting report...", "sub": "Professional output"},
-        ], "input_header": "📝 Input Information",
+        ],         "input_header": "📝 Input Information",
+        "card_product": "📋 Product Info",
+        "card_problem": "⚠️ Problem Description",
+        "card_details": "🔍 Event Details",
         "product_name": "Product Name / Model", "customer": "Customer Name",
         "problem_desc": "Problem Description",
         "problem_placeholder": "Please use 5W2H method",
@@ -276,7 +650,9 @@ TEXT = {
         "generate_btn": "🚀 Generate 8D Report",
         "generating": "Generating report, please wait...",
         "preview_header": "📄 Report Preview", "download_btn": "📥 Export Word",
-        "export_disabled": "🔒 Activate to export",
+        "download_ppt": "📊 Export PPT",
+        "ppt_title": "8D Corrective Action Report",
+        "export_disabled": "🔒 Activate to export Word / PPT",
         "no_desc": "❌ Please enter description",
         "no_license_error": "❌ Not activated, please purchase activation code", "api_error": "❌ Service error",
         "success": "✅ Report generated!", "report_complete": "Report generated!",
@@ -344,11 +720,26 @@ SYSTEM_PROMPT = {
         "Why1：为什么偏移参数的产品流出了？→ OQC 检验标准未包含该参数\n\n"
         "Why2：为什么标准未包含？→ 控制计划未更新该参数\n\n"
         "Why3：为什么控制计划未更新？→ 工程变更流程缺失 ← 根本原因\n\n"
+        "【真实性约束与置信度标注】\n"
+        "你无法获知现场实测数据，严禁编造具体数值（温度、尺寸、电流、时长、批次量等）。\n"
+        "每条根因与结论必须标注置信度：\n"
+        "🟢 高置信度 = 来自用户输入中明确给出的事实\n"
+        "🟡 中置信度 = 基于行业经验的合理推断\n"
+        "🔴 低置信度 = AI 推测，需现场验证\n"
+        "凡无法确认的数据，使用占位标记：[待现场确认]、[参数待实测]、[数据待补充]\n"
+        "示例：机：回流焊峰值温度偏低 🟡（推测实际约 235°C，[参数待实测]）\n\n"
+        "【信息完整性地图】\n"
+        "报告末尾必须附一张信息完整性地图，区分「已确认事实」与「AI 推测建议」：\n"
+        "信息项 | 来源 | 可信度\n"
+        "问题描述 | 用户提供 | 🟢\n"
+        "根本原因 | AI 推断 | 🟡 / 🔴\n"
+        "实测数据 | 待现场确认 | 🔴\n"
+        "帮助使用者正确判断哪些可直接采用、哪些需现场核实。\n\n"
         "【其他要求】\n"
         "语气专业客观\n"
         "措施使用 [责任人 | 时间 | 状态] 格式\n"
-        "不使用 Markdown 标记\n"
-        "直接输出 D1-D8 报告正文"
+        "报告正文不使用 Markdown 标记（信息完整性地图可用表格）\n"
+        "直接输出 D1-D8 报告正文，末尾附信息完整性地图"
     ),
     
     "en": (
@@ -388,13 +779,65 @@ SYSTEM_PROMPT = {
         "=== Escape Cause ===\n\n"
         "【Inspection Failure Analysis】\n"
         "Why1: ...\n\n"
+        "【Truthfulness Constraints & Confidence Labeling】\n"
+        "You do NOT have access to on-site measured data. Never fabricate specific values "
+        "(temperature, dimension, current, duration, batch size, etc).\n"
+        "Label confidence for every root cause and conclusion:\n"
+        "🟢 High = fact explicitly given by the user\n"
+        "🟡 Medium = reasonable inference from industry experience\n"
+        "🔴 Low = AI speculation, needs on-site verification\n"
+        "For any unverified data, use placeholders: [To be confirmed on-site], [Params to be measured], [Data to be filled]\n"
+        "Example: Machine: reflow peak temp slightly low 🟡 (est. ~235°C, [Params to be measured])\n\n"
+        "【Information Completeness Map】\n"
+        "End the report with an Information Completeness Map separating 'Confirmed Facts' from 'AI Suggestions':\n"
+        "Item | Source | Confidence\n"
+        "Problem description | User input | 🟢\n"
+        "Root cause | AI inference | 🟡 / 🔴\n"
+        "Measured data | To be confirmed | 🔴\n"
+        "Help users judge what can be used directly vs what needs verification.\n\n"
         "【Other Requirements】\n"
         "Professional tone\n"
         "Use [Owner|Date|Status] format for actions\n"
-        "No Markdown\n"
-        "Output D1-D8 directly"
+        "No Markdown in report body (table allowed in the map)\n"
+        "Output D1-D8 directly, then append the Information Completeness Map"
     )
 }
+
+# ==================== 行业专属逻辑 ====================
+# 每个行业带中英文标签与专属分析指引，用户选择后注入 prompt
+INDUSTRIES = [
+    {
+        "zh": "通用制造", "en": "General Manufacturing",
+        "zh_guide": "按通用 ISO 9001 质量管理原则分析，覆盖人/机/料/法/环全要素，无特殊行业合规要求。",
+        "en_guide": "Follow general ISO 9001 principles covering Man/Machine/Material/Method/Environment, no special industry compliance.",
+    },
+    {
+        "zh": "汽车电子 (IATF 16949)", "en": "Automotive (IATF 16949)",
+        "zh_guide": "汽车行业专属：评估停线风险与召回影响；重视供应商变更管控（4M 变更）；围堵须覆盖在途品与客户端库存；永久措施纳入 SPC 监控，关键特性过程能力 Cpk≥1.33。",
+        "en_guide": "Automotive specifics: assess line-down & recall risk; emphasize supplier change control (4M); containment covers in-transit & customer inventory; permanent actions under SPC with Cpk≥1.33.",
+    },
+    {
+        "zh": "半导体 / 芯片", "en": "Semiconductor / Chip",
+        "zh_guide": "半导体专属：Wafer Lot→Die→Package 逐级追溯；D4 走 FA 失效分析流程（X-Ray/SAM 非破坏检查 → 切片/SEM/EDX 破坏分析）；回流焊温度曲线（TAL/峰值温度）必查；MSA 测量系统分析 GR&R<10%。",
+        "en_guide": "Semiconductor specifics: trace Wafer Lot→Die→Package; D4 FA flow (X-Ray/SAM non-destructive → cross-section/SEM/EDX); reflow profile (TAL/peak) required; MSA GR&R<10%.",
+    },
+    {
+        "zh": "PCB / 电子制造", "en": "PCB / Electronics",
+        "zh_guide": "PCB 专属：阻抗失效用 TDR 定位 + 切片测线宽/线距/介质厚度；分层/起泡用 288℃/10s 热应力试验；电镀查孔铜厚度分布；过程能力线宽/孔铜 Cpk≥1.33、阻抗 Cpk≥1.67；回流焊温度曲线与 AOI/X-Ray 关联分析。",
+        "en_guide": "PCB specifics: TDR + cross-section for impedance; 288℃/10s thermal stress for delamination; plating thickness distribution; Cpk≥1.33 (width/hole), ≥1.67 (impedance); reflow profile linked to AOI/X-Ray.",
+    },
+    {
+        "zh": "医疗器械 (ISO 13485)", "en": "Medical (ISO 13485)",
+        "zh_guide": "医疗器械专属：强调法规合规与可追溯性（批次→患者）；根因须关联风险管理（ISO 14971）；措施考虑临床影响与上市后监督（PMS）。",
+        "en_guide": "Medical specifics: regulatory compliance & traceability (lot→patient); link root cause to risk management (ISO 14971); consider clinical impact & post-market surveillance.",
+    },
+    {
+        "zh": "航空航天 (AS9100)", "en": "Aerospace (AS9100)",
+        "zh_guide": "航空航天专属：适航合规与安全性为首要；采用 FRACAS 故障报告、分析与纠正系统；措施需首件检验（FAI）与过程确认。",
+        "en_guide": "Aerospace specifics: airworthiness & safety first; use FRACAS; actions require first-article inspection (FAI) & process qualification.",
+    },
+]
+
 # ==================== 初始化配置 ====================
 try:
     API_KEY = st.secrets["DEEPSEEK_API_KEY"]
@@ -536,6 +979,8 @@ def activate_trial_code(user_id, code):
 def clean_format(text):
     if not text:
         return ""
+    # 统一换行符：DeepSeek 输出偶发 \r\n，避免 setext 下划线正则因 \r 而漏判
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
     text = text.replace("**", "").replace("#", "")
     for i in range(1, 9):
         text = re.sub(rf'(D{i}[:：])\s*\n+\s*', rf'\1 ', text)
@@ -546,7 +991,305 @@ def clean_format(text):
     text = re.sub(r'(为什么\d+：)', r'\n\1', text)
     text = re.sub(r'(→ [^\n]+)(?=为什么\d+：|$)', r'\1\n', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
-    return text.strip()
+    # ★ 强力去 setext 下划线：
+    # 1) 独占一行、整行只由 = 或 - 构成（含 :, 空格）→ 当作下划线，整行删掉
+    # 2) 同一行的 === 装饰：`=== 标题 ===` → 去掉两侧 `===`，留下标题文本
+    # 3) 同一行尾部/头部的 `===` 或 `---` 装饰（成对）→ 去掉
+    # 这一步必须放在 D-section/Why 段落重排之后，避免误伤前面的换行规则
+    text = re.sub(r'(?m)^\s*[=\-]{3,}[ \t:=]*\s*$', '', text)
+    text = re.sub(r'(?m)^[ \t]*={2,}[ \t]*([^\n]+?)[ \t]*={2,}[ \t]*$', r'\1', text)
+    text = re.sub(r'(?m)^[ \t]*-{2,}[ \t]*([^\n]+?)[ \t]*-{2,}[ \t]*$', r'\1', text)
+    return re.sub(r'\n{3,}', '\n\n', text).strip()
+
+def _ncols(row):
+    """返回该行按 | 拆出的单元格数量（含空单元格），用于判断是否像表格行。"""
+    s = row.strip()
+    if s.startswith('|'):
+        s = s[1:]
+    if s.endswith('|'):
+        s = s[:-1]
+    return len(s.split('|'))
+
+
+def _split_row(row):
+    """把 markdown 表格的一行按 | 拆成单元格，去掉首尾多余的 |。"""
+    s = row.strip()
+    if s.startswith('|'):
+        s = s[1:]
+    if s.endswith('|'):
+        s = s[:-1]
+    return [c.strip() for c in s.split('|')]
+
+
+def _is_table_start(lines, i):
+    """判断 lines[i] 是否是一段表格的起始行。
+
+    兼容两种情况：① 标准 markdown 表格（下一行是 |---|---| 分隔行）；
+    ② 模型省略分隔行，仅靠连续的 | 分隔行构成表格。
+    """
+    if '|' not in lines[i] or _ncols(lines[i]) < 2:
+        return False
+    if i + 1 >= len(lines):
+        return False
+    nxt = lines[i + 1].strip().strip('|').strip()
+    sep = bool(nxt) and '-' in nxt and all(c in '-:| ' for c in nxt)
+    if sep:
+        return True
+    # 无分隔行：要求下一行同样是 >=2 列的 | 行（排除标题类行），才判定为表格
+    if lines[i + 1].lstrip().startswith('【') or lines[i + 1].lstrip().startswith('#'):
+        return False
+    return '|' in lines[i + 1] and _ncols(lines[i + 1]) >= 2
+
+
+def _esc(text):
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _strip_map_title(sec):
+    """去掉信息完整性地图原括号标题行，避免与卡片标题重复。"""
+    first = sec.split('\n', 1)
+    if re.search(r'信息完整性地图|Information Completeness Map', first[0]):
+        return first[1].strip() if len(first) > 1 else ''
+    return sec
+
+
+def _render_body_md(body):
+    """正文转「原生 markdown」：连续的 | 分隔行转成标准 markdown 表格（自动补分隔行），
+    其余文本原样保留。返回原生 markdown 字符串，交给 st.markdown 渲染——
+    不再手写 <table> HTML，从根本上杜绝标签泄漏为纯文本的问题。"""
+    lines = body.split('\n')
+    out = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        if _is_table_start(lines, i):
+            header = _split_row(lines[i])
+            rows = []
+            j = i + 1
+            # 跳过模型可能写出的分隔行 |---|---|
+            if j < n:
+                s = lines[j].strip().strip('|').strip()
+                if '-' in s and all(c in '-:| ' for c in s):
+                    j += 1
+            while j < n and lines[j].strip() and _ncols(lines[j]) >= 2:
+                rows.append(_split_row(lines[j]))
+                j += 1
+            # 表格前补一个空行，确保 Streamlit 的 markdown 引擎能识别为表格
+            if out and out[-1].strip():
+                out.append('')
+            # 输出标准 markdown 表格（Streamlit 原生支持，需带分隔行）
+            out.append('| ' + ' | '.join(header) + ' |')
+            out.append('| ' + ' | '.join('---' for _ in header) + ' |')
+            for r in rows:
+                out.append('| ' + ' | '.join(r) + ' |')
+            out.append('')  # 表格后补一个空行，避免与下文粘连
+            i = j
+        else:
+            out.append(lines[i])
+            i += 1
+    return '\n'.join(out)
+
+
+def render_d_sections(content):
+    """将报告内容按 D1-D8 拆分，渲染为带彩色边框的章节"""
+    if not content:
+        return
+    # 清理 markdown 标记
+    clean = content.replace("**", "").replace("#", "")
+    # 按 D1-D8 及信息完整性地图拆分
+    sections = re.split(r'\n(?=D[1-8][:：]|【?信息完整性地图】?|【?Information Completeness Map】?)', clean)
+    d_found = False
+    for sec in sections:
+        sec = sec.strip()
+        if not sec:
+            continue
+        # 提取 D 编号
+        m = re.match(r'(D[1-8])[:：]\s*(.*)', sec)
+        if m:
+            d_num = m.group(1)  # "D1"
+            d_title = m.group(2).split('\n')[0]  # 第一行标题
+            d_body = sec[len(m.group(0)):].strip()  # 剩余内容
+            if not d_title:
+                d_title = d_num
+            css_class = f"d-section d-section-{d_num.lower()}"
+            title_safe = _esc(d_title)
+            body_md = _render_body_md(d_body)
+            st.markdown(
+                f'<div class="{css_class}">'
+                f'<div class="d-section-title">{d_num}：{title_safe}</div>'
+                f'<div class="d-section-body">{body_md}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            d_found = True
+        elif re.search(r'信息完整性地图|Information Completeness Map', sec):
+            # 信息完整性地图：独立灰色卡片
+            map_title = "📊 信息完整性地图" if st.session_state.lang == "zh" else "📊 Information Completeness Map"
+            body_md = _render_body_md(_strip_map_title(sec))
+            st.markdown(
+                f'<div class="d-section d-section-map">'
+                f'<div class="d-section-title">{map_title}</div>'
+                f'<div class="d-section-body">{body_md}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            d_found = True
+        elif not d_found:
+            # D1 之前的前言内容或无 D 章节的内容，直接显示（原生 markdown）
+            st.markdown(_render_body_md(sec))
+
+def render_d0_card(product_name, customer, problem_desc, defect_qty, severity, industry_std, team_members, lang):
+    """D0 前置自诊断卡片：根据表单输入实时计算问题分类、数据完整度、复杂度、紧急程度与围堵建议"""
+    if lang == "zh":
+        labels = ["问题分类", "数据完整度", "复杂度", "紧急程度"]
+        tip_header = "💡 围堵建议"
+        cls_map = {
+            "外观": "外观缺陷", "功能": "功能失效", "尺寸": "尺寸/公差",
+            "性能": "性能衰减", "装配": "装配不良", "物料": "物料/批次",
+            "软件": "软件/逻辑", "其他": "其他",
+        }
+        comp_map = {"低": "低", "中": "中", "高": "高"}
+        sev_map = {
+            "critical": ("🔴", "紧急", "#dc2626"),
+            "high": ("🟠", "高", "#ea580c"),
+            "medium": ("🟡", "中", "#ca8a04"),
+            "low": ("🟢", "低", "#16a34a"),
+        }
+    else:
+        labels = ["Type", "Data Completeness", "Complexity", "Urgency"]
+        tip_header = "💡 Containment Advice"
+        cls_map = {
+            "外观": "Appearance", "功能": "Function", "尺寸": "Dimension",
+            "性能": "Performance", "装配": "Assembly", "物料": "Material",
+            "软件": "Software", "其他": "Other",
+        }
+        comp_map = {"低": "Low", "中": "Medium", "高": "High"}
+        sev_map = {
+            "critical": ("🔴", "Critical", "#dc2626"),
+            "high": ("🟠", "High", "#ea580c"),
+            "medium": ("🟡", "Medium", "#ca8a04"),
+            "low": ("🟢", "Low", "#16a34a"),
+        }
+
+    # ---- 问题分类（关键词匹配）----
+    kw = {
+        "外观": ["划伤", "刮伤", "异色", "变色", "脏污", "毛刺", "起泡", "开裂", "裂纹", "破损", "变形", "生锈", "缺料", "烧焦"],
+        "功能": ["失效", "故障", "不工作", "无法", "异常", "死机", "黑屏", "失灵", "通讯", "通信", "误判", "短路", "开路", "击穿"],
+        "尺寸": ["尺寸", "公差", "超差", "平面度", "厚度", "长度", "孔径", "偏移"],
+        "性能": ["性能", "参数", "指标", "衰减", "漂移", "温升", "噪声", "阻抗"],
+        "装配": ["装配", "错位", "漏装", "错装", "松动", "间隙", "干涉"],
+        "物料": ["物料", "批次", "混料", "供应商", "原料", "变更"],
+        "软件": ["软件", "程序", "代码", "逻辑", "算法", "固件"],
+    }
+    desc = problem_desc or ""
+    ptype = "其他"
+    for k, words in kw.items():
+        if any(w in desc for w in words):
+            ptype = k
+            break
+    ptype_label = cls_map.get(ptype, ptype)
+
+    # ---- 数据完整度评分（满分 100）----
+    score = 0
+    if product_name: score += 15
+    if customer: score += 10
+    score += min(30, len(desc) // 8)  # 描述越长越完整，上限 30
+    score += 10  # 发生日期（默认有值）
+    if defect_qty and defect_qty > 0: score += 10
+    score += 10  # 严重程度（必选）
+    score += 5   # 行业标准
+    if team_members: score += 10
+    score = max(0, min(100, score))
+    # 数据完整度颜色：≥80 绿，50-79 黄，<50 红
+    bar_color = "#16a34a" if score >= 80 else "#ca8a04" if score >= 50 else "#dc2626"
+
+    # ---- 复杂度评级 ----
+    if defect_qty and defect_qty > 1000 or len(desc) > 200:
+        complexity = "高"
+    elif (defect_qty and defect_qty > 100) or len(desc) > 80:
+        complexity = "中"
+    else:
+        complexity = "低"
+    complexity_label = comp_map.get(complexity, complexity)
+
+    # ---- 紧急程度（来自严重程度）----
+    sev_key = None
+    sl = TEXT[lang]
+    if severity == sl["severity_critical"]: sev_key = "critical"
+    elif severity == sl["severity_high"]: sev_key = "high"
+    elif severity == sl["severity_medium"]: sev_key = "medium"
+    else: sev_key = "low"
+    icon, urg_label, urg_color = sev_map[sev_key]
+
+    # ---- 围堵建议 ----
+    if sev_key in ("critical", "high"):
+        tip = ("问题紧急，建议立即启动围堵措施（ICA），优先拦截在途品与客户端库存。"
+               if lang == "zh" else
+               "Urgent — recommend launching interim containment (ICA) immediately, prioritize intercepting in-transit & customer inventory.")
+    else:
+        tip = ("建议评估影响范围后启动围堵措施，避免问题扩大。"
+               if lang == "zh" else
+               "Recommend containment after assessing impact scope to prevent spread.")
+
+    html = f'''
+    <div class="d0-card">
+      <div class="d0-card-header">🔍 D0 前置诊断 / Pre-check</div>
+      <div class="d0-row"><span>{labels[0]}</span><b>{ptype_label}</b></div>
+      <div class="d0-row"><span>{labels[1]}</span>
+        <div class="d0-bar"><div class="d0-bar-fill" style="width:{score}%;background:{bar_color}"></div></div>
+        <b style="color:{bar_color}">{score}%</b>
+      </div>
+      <div class="d0-row"><span>{labels[2]}</span><b>{complexity_label}</b></div>
+      <div class="d0-row"><span>{labels[3]}</span><b style="color:{urg_color}">{icon} {urg_label}</b></div>
+      <div class="d0-tip"><b>{tip_header}：</b>{tip}</div>
+    </div>
+    '''
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def _add_body_to_doc(doc, body):
+    """把正文写入 Word：含 markdown 表格则生成真实表格，否则按段写入。"""
+    lines = body.split('\n')
+    text_buf = []
+    i = 0
+    n = len(lines)
+
+    def flush_text():
+        if text_buf:
+            doc.add_paragraph(''.join(text_buf).strip())
+            text_buf.clear()
+
+    while i < n:
+        if _is_table_start(lines, i):
+            flush_text()
+            header = _split_row(lines[i])
+            j = i + 1
+            if j < n:
+                s = lines[j].strip().strip('|').strip()
+                if '-' in s and all(c in '-:| ' for c in s):
+                    j += 1
+            rows = []
+            while j < n and lines[j].strip() and _ncols(lines[j]) >= 2:
+                rows.append(_split_row(lines[j]))
+                j += 1
+            table = doc.add_table(rows=1, cols=max(1, len(header)))
+            try:
+                table.style = 'Light Grid Accent 1'
+            except Exception:
+                pass
+            hdr = table.rows[0].cells
+            for k, h in enumerate(header):
+                hdr[k].text = h
+            for r in rows:
+                cells = table.add_row().cells
+                for k, c in enumerate(r):
+                    cells[k].text = c
+            i = j
+        else:
+            text_buf.append(lines[i] + '\n')
+            i += 1
+    flush_text()
+
 
 def export_to_word(content, product_name, lang):
     doc = Document()
@@ -562,10 +1305,22 @@ def export_to_word(content, product_name, lang):
     info.add_run(f"Product: {product_name}").bold = True
     info.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph()
-    sections = re.split(r'\n(?=D[1-8][:：])', content.replace("**", "").replace("#", ""))
+    clean = content.replace("**", "").replace("#", "")
+    sections = re.split(r'\n(?=D[1-8][:：]|【?信息完整性地图】?|【?Information Completeness Map】?)', clean)
     for i, sec in enumerate(sections):
         if not sec.strip():
             continue
+        # 信息完整性地图：独立小节 + 真实表格
+        if re.search(r'信息完整性地图|Information Completeness Map', sec):
+            map_title = "📊 信息完整性地图" if lang == "zh" else "📊 Information Completeness Map"
+            p = doc.add_paragraph()
+            run = p.add_run(map_title)
+            run.bold = True
+            run.font.size = Pt(14)
+            run.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
+            _add_body_to_doc(doc, _strip_map_title(sec))
+            continue
+        # 普通 D 章节
         lines = sec.strip().split('\n', 1)
         p_title = doc.add_paragraph()
         runner = p_title.add_run(lines[0].strip())
@@ -573,7 +1328,7 @@ def export_to_word(content, product_name, lang):
         runner.font.size = Pt(14)
         runner.font.color.rgb = RGBColor(30, 58, 138)
         if len(lines) > 1 and lines[1].strip():
-            doc.add_paragraph(lines[1].strip())
+            _add_body_to_doc(doc, lines[1].strip())
         if i < len(sections) - 1:
             p_line = doc.add_paragraph()
             p_line.paragraph_format.space_before = Pt(12)
@@ -589,6 +1344,275 @@ def export_to_word(content, product_name, lang):
     bio = BytesIO()
     doc.save(bio)
     return bio.getvalue()
+
+def _ppt_parse_blocks(body):
+    """把章节正文解析成结构化块：('heading',..) / ('para',..) / ('bullet',..) / ('table',(header,rows))"""
+    if not body:
+        return []
+    lines = body.split('\n')
+    blocks = []
+    i, n = 0, len(lines)
+    while i < n:
+        s = lines[i].strip()
+        if not s:
+            i += 1
+            continue
+        # 表格
+        if _is_table_start(lines, i):
+            header = _split_row(lines[i])
+            rows = []
+            j = i + 1
+            if j < n:
+                ss = lines[j].strip().strip('|').strip()
+                if '-' in ss and all(c in '-:| ' for c in ss):
+                    j += 1
+            while j < n and lines[j].strip() and _ncols(lines[j]) >= 2:
+                rows.append(_split_row(lines[j]))
+                j += 1
+            blocks.append(('table', (header, rows)))
+            i = j
+            continue
+        # 标题：=== xxx ===
+        if s.startswith('===') and s.endswith('==='):
+            blocks.append(('heading', s.strip('= ').strip()))
+            i += 1
+            continue
+        # 小标题：以 ：结尾且较短
+        if (s.endswith('：') or s.endswith(':')) and len(s) <= 28:
+            blocks.append(('heading', s))
+            i += 1
+            continue
+        # 项目符号
+        if re.match(r'^([-\u2022\u25cf*]|\d+[.)]|[a-zA-Z][.)])\s+', s) or s.startswith('\u2192') or s.startswith('\u25b6') or s.startswith('\u2022'):
+            txt = re.sub(r'^([-\u2022\u25cf*]|\d+[.)]|[a-zA-Z][.)]|\u2192|\u25b6)\s*', '', s).strip()
+            blocks.append(('bullet', txt))
+            i += 1
+            continue
+        blocks.append(('para', s))
+        i += 1
+    return blocks
+
+
+def export_to_pptx(content, product_name, lang):
+    """将报告导出为结构化的 PPT：标题页 + 每个 D 章节一页（含分色标题带、徽章、表格、自动分页）。"""
+    from pptx import Presentation
+    from pptx.util import Pt, Inches
+    from pptx.dml.color import RGBColor
+    from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+    from pptx.enum.shapes import MSO_SHAPE
+
+    D_COLORS = {
+        "D1": RGBColor(0x25, 0x63, 0xEB),
+        "D2": RGBColor(0x16, 0xA3, 0x4A),
+        "D3": RGBColor(0xEA, 0x58, 0x0C),
+        "D4": RGBColor(0xDB, 0x27, 0x77),
+        "D5": RGBColor(0x93, 0x33, 0xEA),
+        "D6": RGBColor(0x08, 0x91, 0xB2),
+        "D7": RGBColor(0xCA, 0x8A, 0x04),
+        "D8": RGBColor(0x64, 0x74, 0x8B),
+        "MAP": RGBColor(0x47, 0x55, 0x69),
+    }
+    WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+    DARK = RGBColor(0x33, 0x33, 0x33)
+    GREY = RGBColor(0x94, 0xA3, 0xB8)
+    NAVY = RGBColor(0x1E, 0x3A, 0x8A)
+
+    prs = Presentation()
+    prs.slide_width = Inches(13.333)
+    prs.slide_height = Inches(7.5)
+    SW = float(prs.slide_width) / 914400.0
+    SH = float(prs.slide_height) / 914400.0
+
+    # ---------- 标题页 ----------
+    ts = prs.slides.add_slide(prs.slide_layouts[6])
+    ts.background.fill.solid()
+    ts.background.fill.fore_color.rgb = NAVY
+    bar = ts.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(3.1), prs.slide_width, Inches(0.12))
+    bar.fill.solid()
+    bar.fill.fore_color.rgb = RGBColor(0x60, 0xA5, 0xFA)
+    bar.line.fill.background()
+    t = ts.shapes.add_textbox(Inches(1), Inches(2.1), SW - 2, Inches(1.2))
+    tf = t.text_frame
+    tf.word_wrap = True
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    r = p.add_run()
+    r.text = TEXT[lang]["ppt_title"]
+    r.font.size = Pt(40)
+    r.font.bold = True
+    r.font.color.rgb = WHITE
+    sub = ts.shapes.add_textbox(Inches(1), Inches(4.0), SW - 2, Inches(0.8))
+    stf = sub.text_frame
+    stf.word_wrap = True
+    sp = stf.paragraphs[0]
+    sp.alignment = PP_ALIGN.CENTER
+    sr = sp.add_run()
+    sr.text = f"Product / 产品: {product_name}"
+    sr.font.size = Pt(20)
+    sr.font.color.rgb = RGBColor(0xBF, 0xDB, 0xFE)
+    dt = ts.shapes.add_textbox(Inches(1), Inches(5.4), SW - 2, Inches(0.5))
+    dtf = dt.text_frame
+    dtf.paragraphs[0].alignment = PP_ALIGN.CENTER
+    dr = dtf.paragraphs[0].add_run()
+    dr.text = datetime.now().strftime("%Y-%m-%d")
+    dr.font.size = Pt(14)
+    dr.font.color.rgb = GREY
+
+    # ---------- 章节拆分 ----------
+    clean = content.replace("**", "").replace("#", "")
+    sections = re.split(
+        r'\n(?=D[1-8][:：]|【?信息完整性地图】?|【?Information Completeness Map】?)',
+        clean
+    )
+
+    MARGIN = 0.6
+    TOP = 1.2
+    BOTTOM = SH - 0.6
+    X = MARGIN
+    W = SW - 2 * MARGIN
+
+    def _make_slide(color, badge, title, continuation=False):
+        s = prs.slides.add_slide(prs.slide_layouts[6])
+        s.background.fill.solid()
+        s.background.fill.fore_color.rgb = WHITE
+        # 顶部色带
+        band = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, Inches(0.95))
+        band.fill.solid()
+        band.fill.fore_color.rgb = color
+        band.line.fill.background()
+        # 徽章
+        badge_shape = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(0.4), Inches(0.18), Inches(0.6), Inches(0.6))
+        badge_shape.fill.solid()
+        badge_shape.fill.fore_color.rgb = WHITE
+        badge_shape.line.fill.background()
+        bt = badge_shape.text_frame
+        bt.word_wrap = False
+        bp = bt.paragraphs[0]
+        bp.alignment = PP_ALIGN.CENTER
+        br = bp.add_run()
+        br.text = badge
+        br.font.size = Pt(16)
+        br.font.bold = True
+        br.font.color.rgb = color
+        # 标题
+        tt = s.shapes.add_textbox(Inches(1.15), Inches(0.18), SW - 1.5, Inches(0.6))
+        ttf = tt.text_frame
+        ttf.word_wrap = True
+        tp = ttf.paragraphs[0]
+        tp.alignment = PP_ALIGN.LEFT
+        tr = tp.add_run()
+        tr.text = title + ("（续）" if continuation else "")
+        tr.font.size = Pt(22)
+        tr.font.bold = True
+        tr.font.color.rgb = WHITE
+        # 页脚
+        ft = s.shapes.add_textbox(Inches(0.5), SH - 0.45, SW - 1, Inches(0.35))
+        ftf = ft.text_frame
+        ftf.paragraphs[0].alignment = PP_ALIGN.LEFT
+        fr = ftf.paragraphs[0].add_run()
+        fr.text = f"{product_name}  ·  8D Report  ·  {datetime.now().strftime('%Y-%m-%d')}"
+        fr.font.size = Pt(9)
+        fr.font.color.rgb = GREY
+        return s
+
+    def _est(text, pt, w_in):
+        cw = pt * 0.55 / 72.0
+        nlines = max(1, -(-len(text) // max(1, int(w_in / cw))))
+        return nlines * (pt * 1.25 / 72.0) + 0.08
+
+    for sec in sections:
+        sec = sec.strip()
+        if not sec:
+            continue
+        lines = sec.split('\n')
+        head = lines[0].strip()
+        body = '\n'.join(lines[1:]).strip()
+        m = re.match(r'D(\d)[:：]\s*(.*)', head)
+        is_map = bool(re.search(r'信息完整性地图|Information Completeness Map', head))
+        if m:
+            dnum = "D" + m.group(1)
+            dtitle = m.group(2).strip() or dnum
+            color = D_COLORS.get(dnum, D_COLORS["D8"])
+            badge = m.group(1)
+        elif is_map:
+            dnum = "MAP"
+            dtitle = "📊 信息完整性地图" if lang == "zh" else "Information Completeness Map"
+            color = D_COLORS["MAP"]
+            badge = "图"
+        else:
+            dnum = ""
+            dtitle = head[:40]
+            color = D_COLORS["D8"]
+            badge = "•"
+
+        blocks = _ppt_parse_blocks(body)
+        if not blocks:
+            blocks = [('para', body if body else head)]
+
+        y = TOP
+        s = _make_slide(color, badge, dtitle)
+        for kind, payload in blocks:
+            if kind == 'table':
+                header, rows = payload
+                nrows = len(rows) + 1
+                ncols = max(len(header), 1)
+                h = nrows * 0.32 + 0.1
+                if y + h > BOTTOM and y > TOP:
+                    s = _make_slide(color, badge, dtitle, True)
+                    y = TOP
+                tbl_shape = s.shapes.add_table(nrows, ncols, Inches(X), Inches(y), Inches(W), Inches(h))
+                tbl = tbl_shape.table
+                for c in range(ncols):
+                    tbl.columns[c].width = Inches(W / ncols)
+                for c in range(ncols):
+                    cell = tbl.cell(0, c)
+                    cell.text = header[c] if c < len(header) else ""
+                    cell.fill.solid()
+                    cell.fill.fore_color.rgb = color
+                    cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+                    pr = cell.text_frame.paragraphs[0]
+                    pr.alignment = PP_ALIGN.CENTER
+                    run = pr.runs[0]
+                    run.font.size = Pt(11)
+                    run.font.bold = True
+                    run.font.color.rgb = WHITE
+                for ri, row in enumerate(rows, start=1):
+                    for c in range(ncols):
+                        cell = tbl.cell(ri, c)
+                        cell.text = row[c] if c < len(row) else ""
+                        cell.fill.solid()
+                        cell.fill.fore_color.rgb = WHITE if ri % 2 else RGBColor(0xF1, 0xF5, 0xF9)
+                        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+                        pr = cell.text_frame.paragraphs[0]
+                        run = pr.runs[0]
+                        run.font.size = Pt(10)
+                        run.font.color.rgb = DARK
+                y = y + h + 0.15
+            else:
+                text = payload
+                pt = 18 if kind == 'heading' else 14
+                h = _est(text, pt, W)
+                if y + h > BOTTOM and y > TOP:
+                    s = _make_slide(color, badge, dtitle, True)
+                    y = TOP
+                tb = s.shapes.add_textbox(Inches(X), Inches(y), Inches(W), Inches(h))
+                tf = tb.text_frame
+                tf.word_wrap = True
+                p = tf.paragraphs[0]
+                p.text = ("•  " + text) if kind == 'bullet' else text
+                for run in p.runs:
+                    run.font.size = Pt(pt)
+                    run.font.color.rgb = DARK
+                if kind == 'heading':
+                    p.runs[0].font.bold = True
+                    p.runs[0].font.color.rgb = color
+                    p.space_after = Pt(4)
+                y = y + h + (0.12 if kind in ('para', 'bullet') else 0.18)
+
+    bio = BytesIO()
+    prs.save(bio)
+    return bio.getvalue()
+
 
 # ==================== 历史记录功能 ====================
 def save_report_history(user_id, product_name, customer, problem_desc, report_content, lang):
@@ -775,8 +1799,8 @@ def render_sidebar():
 
 | 版本 | 原价 | 优惠价 |
 |------|------|--------|
-| 月卡 | ~~¥29~~ | **¥9.9/月** |
-| 年卡 | ~~¥99~~ | **¥29.9/年** |
+| 月卡 | ~~¥29~~ | **¥6.9/月** |
+| 年卡 | ~~¥99~~ | **¥39/年** |
 | 5年卡 | ~~¥299~~ | **¥99/5年** |
 
 **购买步骤：**
@@ -865,36 +1889,69 @@ def render_sidebar():
 # ==================== 主页面 ====================
 render_sidebar()
 
-st.title(T["main_title"])
+st.markdown(f'''
+<div class="brand-header">
+    <div class="brand-logo">8D</div>
+    <div>
+        <div class="brand-title">{T["main_title"]}</div>
+        <div class="brand-subtitle">{T["main_subtitle"]}</div>
+    </div>
+</div>
+''', unsafe_allow_html=True)
 
 col_input, col_preview = st.columns([1, 1.2])
 
 with col_input:
-    st.header(T["input_header"])
-    product_name = st.text_input(T["product_name"], placeholder="e.g., PCB-A123" if st.session_state.lang == "en" else "例：PCB-A123")
-    customer = st.text_input(T["customer"], placeholder="e.g., Wuxing technology" if st.session_state.lang == "en" else "例：五星科技")
-    problem_desc = st.text_area(T["problem_desc"], height=150, placeholder=T["problem_placeholder"])
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        occur_date = st.date_input(T["occur_date"], datetime.now())
-    with col2:
-        defect_qty = st.number_input(T["defect_qty"], min_value=1, value=1)
-    with col3:
-        severity = st.selectbox(
-            T["severity"], 
-            [T["severity_low"], T["severity_medium"], T["severity_high"], T["severity_critical"]]
+    st.markdown(f'<div class="panel-title">{T["input_header"]}</div>', unsafe_allow_html=True)
+
+    # ========== 卡片1：产品信息 ==========
+    with st.container(border=True):
+        st.markdown(f'<div class="input-card-header accent-blue">{T["card_product"]}</div>', unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        with c1:
+            product_name = st.text_input(T["product_name"], placeholder="例：PCB-A123" if st.session_state.lang == "zh" else "e.g., PCB-A123")
+        with c2:
+            customer = st.text_input(T["customer"], placeholder="例：比亚迪汽车" if st.session_state.lang == "zh" else "e.g., BYD")
+
+    # ========== 卡片2：问题描述 ==========
+    with st.container(border=True):
+        st.markdown(f'<div class="input-card-header accent-orange">{T["card_problem"]}</div>', unsafe_allow_html=True)
+        problem_desc = st.text_area(T["problem_desc"], height=120, placeholder=T["problem_placeholder"])
+
+    # ========== 卡片3：事件详情 ==========
+    with st.container(border=True):
+        st.markdown(f'<div class="input-card-header accent-teal">{T["card_details"]}</div>', unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            occur_date = st.date_input(T["occur_date"], datetime.now())
+        with col2:
+            defect_qty = st.number_input(T["defect_qty"], min_value=1, value=1)
+        with col3:
+            severity = st.selectbox(
+                T["severity"],
+                [T["severity_low"], T["severity_medium"], T["severity_high"], T["severity_critical"]]
+            )
+
+        col4, col5 = st.columns(2)
+        with col4:
+            industry_opts = [x["zh"] if st.session_state.lang == "zh" else x["en"] for x in INDUSTRIES]
+            industry_std = st.selectbox(
+                T["industry_std"],
+                industry_opts,
+                index=1
+            )
+        with col5:
+            team_members = st.text_input(T["team_members"], placeholder=T["team_placeholder"])
+
+        # 解析选中的行业，提取专属指引
+        sel_industry = next(
+            (x for x in INDUSTRIES if x["zh"] == industry_std or x["en"] == industry_std),
+            INDUSTRIES[1]
         )
-    
-    col4, col5 = st.columns(2)
-    with col4:
-        industry_std = st.selectbox(
-            T["industry_std"], 
-            ["ISO 9001", "IATF 16949", "ISO 13485", "AS9100"], 
-            index=1
-        )
-    with col5:
-        team_members = st.text_input(T["team_members"], placeholder=T["team_placeholder"])
+        industry_guide = sel_industry[st.session_state.lang + "_guide"]
+
+        # ========== D0 前置自诊断卡片 ==========
+        render_d0_card(product_name, customer, problem_desc, defect_qty, severity, industry_std, team_members, st.session_state.lang)
     
         
     if st.button(T["generate_btn"], type="primary", use_container_width=True):
@@ -928,7 +1985,8 @@ with col_input:
                             f"严重程度：{severity}, "
                             f"标准：{industry_std}, "
                             f"团队：{team_members or '未提供'}\n\n"
-                            f"问题描述：{problem_desc}"
+                            f"问题描述：{problem_desc}\n\n"
+                            f"【行业专属要求】\n{industry_guide}"
                         )
                     else:
                         user_prompt = (
@@ -940,11 +1998,12 @@ with col_input:
                             f"Severity: {severity}\n"
                             f"Standard: {industry_std}\n"
                             f"Team: {team_members or 'N/A'}\n\n"
-                            f"Problem Description: {problem_desc}"
+                            f"Problem Description: {problem_desc}\n\n"
+                            f"[Industry-specific Requirements]\n{industry_guide}"
                         )
 
                     response = client.chat.completions.create(
-                        model="deepseek-v4-flash",
+                        model="deepseek-chat",
                         messages=[
                             {"role": "system", "content": SYSTEM_PROMPT[st.session_state.lang]},
                             {"role": "user", "content": user_prompt}
@@ -955,13 +2014,38 @@ with col_input:
                     )
 
                     full_content = ""
+                    progress_placeholder = st.empty()
                     stream_placeholder = st.empty()
 
                     for chunk in response:
                         delta = chunk.choices[0].delta.content
                         if delta:
                             full_content += delta
+                            # 检测当前 D 步骤
+                            current_d = 0
+                            for i in range(1, 9):
+                                if re.search(rf'D{i}[:：]', full_content):
+                                    current_d = i
+                            # 更新进度圆点
+                            if current_d > 0:
+                                dots_html = '<div class="progress-dots">'
+                                for i in range(1, 9):
+                                    if i < current_d:
+                                        dots_html += '<div class="progress-dot dot-done">✓</div>'
+                                    elif i == current_d:
+                                        dots_html += f'<div class="progress-dot dot-active">D{i}</div>'
+                                    else:
+                                        dots_html += f'<div class="progress-dot dot-pending">D{i}</div>'
+                                dots_html += '</div>'
+                                progress_placeholder.markdown(dots_html, unsafe_allow_html=True)
                             stream_placeholder.markdown(full_content)
+
+                    # 完成后全部绿色
+                    dots_done = '<div class="progress-dots">'
+                    for i in range(1, 9):
+                        dots_done += '<div class="progress-dot dot-done">✓</div>'
+                    dots_done += '</div>'
+                    progress_placeholder.markdown(dots_done, unsafe_allow_html=True)
 
                     status.update(label="✅ " + T["success"], state="complete", expanded=False)
 
@@ -990,7 +2074,7 @@ with col_input:
                     st.error(T["api_error"])
 
 with col_preview:
-    st.header(T["preview_header"])
+    st.markdown(f'<div class="panel-title">{T["preview_header"]}</div>', unsafe_allow_html=True)
     if st.session_state.current_result:
         edit_mode = st.checkbox(T["edit_mode"], key="edit_mode_toggle")
         if edit_mode:
@@ -1001,71 +2085,95 @@ with col_preview:
                 st.success("✅ 修改已保存" if st.session_state.lang == "zh" else "✅ Changes saved")
                 st.rerun()
         else:
-            st.markdown(st.session_state.current_result.replace("**", "").replace("#", ""))
+            render_d_sections(st.session_state.current_result)
         
         st.markdown("---")
         
-        # ========== 一键复制按钮 ==========
-        copy_b64 = base64.b64encode(st.session_state.current_result.encode('utf-8')).decode('ascii')
-        copy_label = "📋 一键复制报告" if st.session_state.lang == "zh" else "📋 Copy Report"
-        copied_label = "✅ 已复制到剪贴板" if st.session_state.lang == "zh" else "✅ Copied!"
-        fail_label = "复制失败，请手动选择文本复制" if st.session_state.lang == "zh" else "Copy failed"
-
-        copy_html = f'''
-        <div style="width:100%;">
-        <button id="copy-btn" style="
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 0.5rem 1.5rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 0.9rem;
-            width: 100%;
-        " onclick="
-            try {{
-                const b64 = '{copy_b64}';
-                const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-                const text = new TextDecoder('utf-8').decode(bytes);
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                const btn = document.getElementById('copy-btn');
-                btn.textContent = '{copied_label}';
-                btn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
-                setTimeout(function() {{
-                    btn.textContent = '{copy_label}';
-                    btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                }}, 2000);
-            }} catch(e) {{
-                alert('{fail_label}');
-            }}
-        ">{copy_label}</button>
-        </div>
-        '''
-        components.html(copy_html, height=50)
-        
+        # ========== 按钮行：复制 + 导出并排 ==========
         user_id = st.session_state.get("user_id")
         lic = get_user_license(user_id) if user_id else None
-        if lic and lic['plan_type'] != 'free':
-            word_data = export_to_word(
-                st.session_state.current_result,
-                product_name or "8D_Report",
-                st.session_state.lang
-            )
-            st.download_button(
-                label=T["download_btn"],
-                data=word_data,
-                file_name=f"8D_Report_{datetime.now().strftime('%Y%m%d')}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True
-            )
-        else:
-            st.info(T["export_disabled"])
+        
+        btn_col1, btn_col2 = st.columns(2)
+        
+        with btn_col1:
+            # ========== 一键复制按钮 ==========
+            copy_b64 = base64.b64encode(st.session_state.current_result.encode('utf-8')).decode('ascii')
+            copy_label = "📋 一键复制报告" if st.session_state.lang == "zh" else "📋 Copy Report"
+            copied_label = "✅ 已复制到剪贴板" if st.session_state.lang == "zh" else "✅ Copied!"
+            fail_label = "复制失败，请手动选择文本复制" if st.session_state.lang == "zh" else "Copy failed"
+
+            copy_html = f'''
+            <div style="width:100%;">
+            <button id="copy-btn" style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 0.45rem 1rem;
+                border-radius: 0.5rem;
+                cursor: pointer;
+                font-size: 0.9rem;
+                width: 100%;
+            " onclick="
+                try {{
+                    const b64 = '{copy_b64}';
+                    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+                    const text = new TextDecoder('utf-8').decode(bytes);
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    const btn = document.getElementById('copy-btn');
+                    btn.textContent = '{copied_label}';
+                    btn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+                    setTimeout(function() {{
+                        btn.textContent = '{copy_label}';
+                        btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    }}, 2000);
+                }} catch(e) {{
+                    alert('{fail_label}');
+                }}
+            ">{copy_label}</button>
+            </div>
+            '''
+            components.html(copy_html, height=45)
+        
+        with btn_col2:
+            if lic and lic['plan_type'] != 'free':
+                ex_col1, ex_col2 = st.columns(2)
+                with ex_col1:
+                    word_data = export_to_word(
+                        st.session_state.current_result,
+                        product_name or "8D_Report",
+                        st.session_state.lang
+                    )
+                    st.download_button(
+                        label=T["download_btn"],
+                        data=word_data,
+                        file_name=f"8D_Report_{datetime.now().strftime('%Y%m%d')}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True
+                    )
+                with ex_col2:
+                    try:
+                        ppt_data = export_to_pptx(
+                            st.session_state.current_result,
+                            product_name or "8D_Report",
+                            st.session_state.lang
+                        )
+                        st.download_button(
+                            label=T["download_ppt"],
+                            data=ppt_data,
+                            file_name=f"8D_Report_{datetime.now().strftime('%Y%m%d')}.pptx",
+                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                            use_container_width=True
+                        )
+                    except Exception:
+                        st.warning("⚠️ PPT 导出不可用（依赖缺失）" if st.session_state.lang == "zh" else "⚠️ PPT export unavailable")
+            else:
+                st.info(T["export_disabled"])
     else:
         st.info("👈 输入问题描述后点击生成" if st.session_state.lang == "zh" else "👈 Enter description and click generate")
