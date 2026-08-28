@@ -51,6 +51,21 @@ hide_streamlit_style = """
 <style>
     /* 只隐藏右上角菜单 */
     #MainMenu {visibility: hidden !important; display: none !important;}
+
+    /* ========== 顶部 header / 工具栏改为蓝色背景 ========== */
+    header[data-testid="stHeader"],
+    [data-testid="stToolbar"] {
+        background-color: #1e3a5f !important;
+        color: #ffffff !important;
+    }
+    header[data-testid="stHeader"] *,
+    [data-testid="stToolbar"] * {
+        color: #ffffff !important;
+    }
+    header[data-testid="stHeader"] a,
+    [data-testid="stToolbar"] a {
+        color: #ffffff !important;
+    }
     
     /* 隐藏 footer 水印 */
     footer {visibility: hidden !important; display: none !important;}
@@ -61,6 +76,12 @@ hide_streamlit_style = """
     /* 调整主内容区域 */
     .main .block-container {
         padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    /* 顶部留给 header 的空间尽量小 */
+    .stApp > header[data-testid="stHeader"] {
+        height: 2.2rem !important;
+        min-height: 2.2rem !important;
     }
     
     /* ========== 缩小侧边栏间距 ========== */
@@ -128,86 +149,192 @@ hide_streamlit_style = """
         }
     }
     
-    /* ========== 品牌头部 ========== */
-    .brand-header {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        padding: 0.5rem 0 0.8rem 0;
-        border-bottom: 3px solid #2563eb;
-        margin-bottom: 1rem;
-    }
-    .brand-logo {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
-        font-weight: 800;
-        flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(37,99,235,0.3);
-    }
-    .brand-title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #1e3a5f;
-        margin: 0;
-        line-height: 1.2;
-    }
-    .brand-subtitle {
-        font-size: 0.8rem;
-        color: #64748b;
-        margin: 0;
-        line-height: 1.2;
-    }
+    /* 品牌头部样式见下方（深色画布上的实色条） */
     @media screen and (max-width: 768px) {
         .brand-logo { width: 38px; height: 38px; font-size: 1rem; }
         .brand-title { font-size: 1.1rem; }
         .brand-subtitle { font-size: 0.7rem; }
     }
     
-    /* ========== 输入卡片样式 ========== */
+    /* ========== 输入卡片样式（深蓝底，配合白色文字） ========== */
     div[data-testid="stVerticalBlock"] .input-card {
-        border: 1px solid #e2e8f0;
+        border: 1px solid #2a3654;
         border-radius: 0.6rem;
         overflow: hidden;
-        margin-bottom: 0.8rem;
-        background: #ffffff;
-    }
-    .input-card-header {
-        background: #f1f5f9;
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #475569;
-        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 0.4rem;
+        background: #131a2c;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
     .input-card-body {
-        padding: 0.6rem 0.8rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    /* ========== 主区紧凑布局：缩小卡片间距、表单元素间距 ========== */
+    .main [data-testid="stVerticalBlockBorderWrapper"] {
+        margin-bottom: 0.4rem !important;
+        padding: 0.4rem 0.7rem !important;
+    }
+    .main .element-container { margin-bottom: 0.2rem !important; }
+    .main [data-testid="stVerticalBlock"] > div { gap: 0.3rem !important; }
+    /* 输入控件整体压矮 */
+    .main [data-testid="stTextInput"] input,
+    .main [data-testid="stNumberInput"] input,
+    .main [data-testid="stDateInput"] input,
+    .main [data-testid="stSelectbox"] [data-testid="stWidgetCombobox"] {
+        min-height: 32px !important;
+        padding: 0.15rem 0.5rem !important;
+        font-size: 0.85rem !important;
+    }
+    .main [data-testid="stTextArea"] textarea {
+        min-height: 80px !important;
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.85rem !important;
+    }
+    /* selectbox/date 内部触发按钮也压矮 */
+    .main [data-baseweb="select"] > div,
+    .main [data-baseweb="input"] > div {
+        min-height: 32px !important;
+    }
+    .main label, .main [data-testid="stWidgetLabel"] {
+        margin-bottom: 0.1rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* ========== 报告预览区所有文字（白色，深蓝底上看得清） ========== */
+    .main [data-testid="stMarkdown"],
+    .main [data-testid="stMarkdownContainer"] {
+        color: #ffffff !important;
+    }
+    .main [data-testid="stMarkdown"] *,
+    .main [data-testid="stMarkdownContainer"] *,
+    .main [data-testid="stMarkdown"] h1,
+    .main [data-testid="stMarkdown"] h2,
+    .main [data-testid="stMarkdown"] h3,
+    .main [data-testid="stMarkdown"] h4,
+    .main [data-testid="stMarkdown"] h5,
+    .main [data-testid="stMarkdown"] h6,
+    .main [data-testid="stMarkdown"] p,
+    .main [data-testid="stMarkdown"] li,
+    .main [data-testid="stMarkdown"] strong,
+    .main [data-testid="stMarkdown"] em,
+    .main [data-testid="stMarkdown"] span,
+    .main [data-testid="stMarkdown"] div {
+        color: #ffffff !important;
+    }
+    .main [data-testid="stMarkdown"] table,
+    .main [data-testid="stMarkdown"] table td,
+    .main [data-testid="stMarkdown"] table th {
+        color: #ffffff !important;
+    }
+
+    /* ========== 输入卡片内表单标签（白色，深底上才看得清） ========== */
+    /* 用 html body 前缀拉高特异性，再叠加 !important，必杀 */
+    html body [data-testid="stWidgetLabel"],
+    html body label[data-testid="stWidgetLabel"],
+    html body [data-testid="stTextInput"] label,
+    html body [data-testid="stTextInput"] [data-testid="stWidgetLabel"],
+    html body [data-testid="stTextArea"] label,
+    html body [data-testid="stTextArea"] [data-testid="stWidgetLabel"],
+    html body [data-testid="stNumberInput"] label,
+    html body [data-testid="stNumberInput"] [data-testid="stWidgetLabel"],
+    html body [data-testid="stDateInput"] label,
+    html body [data-testid="stDateInput"] [data-testid="stWidgetLabel"],
+    html body [data-testid="stSelectbox"] label,
+    html body [data-testid="stSelectbox"] [data-testid="stWidgetLabel"],
+    html body [data-testid="stMultiselect"] label,
+    html body [data-testid="stMultiselect"] [data-testid="stWidgetLabel"],
+    .main label,
+    .main .stTextInput label,
+    .main .stTextInput > label,
+    .main .stTextArea label,
+    .main .stTextArea > label,
+    .main .stNumberInput label,
+    .main .stDateInput label,
+    .main .stSelectbox label,
+    .main .stMultiselect label,
+    .main [data-testid="stWidgetLabel"] {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+    /* placeholder 也要看得清 */
+    .main input::placeholder,
+    .main textarea::placeholder {
+        color: #64748b !important;
+    }
+
+    /* ========== 侧边栏文字（白色，深蓝底上清楚） ========== */
+    /* 输入激活码、生成历史、按钮等 */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+    [data-testid="stSidebar"] .stCaption,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] [data-testid="stWidgetLabel"],
+    [data-testid="stSidebar"] .streamlit-expanderHeader {
+        color: #ffffff !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] h1,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] h2,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] h3,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] h4,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] p,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] li,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] span,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] strong,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] em {
+        color: #ffffff !important;
+    }
+    /* 侧边栏内的成功/错误/提示信息也白 */
+    [data-testid="stSidebar"] .stAlert,
+    [data-testid="stSidebar"] .stAlert * {
+        color: #ffffff !important;
+    }
+
+    /* ========== st.status 生成中 / 完成 文字（白色） ========== */
+    /* 含“✅ 报告生成完成！”标签 与 正在流式输出的正文 */
+    [data-testid="stStatus"],
+    [data-testid="stStatus"] *,
+    [data-testid="stStatus"] .stStatusLabel,
+    [data-testid="stStatus"] [data-testid="stMarkdown"],
+    [data-testid="stStatus"] [data-testid="stMarkdownContainer"],
+    [data-testid="stStatus"] [data-testid="stMarkdown"] *,
+    [data-testid="stStatus"] [data-testid="stMarkdownContainer"] *,
+    [data-testid="stStatus"] label,
+    [data-testid="stStatus"] p,
+    [data-testid="stStatus"] li,
+    [data-testid="stStatus"] span,
+    [data-testid="stStatus"] strong,
+    [data-testid="stStatus"] div,
+    [data-testid="stStatus"] table,
+    [data-testid="stStatus"] td,
+    [data-testid="stStatus"] th,
+    [data-testid="stStatus"] .streamlit-expanderHeader {
+        color: #ffffff !important;
+    }
+    [data-testid="stStatus"] {
+        background: transparent !important;
+        border-color: #2a3a5c !important;
     }
     
-    /* ========== D 章节彩色边框 ========== */
+    /* ========== D 章节彩色边框（深底） ========== */
     .d-section {
         border-left: 4px solid #cbd5e1;
         padding: 0.5rem 0.8rem;
         margin-bottom: 0.6rem;
         border-radius: 0 0.4rem 0.4rem 0;
-        background: #f8fafc;
+        background: #131a2c;
+        color: #e2e8f0;
     }
-    .d-section-d1 { border-left-color: #2563eb; }
-    .d-section-d2 { border-left-color: #16a34a; }
-    .d-section-d3 { border-left-color: #ea580c; }
-    .d-section-d4 { border-left-color: #db2777; }
-    .d-section-d5 { border-left-color: #9333ea; }
-    .d-section-d6 { border-left-color: #0891b2; }
-    .d-section-d7 { border-left-color: #ca8a04; }
-    .d-section-d8 { border-left-color: #64748b; }
-    .d-section-map { border-left-color: #475569; background: #f1f5f9; }
-    .d-section-map .d-section-title { color: #475569; }
+    .d-section-d1 { border-left-color: #3b82f6; }
+    .d-section-d2 { border-left-color: #22c55e; }
+    .d-section-d3 { border-left-color: #f97316; }
+    .d-section-d4 { border-left-color: #ec4899; }
+    .d-section-d5 { border-left-color: #a855f7; }
+    .d-section-d6 { border-left-color: #06b6d4; }
+    .d-section-d7 { border-left-color: #eab308; }
+    .d-section-d8 { border-left-color: #94a3b8; }
+    .d-section-map { border-left-color: #475569; background: #1a2238; }
+    .d-section-map .d-section-title { color: #94a3b8; }
     .d-section-title {
         font-weight: 700;
         font-size: 0.95rem;
@@ -223,8 +350,18 @@ hide_streamlit_style = """
     .d-section-d8 .d-section-title { color: #64748b; }
     .d-section-body {
         font-size: 0.85rem;
-        color: #334155;
+        color: #ffffff !important;
         line-height: 1.5;
+    }
+    .d-section-body *,
+    .d-section-body p,
+    .d-section-body li,
+    .d-section-body strong,
+    .d-section-body span,
+    .d-section-body table,
+    .d-section-body table th,
+    .d-section-body table td {
+        color: #ffffff !important;
     }
     /* 正文中若残留 h1-h6，强制压成正文字号。
        多重保险：双类选择器 (0,2,0) + 属性选择器 + !important，稳压 Streamlit 后加载的 .stMarkdown h1。 */
@@ -265,14 +402,16 @@ hide_streamlit_style = """
     }
     .d-section-body table th,
     .d-section-body table td {
-        border: 1px solid #cbd5e1;
+        border: 1px solid #2a3654;
         padding: 0.3rem 0.5rem;
         text-align: left;
         white-space: pre-wrap;
+        color: #e2e8f0;
     }
     .d-section-body table th {
-        background: #e2e8f0;
+        background: #1e293b;
         font-weight: 700;
+        color: #f1f5f9;
     }
     
     /* ========== 进度圆点 ========== */
@@ -303,68 +442,155 @@ hide_streamlit_style = """
         50% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(37,99,235,0); }
     }
     
-    /* ========== 全局背景与字体 ========== */
+    /* ========== 双色画布：左侧语言/账户区深蓝，右侧主区稍浅蓝 ========== */
     .stApp {
-        background: #f4f6fb;
+        background: #16233b;
+    }
+    /* 左侧：语言 / 账户区 深蓝 */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] > div,
+    [data-testid="stSidebarUserContent"],
+    section[data-testid="stSidebar"] {
+        background: #0b1220 !important;
+    }
+    /* 左侧文字改浅色，深蓝底上才看得清 */
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] .stMarkdown p,
+    [data-testid="stSidebar"] .stMarkdown span,
+    [data-testid="stSidebar"] .stCaption,
+    [data-testid="stSidebar"] label {
+        color: #cbd5e1 !important;
+    }
+    [data-testid="stSidebar"] h3 { color: #f1f5f9 !important; }
+/* 侧边栏内输入框保持浅底深字，保证可输入可读 */
+    [data-testid="stSidebar"] input,
+    [data-testid="stSidebar"] textarea {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+    }
+
+    /* ========== 侧边栏按钮（登录、激活、加载历史、删除、退出等）统一深蓝白字 ========== */
+    [data-testid="stSidebar"] button,
+    [data-testid="stSidebar"] [data-testid="stButton"] button {
+        background-color: #1e3a5f !important;
+        background-image: none !important;
+        color: #ffffff !important;
+        border: 1px solid #3b82f6 !important;
+    }
+    [data-testid="stSidebar"] button:hover,
+    [data-testid="stSidebar"] [data-testid="stButton"] button:hover {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #60a5fa !important;
+    }
+
+    /* ========== 侧边栏折叠/展开按钮：按状态设图标颜色 ========== */
+    /* 侧边栏打开时（按钮在内，显示 “«”）：图标始终白色 */
+    [data-testid="stSidebarCollapseButton"] {
+        color: #ffffff !important;
+        background-color: #1e3a5f !important;
+        border: 1px solid #3b82f6 !important;
+        border-radius: 0.4rem !important;
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.35) !important;
+        opacity: 1 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] *,
+    [data-testid="stSidebarCollapseButton"] svg,
+    [data-testid="stSidebarCollapseButton"] svg *,
+    [data-testid="stSidebarCollapseButton"] svg path,
+    [data-testid="stSidebarCollapseButton"] svg g,
+    [data-testid="stSidebarCollapseButton"] svg polygon,
+    [data-testid="stSidebarCollapseButton"] svg line,
+    [data-testid="stSidebarCollapseButton"] svg circle,
+    [data-testid="stSidebarCollapseButton"] svg rect {
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+    /* 侧边栏收起时（按钮浮动在主区，显示 “»”）：图标始终黑色 */
+    [data-testid="collapsedControlButton"] {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        border: 1px solid #94a3b8 !important;
+        border-radius: 0.4rem !important;
+    }
+    [data-testid="collapsedControlButton"] *,
+    [data-testid="collapsedControlButton"] svg,
+    [data-testid="collapsedControlButton"] svg *,
+    [data-testid="collapsedControlButton"] svg path,
+    [data-testid="collapsedControlButton"] svg g,
+    [data-testid="collapsedControlButton"] svg polygon,
+    [data-testid="collapsedControlButton"] svg line,
+    [data-testid="collapsedControlButton"] svg circle,
+    [data-testid="collapsedControlButton"] svg rect {
+        fill: #000000 !important;
+        stroke: #000000 !important;
+        color: #000000 !important;
+    }
+
+    /* 右侧：主内容区稍浅蓝（容器透明，透出 .stApp 背景） */
+    .main .block-container {
+        background: transparent;
     }
     html, body, [class*="css"] {
         font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     }
 
-    /* ========== 品牌头部升级 ========== */
+    /* 侧边栏保持 Streamlit 默认浅色主题 */
+
+    /* ========== Streamlit 表单控件 / 提示框（保持默认浅色主题） ========== */
+
+    /* ========== 品牌头部（深色画布上的实色条，保持可见） ========== */
     .brand-header {
         display: flex;
         align-items: center;
-        gap: 0.9rem;
-        padding: 1.1rem 1.3rem;
-        border-radius: 1rem;
-        background: linear-gradient(135deg, #2563eb 0%, #1e40af 55%, #4338ca 100%);
-        border-bottom: none;
-        margin-bottom: 1.2rem;
-        box-shadow: 0 10px 28px rgba(37,99,235,0.28);
-        color: #fff;
+        gap: 0.8rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.6rem;
+        background: #1e3a5f;
+        margin: 0 0 0.6rem 0;
     }
     .brand-logo {
-        width: 54px;
-        height: 54px;
-        border-radius: 15px;
-        background: rgba(255,255,255,0.18);
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.15);
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         font-weight: 800;
         flex-shrink: 0;
-        box-shadow: inset 0 0 0 2px rgba(255,255,255,0.3);
     }
     .brand-title {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
         font-weight: 800;
         color: #ffffff;
         margin: 0;
         line-height: 1.2;
-        letter-spacing: 0.5px;
     }
     .brand-subtitle {
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         color: rgba(255,255,255,0.85);
-        margin: 0.15rem 0 0 0;
+        margin: 0;
         line-height: 1.2;
     }
 
     /* ========== 面板标题 ========== */
     .panel-title {
-        font-size: 1.12rem;
+        font-size: 1.05rem;
         font-weight: 800;
-        color: #1e3a5f;
-        margin: 0 0 0.9rem 0;
-        padding-bottom: 0.4rem;
-        border-bottom: 2px solid #e2e8f0;
+        color: #f1f5f9;
+        margin: 0 0 0.4rem 0;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px solid #2a3654;
         letter-spacing: 0.3px;
     }
 
-    /* ========== 输入卡片头部（彩色标签） ========== */
+    /* ========== 输入卡片头部（彩色标签）—— 浅色主题 ========== */
     .input-card-header {
         display: inline-block;
         margin: 0 0 0.7rem 0;
@@ -377,52 +603,46 @@ hide_streamlit_style = """
         background: #eff6ff;
         color: #1e40af;
     }
-    .input-card-header.accent-blue { border-left-color: #2563eb; background: #eff6ff; color: #1e40af; }
+    .input-card-header.accent-blue   { border-left-color: #2563eb; background: #eff6ff; color: #1e40af; }
     .input-card-header.accent-orange { border-left-color: #ea580c; background: #fff7ed; color: #c2410c; }
-    .input-card-header.accent-teal { border-left-color: #0891b2; background: #ecfeff; color: #0e7490; }
+    .input-card-header.accent-teal   { border-left-color: #0891b2; background: #ecfeff; color: #0e7490; }
 
-    /* ========== D 章节卡片升级 ========== */
-    .d-section {
-        border-left: 4px solid #cbd5e1;
-        padding: 0.6rem 0.9rem;
-        margin-bottom: 0.7rem;
-        border-radius: 0.5rem;
-        background: #ffffff;
-        box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+    /* ========== 输入卡片本体（深色主题） ========== */
+    div[data-testid="stVerticalBlock"] .input-card {
+        border: 1px solid #2a3654;
+        border-radius: 0.6rem;
+        overflow: hidden;
+        margin-bottom: 0.8rem;
+        background: #131a2c;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
-    .d-section-title {
-        font-weight: 700;
-        font-size: 0.98rem;
-        margin-bottom: 0.35rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
+    /* st.container(border=True) 的实际边框容器 */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #131a2c !important;
+        border: 1px solid #2a3654 !important;
+        border-radius: 0.6rem !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
     }
-    .d-section-title::before {
-        content: "";
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: currentColor;
-        flex-shrink: 0;
-    }
+    [data-testid="stVerticalBlockBorderWrapper"] > div { background-color: transparent !important; }
 
-    /* ========== D0 前置诊断卡片 ========== */
+    /* d-section 深色样式见上方定义 */
+
+    /* ========== D0 前置诊断卡片（深色主题） ========== */
     .d0-card {
-        border: 1px solid #e2e8f0;
+        border: 1px solid #2a3654;
         border-radius: 0.7rem;
         padding: 0.9rem 1rem;
         margin: 0.5rem 0 0.3rem 0;
-        background: linear-gradient(180deg, #ffffff, #f8fafc);
-        box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+        background: linear-gradient(180deg, #131a2c, #0f1626);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
     }
     .d0-card-header {
         font-weight: 800;
         font-size: 0.95rem;
-        color: #1e3a5f;
+        color: #f1f5f9;
         margin-bottom: 0.6rem;
         padding-bottom: 0.4rem;
-        border-bottom: 2px dashed #e2e8f0;
+        border-bottom: 2px dashed #2a3654;
     }
     .d0-row {
         display: flex;
@@ -432,14 +652,15 @@ hide_streamlit_style = """
         margin: 0.4rem 0;
     }
     .d0-row > span {
-        color: #64748b;
+        color: #94a3b8;
         min-width: 6rem;
         flex-shrink: 0;
     }
+    .d0-row > b { color: #f1f5f9; }
     .d0-bar {
         flex: 1;
         height: 9px;
-        background: #e2e8f0;
+        background: #1f2a44;
         border-radius: 99px;
         overflow: hidden;
     }
@@ -451,12 +672,23 @@ hide_streamlit_style = """
     .d0-tip {
         margin-top: 0.6rem;
         padding: 0.5rem 0.7rem;
-        background: #fffbeb;
+        background: #2a1810;
         border-left: 3px solid #f59e0b;
         border-radius: 0 0.4rem 0.4rem 0;
         font-size: 0.8rem;
-        color: #92400e;
+        color: #fbbf24;
         line-height: 1.4;
+    }
+
+    /* ========== 输入框本体（深色卡片里的白色输入框） ========== */
+    .main input[type="text"],
+    .main input[type="password"],
+    .main textarea,
+    .main [data-baseweb="input"] input,
+    .main [data-baseweb="textarea"] textarea {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border: 1px solid #cbd5e1 !important;
     }
 
     /* ========== 生成按钮 ========== */
@@ -473,7 +705,7 @@ hide_streamlit_style = """
         box-shadow: 0 6px 20px rgba(37,99,235,0.45) !important;
     }
 
-    /* ========== 下载按钮 ========== */
+    /* ========== 下载按钮（浅色主题） ========== */
     .stDownloadButton button {
         border-radius: 0.6rem !important;
         font-weight: 600 !important;
@@ -484,6 +716,19 @@ hide_streamlit_style = """
         border-color: #2563eb !important;
         color: #2563eb !important;
     }
+
+    /* ========== 普通按钮（次级，浅色主题） ========== */
+    .stButton button:not([kind="primary"]) {
+        border: 1px solid #cbd5e1 !important;
+    }
+    .stButton button:not([kind="primary"]):hover {
+        border-color: #2563eb !important;
+        color: #2563eb !important;
+    }
+
+    /* ========== 进度圆点（浅色微调） ========== */
+    .progress-dot { color: #1e293b; }
+    .dot-pending { background: #cbd5e1; color: #94a3b8; }
 
     /* ========== 按钮行 ========== */
     .btn-row {
@@ -728,17 +973,10 @@ SYSTEM_PROMPT = {
         "🔴 低置信度 = AI 推测，需现场验证\n"
         "凡无法确认的数据，使用占位标记：[待现场确认]、[参数待实测]、[数据待补充]\n"
         "示例：机：回流焊峰值温度偏低 🟡（推测实际约 235°C，[参数待实测]）\n\n"
-        "【信息完整性地图】\n"
-        "报告末尾必须附一张信息完整性地图，区分「已确认事实」与「AI 推测建议」：\n"
-        "信息项 | 来源 | 可信度\n"
-        "问题描述 | 用户提供 | 🟢\n"
-        "根本原因 | AI 推断 | 🟡 / 🔴\n"
-        "实测数据 | 待现场确认 | 🔴\n"
-        "帮助使用者正确判断哪些可直接采用、哪些需现场核实。\n\n"
         "【其他要求】\n"
         "语气专业客观\n"
         "措施使用 [责任人 | 时间 | 状态] 格式\n"
-        "报告正文不使用 Markdown 标记（信息完整性地图可用表格）\n"
+        "报告正文不使用 Markdown 标记（末尾不再附信息完整性地图）\n"
         "直接输出 D1-D8 报告正文，末尾附信息完整性地图"
     ),
     
@@ -788,18 +1026,11 @@ SYSTEM_PROMPT = {
         "🔴 Low = AI speculation, needs on-site verification\n"
         "For any unverified data, use placeholders: [To be confirmed on-site], [Params to be measured], [Data to be filled]\n"
         "Example: Machine: reflow peak temp slightly low 🟡 (est. ~235°C, [Params to be measured])\n\n"
-        "【Information Completeness Map】\n"
-        "End the report with an Information Completeness Map separating 'Confirmed Facts' from 'AI Suggestions':\n"
-        "Item | Source | Confidence\n"
-        "Problem description | User input | 🟢\n"
-        "Root cause | AI inference | 🟡 / 🔴\n"
-        "Measured data | To be confirmed | 🔴\n"
-        "Help users judge what can be used directly vs what needs verification.\n\n"
         "【Other Requirements】\n"
         "Professional tone\n"
         "Use [Owner|Date|Status] format for actions\n"
         "No Markdown in report body (table allowed in the map)\n"
-        "Output D1-D8 directly, then append the Information Completeness Map"
+        "Output D1-D8 directly. No Information Completeness Map."
     )
 }
 
@@ -1096,12 +1327,15 @@ def render_d_sections(content):
         return
     # 清理 markdown 标记
     clean = content.replace("**", "").replace("#", "")
-    # 按 D1-D8 及信息完整性地图拆分
-    sections = re.split(r'\n(?=D[1-8][:：]|【?信息完整性地图】?|【?Information Completeness Map】?)', clean)
+    # 按 D1-D8 拆分（不再单独处理信息完整性地图，AI 已不再生成）
+    sections = re.split(r'\n(?=D[1-8][:：])', clean)
     d_found = False
     for sec in sections:
         sec = sec.strip()
         if not sec:
+            continue
+        # 跳过信息完整性地图残留（旧报告可能还有）
+        if re.match(r'^[【\[]?信息完整性地图[】\]]?', sec) or re.match(r'^[【\[]?Information Completeness Map[】\]]?', sec):
             continue
         # 提取 D 编号
         m = re.match(r'(D[1-8])[:：]\s*(.*)', sec)
@@ -1117,18 +1351,6 @@ def render_d_sections(content):
             st.markdown(
                 f'<div class="{css_class}">'
                 f'<div class="d-section-title">{d_num}：{title_safe}</div>'
-                f'<div class="d-section-body">{body_md}</div>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-            d_found = True
-        elif re.search(r'信息完整性地图|Information Completeness Map', sec):
-            # 信息完整性地图：独立灰色卡片
-            map_title = "📊 信息完整性地图" if st.session_state.lang == "zh" else "📊 Information Completeness Map"
-            body_md = _render_body_md(_strip_map_title(sec))
-            st.markdown(
-                f'<div class="d-section d-section-map">'
-                f'<div class="d-section-title">{map_title}</div>'
                 f'<div class="d-section-body">{body_md}</div>'
                 f'</div>',
                 unsafe_allow_html=True
@@ -1306,19 +1528,12 @@ def export_to_word(content, product_name, lang):
     info.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph()
     clean = content.replace("**", "").replace("#", "")
-    sections = re.split(r'\n(?=D[1-8][:：]|【?信息完整性地图】?|【?Information Completeness Map】?)', clean)
+    sections = re.split(r'\n(?=D[1-8][:：])', clean)
     for i, sec in enumerate(sections):
         if not sec.strip():
             continue
-        # 信息完整性地图：独立小节 + 真实表格
-        if re.search(r'信息完整性地图|Information Completeness Map', sec):
-            map_title = "📊 信息完整性地图" if lang == "zh" else "📊 Information Completeness Map"
-            p = doc.add_paragraph()
-            run = p.add_run(map_title)
-            run.bold = True
-            run.font.size = Pt(14)
-            run.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
-            _add_body_to_doc(doc, _strip_map_title(sec))
+        # 跳过残留的旧信息完整性地图章节
+        if re.match(r'^[【\[]?信息完整性地图[】\]]?', sec.strip()) or re.match(r'^[【\[]?Information Completeness Map[】\]]?', sec.strip()):
             continue
         # 普通 D 章节
         lines = sec.strip().split('\n', 1)
@@ -1461,7 +1676,7 @@ def export_to_pptx(content, product_name, lang):
     # ---------- 章节拆分 ----------
     clean = content.replace("**", "").replace("#", "")
     sections = re.split(
-        r'\n(?=D[1-8][:：]|【?信息完整性地图】?|【?Information Completeness Map】?)',
+        r'\n(?=D[1-8][:：])',
         clean
     )
 
@@ -1528,17 +1743,14 @@ def export_to_pptx(content, product_name, lang):
         head = lines[0].strip()
         body = '\n'.join(lines[1:]).strip()
         m = re.match(r'D(\d)[:：]\s*(.*)', head)
-        is_map = bool(re.search(r'信息完整性地图|Information Completeness Map', head))
+        # 跳过残留的旧信息完整性地图章节
+        if re.match(r'^[【\[]?信息完整性地图[】\]]?', head) or re.match(r'^[【\[]?Information Completeness Map[】\]]?', head):
+            continue
         if m:
             dnum = "D" + m.group(1)
             dtitle = m.group(2).strip() or dnum
             color = D_COLORS.get(dnum, D_COLORS["D8"])
             badge = m.group(1)
-        elif is_map:
-            dnum = "MAP"
-            dtitle = "📊 信息完整性地图" if lang == "zh" else "Information Completeness Map"
-            color = D_COLORS["MAP"]
-            badge = "图"
         else:
             dnum = ""
             dtitle = head[:40]
@@ -1799,7 +2011,7 @@ def render_sidebar():
 
 | 版本 | 原价 | 优惠价 |
 |------|------|--------|
-| 月卡 | ~~¥29~~ | **¥9.9/月** |
+| 月卡 | ~~¥29~~ | **¥6.9/月** |
 | 年卡 | ~~¥99~~ | **¥39/年** |
 | 5年卡 | ~~¥299~~ | **¥99/5年** |
 
@@ -1906,7 +2118,6 @@ with col_input:
 
     # ========== 卡片1：产品信息 ==========
     with st.container(border=True):
-        st.markdown(f'<div class="input-card-header accent-blue">{T["card_product"]}</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
             product_name = st.text_input(T["product_name"], placeholder="例：PCB-A123" if st.session_state.lang == "zh" else "e.g., PCB-A123")
@@ -1915,12 +2126,10 @@ with col_input:
 
     # ========== 卡片2：问题描述 ==========
     with st.container(border=True):
-        st.markdown(f'<div class="input-card-header accent-orange">{T["card_problem"]}</div>', unsafe_allow_html=True)
-        problem_desc = st.text_area(T["problem_desc"], height=120, placeholder=T["problem_placeholder"])
+        problem_desc = st.text_area(T["problem_desc"], height=90, placeholder=T["problem_placeholder"])
 
     # ========== 卡片3：事件详情 ==========
     with st.container(border=True):
-        st.markdown(f'<div class="input-card-header accent-teal">{T["card_details"]}</div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1:
             occur_date = st.date_input(T["occur_date"], datetime.now())
