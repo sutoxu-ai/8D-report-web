@@ -89,6 +89,33 @@ hide_streamlit_style = """
         background-color: #1e3a5f !important;
     }
 
+    /* 工具栏里的所有 action 按钮（Stop / Share / ★ / ✏ / ⟳ 等）整体与 header 同色 */
+    [data-testid="stAppToolbar"] .stToolbarActionButton,
+    .stAppToolbar .stToolbarActionButton,
+    .stToolbarActions button,
+    [data-testid="stAppToolbar"] [data-testid="stAppShareButton"],
+    [data-testid="stAppToolbar"] [data-testid="stAppStopButton"],
+    [data-testid="stAppShareButton"],
+    [data-testid="stAppStopButton"] {
+        color: #1e3a5f !important;
+        background: #1e3a5f !important;
+        background-color: #1e3a5f !important;
+        background-image: none !important;
+        border: 1px solid #1e3a5f !important;
+        border-color: #1e3a5f !important;
+        box-shadow: none !important;
+    }
+    .stAppToolbar .stToolbarActionButton *,
+    [data-testid="stAppToolbar"] .stToolbarActionButton *,
+    [data-testid="stAppToolbar"] [data-testid="stAppShareButton"] *,
+    [data-testid="stAppToolbar"] [data-testid="stAppStopButton"] * {
+        color: #1e3a5f !important;
+        fill: #1e3a5f !important;
+        stroke: #1e3a5f !important;
+        background: #1e3a5f !important;
+        background-color: #1e3a5f !important;
+    }
+
     /* 隐藏 footer 水印 */
     footer {visibility: hidden !important; display: none !important;}
     
@@ -2131,7 +2158,7 @@ def render_sidebar():
 | 版本 | 原价 | 优惠价 |
 |------|------|--------|
 | 月卡 | ~~¥29~~ | **¥9.9/月** |
-| 年卡 | ~~¥99~~ | **¥29/年** |
+| 年卡 | ~~¥99~~ | **¥39/年** |
 | 5年卡 | ~~¥299~~ | **¥99/5年** |
 
 **购买步骤：**
