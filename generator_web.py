@@ -116,6 +116,19 @@ hide_streamlit_style = """
         background-color: #1e3a5f !important;
     }
 
+    /* Status widget（运行时）：页面静止时不渲染，流式生成时显示动画小人和 Stop。
+       为保顶部始终干干净净（连流式时也看不到），整体 display:none。
+       真 testid=stStatusWidget；className=stStatusWidget（确认扒包）。 */
+    .stStatusWidget,
+    [data-testid="stStatusWidget"],
+    .stStatusWidgetRunningIcon,
+    .stStatusWidgetRunningManIcon,
+    [data-testid="stStatusWidgetRunningIcon"],
+    [data-testid="stStatusWidgetRunningManIcon"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
     /* 隐藏 footer 水印 */
     footer {visibility: hidden !important; display: none !important;}
     
