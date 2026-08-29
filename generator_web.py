@@ -40,8 +40,8 @@ def clear_license_cache(user_id):
 
 # ==================== 页面配置 ====================
 st.set_page_config(
-    page_title="8D 报告 - 智能生成助手", 
-    page_icon="📊", 
+    page_title="8D 报告 - 智能生成助手",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -66,7 +66,29 @@ hide_streamlit_style = """
     [data-testid="stToolbar"] a {
         color: #ffffff !important;
     }
-    
+    /* Deploy 按钮：真实 testid=stAppDeployButton / class=stAppDeployButton
+       文字 + 背景 + 边框 都与 header 同色 #1e3a5f，肉眼看不见 */
+    .stAppDeployButton,
+    [data-testid="stAppDeployButton"],
+    [data-testid="stToolbar"] .stAppDeployButton,
+    header[data-testid="stHeader"] .stAppDeployButton {
+        color: #1e3a5f !important;
+        background: #1e3a5f !important;
+        background-color: #1e3a5f !important;
+        background-image: none !important;
+        border: 1px solid #1e3a5f !important;
+        box-shadow: none !important;
+    }
+    /* 按钮内部文字 / 图标也一起同色 */
+    .stAppDeployButton *,
+    [data-testid="stAppDeployButton"] * {
+        color: #1e3a5f !important;
+        fill: #1e3a5f !important;
+        stroke: #1e3a5f !important;
+        background: #1e3a5f !important;
+        background-color: #1e3a5f !important;
+    }
+
     /* 隐藏 footer 水印 */
     footer {visibility: hidden !important; display: none !important;}
     
@@ -170,12 +192,24 @@ hide_streamlit_style = """
     }
 
     /* ========== 主区紧凑布局：缩小卡片间距、表单元素间距 ========== */
+    /* ★ 不依赖 .main 类名（不同 Streamlit 版本结构有变），
+       直接锁 data-testid，只要在主区里出现就生效 */
+    [data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"],
     .main [data-testid="stVerticalBlockBorderWrapper"] {
-        margin-bottom: 0.4rem !important;
-        padding: 0.4rem 0.7rem !important;
+        margin: 0 !important;
+        padding: 0.1rem 0.7rem !important;
+        border-top-width: 1px !important;
     }
-    .main .element-container { margin-bottom: 0.2rem !important; }
-    .main [data-testid="stVerticalBlock"] > div { gap: 0.3rem !important; }
+    /* ★ 关键：主区垂直栈的内部 gap，彻底压为 0 */
+    [data-testid="stMain"] [data-testid="stVerticalBlock"] > div,
+    .main [data-testid="stVerticalBlock"] > div {
+        gap: 0 !important;
+    }
+    /* 元素容器外边距压到最小 */
+    [data-testid="stMain"] .element-container,
+    .main .element-container {
+        margin: 0 !important;
+    }
     /* 输入控件整体压矮 */
     .main [data-testid="stTextInput"] input,
     .main [data-testid="stNumberInput"] input,
@@ -186,8 +220,8 @@ hide_streamlit_style = """
         font-size: 0.85rem !important;
     }
     .main [data-testid="stTextArea"] textarea {
-        min-height: 80px !important;
-        padding: 0.3rem 0.5rem !important;
+        min-height: 60px !important;
+        padding: 0.2rem 0.5rem !important;
         font-size: 0.85rem !important;
     }
     /* selectbox/date 内部触发按钮也压矮 */
@@ -195,36 +229,83 @@ hide_streamlit_style = """
     .main [data-baseweb="input"] > div {
         min-height: 32px !important;
     }
+    /* label 与输入框之间：去 margin，强制贴近 */
     .main label, .main [data-testid="stWidgetLabel"] {
-        margin-bottom: 0.1rem !important;
+        margin: 0 0 0.05rem 0 !important;
+        padding: 0 !important;
         font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+    }
+    /* 输入框根容器：去掉顶部留白 */
+    .main [data-testid="stTextInput"],
+    .main [data-testid="stTextArea"],
+    .main [data-testid="stNumberInput"],
+    .main [data-testid="stDateInput"],
+    .main [data-testid="stSelectbox"],
+    .main [data-testid="stMultiSelect"] {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    /* ★ 关键：Streamlit 把 label 和 input 包在一个 flex 列容器里，
+       默认 gap 很大（约 0.5rem）。直接压这个 gap 才能把两者拉近。 */
+    .main [data-testid="stTextInput"] > div,
+    .main [data-testid="stTextArea"] > div,
+    .main [data-testid="stNumberInput"] > div,
+    .main [data-testid="stDateInput"] > div,
+    .main [data-testid="stSelectbox"] > div,
+    .main [data-testid="stMultiSelect"] > div,
+    .main [data-testid="stTextInput"] > div > div,
+    .main [data-testid="stTextArea"] > div > div,
+    .main [data-testid="stNumberInput"] > div > div,
+    .main [data-testid="stDateInput"] > div > div,
+    .main [data-testid="stSelectbox"] > div > div,
+    .main [data-testid="stMultiSelect"] > div > div {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.05rem !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    /* Streamlit 给 label 和 input 中间塞的 st-emotion 容器，去 padding */
+    .main [data-testid="stWidgetLabel"] + div,
+    .main label + [data-baseweb="input"],
+    .main label + [data-baseweb="select"],
+    .main label + [data-baseweb="textarea"] {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
 
     /* ========== 报告预览区所有文字（白色，深蓝底上看得清） ========== */
-    .main [data-testid="stMarkdown"],
-    .main [data-testid="stMarkdownContainer"] {
+    /* 直接用 class/data-testid 锁定，不依赖 .main 类名 */
+    [data-testid="stMarkdown"],
+    [data-testid="stMarkdownContainer"],
+    .report-preamble,
+    .d-section-body,
+    .d-section-title,
+    .d-section {
         color: #ffffff !important;
     }
-    .main [data-testid="stMarkdown"] *,
-    .main [data-testid="stMarkdownContainer"] *,
-    .main [data-testid="stMarkdown"] h1,
-    .main [data-testid="stMarkdown"] h2,
-    .main [data-testid="stMarkdown"] h3,
-    .main [data-testid="stMarkdown"] h4,
-    .main [data-testid="stMarkdown"] h5,
-    .main [data-testid="stMarkdown"] h6,
-    .main [data-testid="stMarkdown"] p,
-    .main [data-testid="stMarkdown"] li,
-    .main [data-testid="stMarkdown"] strong,
-    .main [data-testid="stMarkdown"] em,
-    .main [data-testid="stMarkdown"] span,
-    .main [data-testid="stMarkdown"] div {
+    [data-testid="stMarkdown"] *,
+    [data-testid="stMarkdownContainer"] *,
+    .report-preamble *,
+    .d-section-body *,
+    .d-section-body p,
+    .d-section-body li,
+    .d-section-body strong,
+    .d-section-body span,
+    .d-section-body table,
+    .d-section-body table th,
+    .d-section-body table td,
+    .d-section-body h1, .d-section-body h2, .d-section-body h3,
+    .d-section-body h4, .d-section-body h5, .d-section-body h6 {
         color: #ffffff !important;
     }
-    .main [data-testid="stMarkdown"] table,
-    .main [data-testid="stMarkdown"] table td,
-    .main [data-testid="stMarkdown"] table th {
+    .d-section-body table th {
+        background: #1f2a44 !important;
         color: #ffffff !important;
+    }
+    .report-preamble {
+        background: transparent !important;
     }
 
     /* ========== 输入卡片内表单标签（白色，深底上才看得清） ========== */
@@ -340,14 +421,16 @@ hide_streamlit_style = """
         font-size: 0.95rem;
         margin-bottom: 0.3rem;
     }
-    .d-section-d1 .d-section-title { color: #2563eb; }
-    .d-section-d2 .d-section-title { color: #16a34a; }
-    .d-section-d3 .d-section-title { color: #ea580c; }
-    .d-section-d4 .d-section-title { color: #db2777; }
-    .d-section-d5 .d-section-title { color: #9333ea; }
-    .d-section-d6 .d-section-title { color: #0891b2; }
-    .d-section-d7 .d-section-title { color: #ca8a04; }
-    .d-section-d8 .d-section-title { color: #64748b; }
+    .d-section-title { color: #ffffff !important; }
+    .d-section-d1 .d-section-title { color: #ffffff !important; }
+    .d-section-d2 .d-section-title { color: #ffffff !important; }
+    .d-section-d3 .d-section-title { color: #ffffff !important; }
+    .d-section-d4 .d-section-title { color: #ffffff !important; }
+    .d-section-d5 .d-section-title { color: #ffffff !important; }
+    .d-section-d6 .d-section-title { color: #ffffff !important; }
+    .d-section-d7 .d-section-title { color: #ffffff !important; }
+    .d-section-d8 .d-section-title { color: #ffffff !important; }
+    .d-section-map .d-section-title { color: #ffffff !important; }
     .d-section-body {
         font-size: 0.85rem;
         color: #ffffff !important;
@@ -607,6 +690,15 @@ hide_streamlit_style = """
     .input-card-header.accent-orange { border-left-color: #ea580c; background: #fff7ed; color: #c2410c; }
     .input-card-header.accent-teal   { border-left-color: #0891b2; background: #ecfeff; color: #0e7490; }
 
+    /* ========== 输入区段间细分隔线（替代删除后的卡头） ========== */
+    .form-divider {
+        height: 1px;
+        background: #2a3654;
+        margin: 0.4rem 0;
+        border: none;
+        padding: 0;
+    }
+
     /* ========== 输入卡片本体（深色主题） ========== */
     div[data-testid="stVerticalBlock"] .input-card {
         border: 1px solid #2a3654;
@@ -705,16 +797,34 @@ hide_streamlit_style = """
         box-shadow: 0 6px 20px rgba(37,99,235,0.45) !important;
     }
 
-    /* ========== 下载按钮（浅色主题） ========== */
-    .stDownloadButton button {
+    /* ========== 下载按钮（与「一键复制报告」一致的紫蓝渐变） ========== */
+    .stDownloadButton button,
+    [data-testid="stMain"] .stDownloadButton button,
+    [data-testid="stMain"] [data-testid="baseButton-secondary"] {
         border-radius: 0.6rem !important;
         font-weight: 600 !important;
-        border: 1px solid #cbd5e1 !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        background-color: #667eea !important;
+        background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
         transition: all .2s !important;
+        box-shadow: 0 2px 6px rgba(102,126,234,0.35) !important;
     }
-    .stDownloadButton button:hover {
-        border-color: #2563eb !important;
-        color: #2563eb !important;
+    .stDownloadButton button:hover,
+    [data-testid="stMain"] .stDownloadButton button:hover {
+        background: linear-gradient(135deg, #5566d8 0%, #653a92 100%) !important;
+        background-color: #5566d8 !important;
+        background-image: linear-gradient(135deg, #5566d8 0%, #653a92 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(102,126,234,0.5) !important;
+        transform: translateY(-1px);
+    }
+    /* 下载按钮内的 SVG 图标保持白色 */
+    .stDownloadButton button svg,
+    [data-testid="stMain"] .stDownloadButton button svg {
+        fill: #ffffff !important;
+        color: #ffffff !important;
     }
 
     /* ========== 普通按钮（次级，浅色主题） ========== */
@@ -1350,15 +1460,18 @@ def render_d_sections(content):
             body_md = _render_body_md(d_body)
             st.markdown(
                 f'<div class="{css_class}">'
-                f'<div class="d-section-title">{d_num}：{title_safe}</div>'
-                f'<div class="d-section-body">{body_md}</div>'
+                f'<div class="d-section-title" style="color:#ffffff !important;">{d_num}：{title_safe}</div>'
+                f'<div class="d-section-body" style="color:#ffffff !important;">{body_md}</div>'
                 f'</div>',
                 unsafe_allow_html=True
             )
             d_found = True
         elif not d_found:
-            # D1 之前的前言内容或无 D 章节的内容，直接显示（原生 markdown）
-            st.markdown(_render_body_md(sec))
+            # D1 之前的前言内容或无 D 章节的内容：包一层带白色内联样式的 div，保证可见
+            st.markdown(
+                f'<div class="report-preamble" style="color:#ffffff !important; background:transparent;">{_render_body_md(sec)}</div>',
+                unsafe_allow_html=True
+            )
 
 def render_d0_card(product_name, customer, problem_desc, defect_qty, severity, industry_std, team_members, lang):
     """D0 前置自诊断卡片：根据表单输入实时计算问题分类、数据完整度、复杂度、紧急程度与围堵建议"""
@@ -1515,6 +1628,11 @@ def _add_body_to_doc(doc, body):
 
 def export_to_word(content, product_name, lang):
     doc = Document()
+    # 页面背景改为浅蓝色（默认是白色）
+    sectPr = doc.sections[0]._sectPr
+    background = OxmlElement('w:background')
+    background.set(qn('w:color'), 'E6EEF8')
+    sectPr.append(background)
     if lang == "zh":
         doc.styles['Normal'].font.name = '宋体'
         doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
@@ -1631,6 +1749,7 @@ def export_to_pptx(content, product_name, lang):
     DARK = RGBColor(0x33, 0x33, 0x33)
     GREY = RGBColor(0x94, 0xA3, 0xB8)
     NAVY = RGBColor(0x1E, 0x3A, 0x8A)
+    LIGHT_BLUE = RGBColor(0xE6, 0xEE, 0xF8)   # 浅蓝（与网页卡片同色）
 
     prs = Presentation()
     prs.slide_width = Inches(13.333)
@@ -1689,7 +1808,7 @@ def export_to_pptx(content, product_name, lang):
     def _make_slide(color, badge, title, continuation=False):
         s = prs.slides.add_slide(prs.slide_layouts[6])
         s.background.fill.solid()
-        s.background.fill.fore_color.rgb = WHITE
+        s.background.fill.fore_color.rgb = LIGHT_BLUE
         # 顶部色带
         band = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, Inches(0.95))
         band.fill.solid()
@@ -2011,8 +2130,8 @@ def render_sidebar():
 
 | 版本 | 原价 | 优惠价 |
 |------|------|--------|
-| 月卡 | ~~¥29~~ | **¥6.9/月** |
-| 年卡 | ~~¥99~~ | **¥39/年** |
+| 月卡 | ~~¥29~~ | **¥9.9/月** |
+| 年卡 | ~~¥99~~ | **¥29/年** |
 | 5年卡 | ~~¥299~~ | **¥99/5年** |
 
 **购买步骤：**
@@ -2116,20 +2235,27 @@ col_input, col_preview = st.columns([1, 1.2])
 with col_input:
     st.markdown(f'<div class="panel-title">{T["input_header"]}</div>', unsafe_allow_html=True)
 
-    # ========== 卡片1：产品信息 ==========
+    # ★ 关键改动：原本三个独立的 st.container(border=True) 会留出 Streamlit 默认空隙。
+    # 现在把整段塞进"一个"带边框容器，从根本上消除卡片之间的间距。
+    # 卡头以横向分隔线 <div class="form-divider"> 视觉区分，不再占额外高度。
     with st.container(border=True):
+        # ========== 第 1 段：产品 & 客户 ==========
         c1, c2 = st.columns(2)
         with c1:
             product_name = st.text_input(T["product_name"], placeholder="例：PCB-A123" if st.session_state.lang == "zh" else "e.g., PCB-A123")
         with c2:
             customer = st.text_input(T["customer"], placeholder="例：比亚迪汽车" if st.session_state.lang == "zh" else "e.g., BYD")
 
-    # ========== 卡片2：问题描述 ==========
-    with st.container(border=True):
+        # 分隔线
+        st.markdown('<div class="form-divider"></div>', unsafe_allow_html=True)
+
+        # ========== 第 2 段：问题描述 ==========
         problem_desc = st.text_area(T["problem_desc"], height=90, placeholder=T["problem_placeholder"])
 
-    # ========== 卡片3：事件详情 ==========
-    with st.container(border=True):
+        # 分隔线
+        st.markdown('<div class="form-divider"></div>', unsafe_allow_html=True)
+
+        # ========== 第 3 段：事件详情 ==========
         col1, col2, col3 = st.columns(3)
         with col1:
             occur_date = st.date_input(T["occur_date"], datetime.now())
