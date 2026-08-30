@@ -89,31 +89,22 @@ hide_streamlit_style = """
         background-color: #1e3a5f !important;
     }
 
-    /* 工具栏里的所有 action 按钮（Stop / Share / ★ / ✏ / ⟳ 等）整体与 header 同色 */
-    [data-testid="stAppToolbar"] .stToolbarActionButton,
+    /* 工具栏里的所有 action 按钮（Deploy / Stop / Share / ★ / ✏ / ⟳ 等）整体隐藏。
+       注意：stExpandSidebarButton（» 展开按钮）是 header 里独立的元素，不属于
+       .stToolbarActionButton，这里绝不能误伤它，否则侧栏收起后就无法再展开。 */
+    [data-testid="stToolbar"] .stToolbarActionButton,
     .stAppToolbar .stToolbarActionButton,
     .stToolbarActions button,
-    [data-testid="stAppToolbar"] [data-testid="stAppShareButton"],
-    [data-testid="stAppToolbar"] [data-testid="stAppStopButton"],
+    [data-testid="stToolbar"] [data-testid="stAppShareButton"],
+    [data-testid="stToolbar"] [data-testid="stAppStopButton"],
     [data-testid="stAppShareButton"],
-    [data-testid="stAppStopButton"] {
-        color: #1e3a5f !important;
-        background: #1e3a5f !important;
-        background-color: #1e3a5f !important;
-        background-image: none !important;
-        border: 1px solid #1e3a5f !important;
-        border-color: #1e3a5f !important;
-        box-shadow: none !important;
-    }
-    .stAppToolbar .stToolbarActionButton *,
-    [data-testid="stAppToolbar"] .stToolbarActionButton *,
-    [data-testid="stAppToolbar"] [data-testid="stAppShareButton"] *,
-    [data-testid="stAppToolbar"] [data-testid="stAppStopButton"] * {
-        color: #1e3a5f !important;
-        fill: #1e3a5f !important;
-        stroke: #1e3a5f !important;
-        background: #1e3a5f !important;
-        background-color: #1e3a5f !important;
+    [data-testid="stAppStopButton"],
+    .stAppDeployButton,
+    [data-testid="stAppDeployButton"],
+    .stAppDeployButton *,
+    [data-testid="stAppDeployButton"] * {
+        display: none !important;
+        visibility: hidden !important;
     }
 
     /* Status widget（运行时）：页面静止时不渲染，流式生成时显示动画小人和 Stop。
@@ -136,14 +127,34 @@ hide_streamlit_style = """
     [data-testid="stSidebarNav"] > ul {display: none !important;}
     
     /* 调整主内容区域 */
-    .main .block-container {
-        padding-top: 0.5rem !important;
+    .main .block-container,
+    [data-testid="stMain"] .block-container {
+        padding-top: 0 !important;
         padding-bottom: 0.5rem !important;
+        margin-top: 0 !important;
     }
-    /* 顶部留给 header 的空间尽量小 */
-    .stApp > header[data-testid="stHeader"] {
-        height: 2.2rem !important;
-        min-height: 2.2rem !important;
+    /* 顶部 header：Deploy/Stop/Share 已 display:none，header 在侧栏展开时无内容会自然塌成 0 高度；
+       侧栏收起时 » 展开按钮会出现，必须保留可见可点 —— 故只压 padding/min-height，绝不 height:0/overflow:hidden。
+
+       ⚠️ DOM 嵌套是 stApp > stAppViewContainer > Gc > stHeader，stHeader 不是 stApp 的直接子元素。
+       之前用 `.stApp > header[...]` 的 `>` 直接子代选择器把它排除了，导致整段 CSS 全无效 → 标题被覆盖。 */
+    header[data-testid="stHeader"],
+    [data-testid="stHeader"] {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    /* 仅当 header 内确实只剩 » 展开按钮时，压缩其上下内边距，避免出现空带 */
+    header[data-testid="stHeader"] [data-testid="stToolbar"],
+    [data-testid="stHeader"] [data-testid="stToolbar"] {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        min-height: 0 !important;
     }
     
     /* ========== 缩小侧边栏间距 ========== */
@@ -758,59 +769,7 @@ hide_streamlit_style = """
     [data-testid="stVerticalBlockBorderWrapper"] > div { background-color: transparent !important; }
 
     /* d-section 深色样式见上方定义 */
-
-    /* ========== D0 前置诊断卡片（深色主题） ========== */
-    .d0-card {
-        border: 1px solid #2a3654;
-        border-radius: 0.7rem;
-        padding: 0.9rem 1rem;
-        margin: 0.5rem 0 0.3rem 0;
-        background: linear-gradient(180deg, #131a2c, #0f1626);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-    }
-    .d0-card-header {
-        font-weight: 800;
-        font-size: 0.95rem;
-        color: #f1f5f9;
-        margin-bottom: 0.6rem;
-        padding-bottom: 0.4rem;
-        border-bottom: 2px dashed #2a3654;
-    }
-    .d0-row {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-        margin: 0.4rem 0;
-    }
-    .d0-row > span {
-        color: #94a3b8;
-        min-width: 6rem;
-        flex-shrink: 0;
-    }
-    .d0-row > b { color: #f1f5f9; }
-    .d0-bar {
-        flex: 1;
-        height: 9px;
-        background: #1f2a44;
-        border-radius: 99px;
-        overflow: hidden;
-    }
-    .d0-bar-fill {
-        height: 100%;
-        border-radius: 99px;
-        transition: width .4s ease;
-    }
-    .d0-tip {
-        margin-top: 0.6rem;
-        padding: 0.5rem 0.7rem;
-        background: #2a1810;
-        border-left: 3px solid #f59e0b;
-        border-radius: 0 0.4rem 0.4rem 0;
-        font-size: 0.8rem;
-        color: #fbbf24;
-        line-height: 1.4;
-    }
+    /* D0 前置诊断卡片 CSS 已删除 (2026-08-30) */
 
     /* ========== 输入框本体（深色卡片里的白色输入框） ========== */
     .main input[type="text"],
@@ -1513,114 +1472,7 @@ def render_d_sections(content):
                 unsafe_allow_html=True
             )
 
-def render_d0_card(product_name, customer, problem_desc, defect_qty, severity, industry_std, team_members, lang):
-    """D0 前置自诊断卡片：根据表单输入实时计算问题分类、数据完整度、复杂度、紧急程度与围堵建议"""
-    if lang == "zh":
-        labels = ["问题分类", "数据完整度", "复杂度", "紧急程度"]
-        tip_header = "💡 围堵建议"
-        cls_map = {
-            "外观": "外观缺陷", "功能": "功能失效", "尺寸": "尺寸/公差",
-            "性能": "性能衰减", "装配": "装配不良", "物料": "物料/批次",
-            "软件": "软件/逻辑", "其他": "其他",
-        }
-        comp_map = {"低": "低", "中": "中", "高": "高"}
-        sev_map = {
-            "critical": ("🔴", "紧急", "#dc2626"),
-            "high": ("🟠", "高", "#ea580c"),
-            "medium": ("🟡", "中", "#ca8a04"),
-            "low": ("🟢", "低", "#16a34a"),
-        }
-    else:
-        labels = ["Type", "Data Completeness", "Complexity", "Urgency"]
-        tip_header = "💡 Containment Advice"
-        cls_map = {
-            "外观": "Appearance", "功能": "Function", "尺寸": "Dimension",
-            "性能": "Performance", "装配": "Assembly", "物料": "Material",
-            "软件": "Software", "其他": "Other",
-        }
-        comp_map = {"低": "Low", "中": "Medium", "高": "High"}
-        sev_map = {
-            "critical": ("🔴", "Critical", "#dc2626"),
-            "high": ("🟠", "High", "#ea580c"),
-            "medium": ("🟡", "Medium", "#ca8a04"),
-            "low": ("🟢", "Low", "#16a34a"),
-        }
-
-    # ---- 问题分类（关键词匹配）----
-    kw = {
-        "外观": ["划伤", "刮伤", "异色", "变色", "脏污", "毛刺", "起泡", "开裂", "裂纹", "破损", "变形", "生锈", "缺料", "烧焦"],
-        "功能": ["失效", "故障", "不工作", "无法", "异常", "死机", "黑屏", "失灵", "通讯", "通信", "误判", "短路", "开路", "击穿"],
-        "尺寸": ["尺寸", "公差", "超差", "平面度", "厚度", "长度", "孔径", "偏移"],
-        "性能": ["性能", "参数", "指标", "衰减", "漂移", "温升", "噪声", "阻抗"],
-        "装配": ["装配", "错位", "漏装", "错装", "松动", "间隙", "干涉"],
-        "物料": ["物料", "批次", "混料", "供应商", "原料", "变更"],
-        "软件": ["软件", "程序", "代码", "逻辑", "算法", "固件"],
-    }
-    desc = problem_desc or ""
-    ptype = "其他"
-    for k, words in kw.items():
-        if any(w in desc for w in words):
-            ptype = k
-            break
-    ptype_label = cls_map.get(ptype, ptype)
-
-    # ---- 数据完整度评分（满分 100）----
-    score = 0
-    if product_name: score += 15
-    if customer: score += 10
-    score += min(30, len(desc) // 8)  # 描述越长越完整，上限 30
-    score += 10  # 发生日期（默认有值）
-    if defect_qty and defect_qty > 0: score += 10
-    score += 10  # 严重程度（必选）
-    score += 5   # 行业标准
-    if team_members: score += 10
-    score = max(0, min(100, score))
-    # 数据完整度颜色：≥80 绿，50-79 黄，<50 红
-    bar_color = "#16a34a" if score >= 80 else "#ca8a04" if score >= 50 else "#dc2626"
-
-    # ---- 复杂度评级 ----
-    if defect_qty and defect_qty > 1000 or len(desc) > 200:
-        complexity = "高"
-    elif (defect_qty and defect_qty > 100) or len(desc) > 80:
-        complexity = "中"
-    else:
-        complexity = "低"
-    complexity_label = comp_map.get(complexity, complexity)
-
-    # ---- 紧急程度（来自严重程度）----
-    sev_key = None
-    sl = TEXT[lang]
-    if severity == sl["severity_critical"]: sev_key = "critical"
-    elif severity == sl["severity_high"]: sev_key = "high"
-    elif severity == sl["severity_medium"]: sev_key = "medium"
-    else: sev_key = "low"
-    icon, urg_label, urg_color = sev_map[sev_key]
-
-    # ---- 围堵建议 ----
-    if sev_key in ("critical", "high"):
-        tip = ("问题紧急，建议立即启动围堵措施（ICA），优先拦截在途品与客户端库存。"
-               if lang == "zh" else
-               "Urgent — recommend launching interim containment (ICA) immediately, prioritize intercepting in-transit & customer inventory.")
-    else:
-        tip = ("建议评估影响范围后启动围堵措施，避免问题扩大。"
-               if lang == "zh" else
-               "Recommend containment after assessing impact scope to prevent spread.")
-
-    html = f'''
-    <div class="d0-card">
-      <div class="d0-card-header">🔍 D0 前置诊断 / Pre-check</div>
-      <div class="d0-row"><span>{labels[0]}</span><b>{ptype_label}</b></div>
-      <div class="d0-row"><span>{labels[1]}</span>
-        <div class="d0-bar"><div class="d0-bar-fill" style="width:{score}%;background:{bar_color}"></div></div>
-        <b style="color:{bar_color}">{score}%</b>
-      </div>
-      <div class="d0-row"><span>{labels[2]}</span><b>{complexity_label}</b></div>
-      <div class="d0-row"><span>{labels[3]}</span><b style="color:{urg_color}">{icon} {urg_label}</b></div>
-      <div class="d0-tip"><b>{tip_header}：</b>{tip}</div>
-    </div>
-    '''
-    st.markdown(html, unsafe_allow_html=True)
-
+# ---- D0 前置自诊断卡片已删除 (2026-08-30) ----
 
 def _add_body_to_doc(doc, body):
     """把正文写入 Word：含 markdown 表格则生成真实表格，否则按段写入。"""
@@ -2325,10 +2177,8 @@ with col_input:
         )
         industry_guide = sel_industry[st.session_state.lang + "_guide"]
 
-        # ========== D0 前置自诊断卡片 ==========
-        render_d0_card(product_name, customer, problem_desc, defect_qty, severity, industry_std, team_members, st.session_state.lang)
-    
-        
+        # D0 前置自诊断卡片已删除 (2026-08-30)：用户认为可有可无，按钮上移。
+
     if st.button(T["generate_btn"], type="primary", use_container_width=True):
         if not st.session_state.get("user_id"):
             st.error(T["login_required"])
