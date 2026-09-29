@@ -468,8 +468,8 @@ hide_streamlit_style = """
     .d-section-map { border-left-color: #475569; background: #1a2238; }
     .d-section-map .d-section-title { color: #94a3b8; }
     .d-section-title {
-        font-weight: 700;
-        font-size: 0.95rem;
+        font-weight: 800;
+        font-size: 1.15rem;
         margin-bottom: 0.3rem;
     }
     .d-section-title { color: #ffffff !important; }
@@ -483,7 +483,7 @@ hide_streamlit_style = """
     .d-section-d8 .d-section-title { color: #ffffff !important; }
     .d-section-map .d-section-title { color: #ffffff !important; }
     .d-section-body {
-        font-size: 0.85rem;
+        font-size: 1.25rem;
         color: #ffffff !important;
         line-height: 1.5;
     }
