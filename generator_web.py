@@ -5,6 +5,12 @@
 最终优化版本
 """
 
+# 在 WorkBuddy 等沙箱中运行时，环境可能继承一个会中断 TLS 的本地 HTTP 代理。
+# 先删除这些变量，确保 httpx/urllib 直连外部服务（Supabase / DeepSeek）。
+import os
+for _k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
+    os.environ.pop(_k, None)
+
 import streamlit as st
 import streamlit.components.v1 as components
 from io import BytesIO
@@ -19,6 +25,13 @@ from docx.oxml import OxmlElement
 import openai
 from supabase import create_client
 import logging
+
+# 一人付（opcpay）支付宝支付接入，详见 opcpay_integration.py
+# 用 guarded import，helper 缺失时仅禁用支付宝按钮，不影响应用启动
+try:
+    import opcpay_integration as opay
+except Exception:
+    opay = None
 
 # ==================== 缓存配置 ====================
 @st.cache_data(ttl=60)
@@ -469,10 +482,24 @@ hide_streamlit_style = """
     .d-section-map .d-section-title { color: #94a3b8; }
     .d-section-title {
         font-weight: 800;
-        font-size: 1.15rem;
+        font-size: 1.8rem !important;
         margin-bottom: 0.3rem;
     }
     .d-section-title { color: #ffffff !important; }
+    /* D4 小标题：产生原因分析 / 流出原因分析（含英文 Occurrence/Escape Cause），比正文大一号 */
+    .d4-cause-title {
+        display: block !important;
+        font-weight: 700 !important;
+        font-size: 1.35rem !important;
+        color: #ffffff !important;
+        margin: 0.6rem 0 0.3rem 0 !important;
+        line-height: 1.4 !important;
+    }
+    /* 移动端（含手机端）进一步放大 D 标题与小标题，保证可读 */
+    @media (max-width: 640px) {
+        .d-section-title { font-size: 2rem !important; }
+        .d4-cause-title { font-size: 1.55rem !important; }
+    }
     .d-section-d1 .d-section-title { color: #ffffff !important; }
     .d-section-d2 .d-section-title { color: #ffffff !important; }
     .d-section-d3 .d-section-title { color: #ffffff !important; }
@@ -483,9 +510,9 @@ hide_streamlit_style = """
     .d-section-d8 .d-section-title { color: #ffffff !important; }
     .d-section-map .d-section-title { color: #ffffff !important; }
     .d-section-body {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         color: #ffffff !important;
-        line-height: 1.5;
+        line-height: 1.6;
     }
     .d-section-body *,
     .d-section-body p,
@@ -884,7 +911,7 @@ TEXT = {
         "activate_code_hint": "激活码", "activate_btn": "立即激活",
         "activate_success": "✅ 激活成功，有效期一年", "activate_fail": "❌ 激活码无效",
         "invalid_activate_code": "请输入有效的激活码",
-        "license_expired": "❌ 授权已过期",
+        "license_expired": "❌ 授权已过期", "trial_exhausted": "⏳ 试用次数已用完，请购买正式版",
         "login_required": "🔒 请先登录", "logout": "退出登录",
         "login_header": "👤 用户登录",
         "username_label": "邮箱或手机号",
@@ -956,7 +983,7 @@ TEXT = {
         "activate_code_hint": "Activation Code", "activate_btn": "Activate",
         "activate_success": "✅ Activated successfully", "activate_fail": "❌ Invalid code",
         "invalid_activate_code": "Please enter a valid activation code",
-        "license_expired": "❌ License expired",
+        "license_expired": "❌ License expired", "trial_exhausted": "⏳ Free trial used up, please purchase a license",
         "login_required": "🔒 Please login", "logout": "Logout",
         "login_header": "👤 User Login",
         "username_label": "Email or Phone",
@@ -1216,17 +1243,28 @@ def can_generate_report(user_id):
     plan = lic.get('plan_type', 'free')
     if plan == 'free':
         return False  # 未激活
-    # trial / pro / enterprise 统一只检查有效期
+    if plan == 'trial':
+        # 试用：受次数上限 + 有效期双重限制
+        used = lic.get('trial_used', 0) or 0
+        limit = lic.get('trial_limit', 0) or 0
+        if used >= limit:
+            return False
+        expire = lic.get('license_expire')
+        if expire:
+            try:
+                if datetime.now() >= datetime.fromisoformat(expire):
+                    return False
+            except Exception:
+                pass
+        return True
+    # pro / enterprise：仅检查有效期
     expire = lic.get('license_expire')
     if expire:
         try:
             return datetime.now() < datetime.fromisoformat(expire)
         except Exception:
             return True
-    # 没有设置有效期的正式版，允许使用
-    if plan in ['pro', 'enterprise']:
-        return True
-    return False
+    return True  # 无有效期的正式版允许使用
 
 def inc_trial_used(user_id):
     if not supabase:
@@ -1296,6 +1334,10 @@ def activate_trial_code(user_id, code):
         tc = r.data[0]
         if tc.get('is_used'):
             return False, "试用码已被使用"
+        # 已是正式版则不覆盖、不消耗试用码
+        cur = get_cached_license(user_id)
+        if cur and cur.get('plan_type') in ('pro', 'enterprise'):
+            return False, "您已是正式版用户，无需使用试用码"
         # 原子抢码：仅当 is_used=False 时才更新，防止并发激活
         claim = supabase.table("trial_codes").update({
             "is_used": True,
@@ -1305,11 +1347,14 @@ def activate_trial_code(user_id, code):
         # 如果没有行被更新，说明已被别人抢走
         if not claim.data or len(claim.data) == 0:
             return False, "试用码已被使用"
-        # 给用户2次试用机会
-        supabase.table("licenses").update({
+        # 给用户2次试用机会，并把 plan_type 设为 trial 以放通生成
+        supabase.table("licenses").upsert({
+            "user_id": user_id,
+            "plan_type": "trial",
             "trial_limit": 2,
-            "trial_used": 0
-        }).eq("user_id", user_id).execute()
+            "trial_used": 0,
+            "license_expire": (datetime.now() + timedelta(days=365)).isoformat()
+        }, on_conflict="user_id").execute()
         clear_license_cache(user_id)
         return True, "✅ 试用码激活成功！获得 2 次试用机会"
     except Exception as e:
@@ -1385,6 +1430,17 @@ def _esc(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def _safe_err(exc):
+    """把异常信息里的密钥、URL 等敏感信息脱敏，用于前端展示。"""
+    msg = f"{type(exc).__name__}: {exc}"
+    for k in ("SUPABASE_KEY", "DEEPSEEK_API_KEY", "SUPABASE_URL"):
+        v = os.environ.get(k, "")
+        if v and len(v) > 6:
+            msg = msg.replace(v, "***")
+    msg = re.sub(r'(https?://)[^/\s"\']+', r'\1***', msg)
+    return msg[:300]
+
+
 def _strip_map_title(sec):
     """去掉信息完整性地图原括号标题行，避免与卡片标题重复。"""
     first = sec.split('\n', 1)
@@ -1430,6 +1486,33 @@ def _render_body_md(body):
     return '\n'.join(out)
 
 
+_D4_SUBTITLES = ["产生原因分析", "流出原因分析", "Occurrence Cause", "Escape Cause"]
+
+
+def _enhance_d4_subtitles(body):
+    """D4 的「产生原因分析 / 流出原因分析」（含英文 Occurrence/Escape Cause）两个小标题放大一号。
+    把形如 '=== 产生原因分析 ===' / '一、产生原因分析（…）：' / 'Part 1 - Occurrence Cause (…)'
+    的整行包成 <div class="d4-cause-title" style="font-size:1.35rem !important; font-weight:700 !important; color:#ffffff !important;">，交给 CSS 单独放大；正文里偶现的同短语不受影响。"""
+    out = []
+    for line in body.split('\n'):
+        s = line.strip()
+        # 情况1：=== 短语 === （setext 风格，实际被当纯文本，这里统一收成标题）
+        mm = re.match(r'^[-=]{1,5}\s*(.*?(?:产生原因分析|流出原因分析|Occurrence Cause|Escape Cause).*?)\s*[-=]{1,5}\s*$', s)
+        if mm:
+            out.append(f'<div class="d4-cause-title" style="font-size:1.35rem !important; font-weight:700 !important; color:#ffffff !important;">{_esc(mm.group(1))}</div>')
+            continue
+        # 情况2：一、短语 / 二、短语（中文序号前缀）
+        if re.match(r'^[一二三四五六七八九十]+[、.。]\s*', s) and any(k in s for k in _D4_SUBTITLES):
+            out.append(f'<div class="d4-cause-title" style="font-size:1.35rem !important; font-weight:700 !important; color:#ffffff !important;">{_esc(s)}</div>')
+            continue
+        # 情况3：Part 1 - Occurrence Cause / Part 2 - Escape Cause（英文）
+        if re.match(r'^Part\s*[12]\s*[-:—]\s*', s) and any(k in s for k in _D4_SUBTITLES):
+            out.append(f'<div class="d4-cause-title" style="font-size:1.35rem !important; font-weight:700 !important; color:#ffffff !important;">{_esc(s)}</div>')
+            continue
+        out.append(line)
+    return '\n'.join(out)
+
+
 def render_d_sections(content):
     """将报告内容按 D1-D8 拆分，渲染为带彩色边框的章节"""
     if not content:
@@ -1454,12 +1537,14 @@ def render_d_sections(content):
             d_body = sec[len(m.group(0)):].strip()  # 剩余内容
             if not d_title:
                 d_title = d_num
+            if d_num == "D4":
+                d_body = _enhance_d4_subtitles(d_body)
             css_class = f"d-section d-section-{d_num.lower()}"
             title_safe = _esc(d_title)
             body_md = _render_body_md(d_body)
             st.markdown(
                 f'<div class="{css_class}">'
-                f'<div class="d-section-title" style="color:#ffffff !important;">{d_num}：{title_safe}</div>'
+                f'<div class="d-section-title" style="color:#ffffff !important; font-size:1.8rem !important; font-weight:800 !important;">{d_num}：{title_safe}</div>'
                 f'<div class="d-section-body" style="color:#ffffff !important;">{body_md}</div>'
                 f'</div>',
                 unsafe_allow_html=True
@@ -1952,8 +2037,8 @@ def render_sidebar():
                     try:
                         existing = supabase.table("licenses").select("user_id").eq("user_id", user_input).execute()
                         existing_user = existing.data is not None and len(existing.data) > 0
-                    except Exception:
-                        st.error(T["system_error"])
+                    except Exception as e:
+                        st.error(f"{T['system_error']}\n\n`{_safe_err(e)}`")
                         st.stop()
 
                 # 校验格式
@@ -2008,11 +2093,62 @@ def render_sidebar():
             st.markdown(f"**👤 {user_id[:30]}**")
             
             if lic:
-                if lic.get('plan_type') == 'free':
+                plan = lic.get('plan_type')
+                if plan == 'free':
                     st.warning(T["no_license"])
-                    # 购买引导
+                elif plan == 'trial':
+                    st.info("🆓 试用版")
+                    _used = lic.get('trial_used', 0) or 0
+                    _limit = lic.get('trial_limit', 0) or 0
+                    st.caption(f"📊 已使用 {_used} 次 / 共 {_limit} 次")
+                    if lic.get('license_expire'):
+                        try:
+                            _exp = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                            st.caption("有效期至 " + _exp)
+                        except Exception:
+                            pass
+                else:
+                    st.success(T["pro_version"])
+                    if lic.get('license_expire'):
+                        try:
+                            _exp = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
+                            st.caption(T["valid_until_date"].format(date=_exp))
+                        except Exception:
+                            pass
+                    else:
+                        st.caption(T["permanent_valid"])
+
+                # 免费版 / 试用版 都展示购买升级入口
+                if plan in ('free', 'trial'):
                     st.markdown("---")
-                    st.markdown("### 💰 购买正式版")
+
+                    # ---- 一人付：支付宝一键开通（全自动，付款后自动激活，无需输码）----
+                    if opay is not None:
+                        st.markdown("### 💳 支付宝一键开通（推荐）")
+                        st.caption("付款成功后会自动激活，无需联系客服、无需输入激活码。")
+                        _opay_cols = st.columns(3)
+                        for _col, _pk in zip(_opay_cols, ["month", "year", "five"]):
+                            _plan = opay.PLANS[_pk]
+                            if _col.button(_plan["label"], key="opay_" + _pk, use_container_width=True):
+                                if not st.session_state.get("user_id"):
+                                    st.error("请先登录后再购买")
+                                else:
+                                    try:
+                                        _url = opay.create_purchase(st.session_state.user_id, _pk, supabase)
+                                        st.session_state["opay_url"] = _url
+                                    except Exception as _e:
+                                        st.error("创建订单失败：" + str(_e))
+                        if st.session_state.get("opay_url"):
+                            st.markdown(
+                                f'<a href="{st.session_state["opay_url"]}" target="_blank">'
+                                f'👉 点击前往支付宝付款</a>',
+                                unsafe_allow_html=True,
+                            )
+                            st.caption("在新标签页完成付款，付款后刷新本页即自动变为正式版。")
+
+                    # ---- 微信人工开通（备用）----
+                    st.markdown("---")
+                    st.markdown("### 💰 其他购买方式（微信人工）")
                     try:
                         st.image("paid.jpg", width=200)
                     except:
@@ -2032,16 +2168,6 @@ def render_sidebar():
 3. 转账后联系微信 **907749064** 获取激活码
 4. 在下方"🔑 输入激活码"中输入激活码
                     """)
-                else:
-                    st.success(T["pro_version"])
-                    if lic.get('license_expire'):
-                        try:
-                            exp_date = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
-                            st.caption(T["valid_until_date"].format(date=exp_date))
-                        except:
-                            pass
-                    else:
-                        st.caption(T["permanent_valid"])
             
                         
             with st.expander(T["expander_activate_code"], expanded=False):
@@ -2187,8 +2313,15 @@ with col_input:
         user_id = st.session_state.user_id
         if not can_generate_report(user_id):
             lic = get_user_license(user_id)
-            if lic and lic['plan_type'] == 'free':
+            if lic and lic.get('plan_type') == 'free':
                 st.error(T["no_license"])
+            elif lic and lic.get('plan_type') == 'trial':
+                used = lic.get('trial_used', 0) or 0
+                limit = lic.get('trial_limit', 0) or 0
+                if used >= limit:
+                    st.error(T["trial_exhausted"])
+                else:
+                    st.error(T["license_expired"])
             else:
                 st.error(T["license_expired"])
             st.stop()
@@ -2367,7 +2500,7 @@ with col_preview:
             components.html(copy_html, height=45)
         
         with btn_col2:
-            if lic and lic['plan_type'] != 'free':
+            if lic and lic.get('plan_type') in ('pro', 'enterprise', 'trial'):
                 ex_col1, ex_col2 = st.columns(2)
                 with ex_col1:
                     word_data = export_to_word(
