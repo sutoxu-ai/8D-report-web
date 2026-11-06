@@ -1306,11 +1306,16 @@ def activate_license_code(user_id, code):
         # 如果没有行被更新，说明已被别人抢走
         if not claim.data or len(claim.data) == 0:
             return False, "激活码已被使用"
+        # 按激活码前缀强制 plan_type，避免 activation_codes 表 plan_type 写错，
+        # 导致正式用户被错标成 trial（trial_limit=0 时会被试用限制直接拦死）。
+        # 8D8E = 5年卡 → enterprise；其余正式码（8D8P / 8D30）→ pro。
+        _prefix = code_clean[:4]
+        _plan = 'enterprise' if _prefix == '8D8E' else 'pro'
         duration = ac.get('duration_days') or 365
         exp_date = (datetime.now() + timedelta(days=duration)).isoformat()
         supabase.table("licenses").upsert({
             "user_id": user_id,
-            "plan_type": ac.get('plan_type', 'pro'),
+            "plan_type": _plan,
             "license_expire": exp_date,
             "trial_used": 0,
             "trial_limit": 0
