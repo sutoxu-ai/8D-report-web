@@ -62,6 +62,21 @@ st.set_page_config(
 # ==================== 隐藏 Streamlit 默认 UI 元素 ====================
 hide_streamlit_style = """
 <style>
+    /* ========== 修复浅色 secondary 主题下组件白底白字不可读 ========== */
+    [data-testid="stAlert"], .stAlert {
+        background-color: #16263f !important;
+        color: #ffffff !important;
+    }
+    [data-testid="stAlert"] *, .stAlert * {
+        color: #ffffff !important;
+    }
+    [data-testid="stTextInput"] input::placeholder,
+    [data-testid="stTextArea"] textarea::placeholder,
+    .stTextInput input::placeholder,
+    .stTextArea textarea::placeholder {
+        color: #64748b !important;
+    }
+
     /* 只隐藏右上角菜单 */
     #MainMenu {visibility: hidden !important; display: none !important;}
 
