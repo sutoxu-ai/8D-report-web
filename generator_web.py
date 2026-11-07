@@ -2024,6 +2024,14 @@ if "user_id" not in st.session_state:
 if "registration_attempted" not in st.session_state:
     st.session_state.registration_attempted = False
 
+# 跨刷新保持登录态：从 URL query_params 恢复 uid（Streamlit 刷新会重置 session_state 导致退出登录）
+try:
+    if not st.session_state.user_id and "uid" in st.query_params:
+        _uid = st.query_params["uid"]
+        st.session_state.user_id = _uid[0] if isinstance(_uid, list) else _uid
+except Exception:
+    pass
+
 T = TEXT[st.session_state.lang]
 
 # ==================== 侧边栏（登录和用户管理） ====================
@@ -2136,6 +2144,10 @@ def render_sidebar():
                         pass
 
                 st.session_state.user_id = user_input
+                try:
+                    st.query_params["uid"] = user_input
+                except Exception:
+                    pass
                 st.rerun()
         
         # ==================== 已登录用户区域 ====================
@@ -2177,8 +2189,21 @@ def render_sidebar():
                     # ---- 一人付：支付宝一键开通（全自动，付款后自动激活，无需输码）----
                     if opay is not None:
                         st.markdown("### 💳 支付宝一键开通（推荐）")
-                        _act_word = "延长有效期" if plan in ('pro', 'enterprise') else "激活"
-                        st.caption("付款成功后会自动" + _act_word + "，无需联系客服、无需输入激活码。")
+                        if plan in ('pro', 'enterprise'):
+                            _exp = lic.get('license_expire')
+                            _exp_str = ""
+                            if _exp:
+                                try:
+                                    _exp_str = datetime.fromisoformat(_exp).strftime('%Y-%m-%d')
+                                except Exception:
+                                    _exp_str = str(_exp)
+                            if _exp_str:
+                                st.info("✅ 您当前为正式版，有效期至 " + _exp_str + "，到期后可在此续费/升级。")
+                            else:
+                                st.info("✅ 您当前为正式版（永久），无需续费。")
+                            st.caption("付款成功后会自动延长有效期，无需联系客服、无需输入激活码。")
+                        else:
+                            st.caption("付款成功后会自动激活，无需联系客服、无需输入激活码。")
                         _opay_cols = st.columns(3)
                         for _col, _pk in zip(_opay_cols, ["month", "year", "five"]):
                             _plan = opay.PLANS[_pk]
@@ -2193,7 +2218,11 @@ def render_sidebar():
                                         # 付款后刷新即可生效：清掉权益缓存，使下次 /access 立即反映新权益
                                         opay.clear_entitlement_cache(st.session_state.user_id)
                                     except Exception as _e:
-                                        st.error("创建订单失败：" + str(_e))
+                                        _msg = str(_e)
+                                        if "NOW_PAY_PRODUCT_NOT_PURCHASABLE" in _msg:
+                                            st.warning("⚠️ 当前会员仍在有效期内，暂不可重复购买。请于到期后再续费/升级。")
+                                        else:
+                                            st.error("创建订单失败：" + _msg)
                         if st.session_state.get("opay_resp"):
                             _resp = st.session_state["opay_resp"]
                             _url = _resp.get("purchase_url")
@@ -2281,6 +2310,11 @@ def render_sidebar():
             if st.button(T["logout"], key="sidebar_logout_btn", use_container_width=True):
                 st.session_state.user_id = None
                 st.session_state.current_result = ""
+                try:
+                    if "uid" in st.query_params:
+                        del st.query_params["uid"]
+                except Exception:
+                    pass
                 get_cached_license.clear()
                 st.rerun()
         
