@@ -1220,7 +1220,54 @@ except Exception:
 
 # ==================== 核心功能函数 ====================
 def get_user_license(user_id):
-    return get_cached_license(user_id)
+    return resolve_license(user_id)
+
+
+def resolve_license(user_id):
+    """取 Supabase license，并用一人付 /access 作为付费权益的权威来源做校正。
+
+    设计要点（来自一人付官方文档）：
+      - 真正的权益真相在 POST /access，webhook 仅创建后 24h 内监测、不可靠；
+      - 因此采用"登录/生成时查 /access"轮询，免去 webhook / Edge Function。
+    安全规则：
+      - 仅当一人付返回"生效的时长包(access_granted & decision=ALLOW & 未过期)"时才覆盖；
+      - 对已有 pro/enterprise 且到期更晚的，不缩短其有效期；
+      - 一人付无生效权益时绝不改写现有 license（保护激活码 pro / 试用用户）。
+    """
+    lic = get_cached_license(user_id)
+    if opay is None:
+        return lic
+    try:
+        ent = opay.get_entitlement(user_id)
+        if not ent:
+            return lic
+        is_pro, expire_iso = opay.parse_pro_entitlement(ent)
+        if not is_pro:
+            return lic
+        cur_plan = (lic or {}).get("plan_type")
+        cur_exp = (lic or {}).get("license_expire")
+        overwrite = False
+        if cur_plan in (None, "free", "trial"):
+            overwrite = True
+        elif cur_exp and expire_iso:
+            try:
+                if datetime.fromisoformat(expire_iso) > datetime.fromisoformat(cur_exp):
+                    overwrite = True
+            except Exception:
+                overwrite = True
+        if overwrite and supabase:
+            supabase.table("licenses").upsert({
+                "user_id": user_id,
+                "plan_type": "pro",
+                "license_expire": expire_iso,
+                "trial_used": 0,
+                "trial_limit": 0,
+            }, on_conflict="user_id").execute()
+            clear_license_cache(user_id)
+            lic = get_cached_license(user_id)
+    except Exception as e:
+        logging.error("opcpay 权益同步失败：%s" % e)
+    return lic
 
 def create_free_license(user_id):
     if not supabase:
@@ -2139,8 +2186,10 @@ def render_sidebar():
                                     st.error("请先登录后再购买")
                                 else:
                                     try:
-                                        _url = opay.create_purchase(st.session_state.user_id, _pk, supabase)
+                                        _url = opay.create_purchase(st.session_state.user_id, _pk)
                                         st.session_state["opay_url"] = _url
+                                        # 付款后刷新即可生效：清掉权益缓存，使下次 /access 立即反映新权益
+                                        opay.clear_entitlement_cache(st.session_state.user_id)
                                     except Exception as _e:
                                         st.error("创建订单失败：" + str(_e))
                         if st.session_state.get("opay_url"):
