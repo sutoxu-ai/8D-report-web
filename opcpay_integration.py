@@ -68,8 +68,20 @@ def create_purchase(user_id, plan_key, supabase=None):
         },
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        resp = json.loads(r.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            resp = json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as he:
+        _body = ""
+        try:
+            _body = he.read().decode("utf-8", "ignore")
+        except Exception:
+            pass
+        logging.error("opcpay /purchase HTTP %s: %s" % (he.code, _body))
+        raise RuntimeError("一人付创建订单失败(HTTP %s): %s" % (he.code, _body))
+    except Exception as e:
+        logging.error("opcpay /purchase 请求异常: %s" % e)
+        raise
 
     purchase_url = resp.get("purchase_url")
     if not purchase_url:
