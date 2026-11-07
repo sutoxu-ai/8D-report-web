@@ -2170,14 +2170,15 @@ def render_sidebar():
                     else:
                         st.caption(T["permanent_valid"])
 
-                # 免费版 / 试用版 都展示购买升级入口
-                if plan in ('free', 'trial'):
+                # 各版本都展示购买入口（pro/enterprise 用户可继续购买以延长有效期）
+                if plan in ('free', 'trial', 'pro', 'enterprise'):
                     st.markdown("---")
 
                     # ---- 一人付：支付宝一键开通（全自动，付款后自动激活，无需输码）----
                     if opay is not None:
                         st.markdown("### 💳 支付宝一键开通（推荐）")
-                        st.caption("付款成功后会自动激活，无需联系客服、无需输入激活码。")
+                        _act_word = "延长有效期" if plan in ('pro', 'enterprise') else "激活"
+                        st.caption("付款成功后会自动" + _act_word + "，无需联系客服、无需输入激活码。")
                         _opay_cols = st.columns(3)
                         for _col, _pk in zip(_opay_cols, ["month", "year", "five"]):
                             _plan = opay.PLANS[_pk]
@@ -2199,7 +2200,7 @@ def render_sidebar():
                             if _qr:
                                 st.markdown("**📱 用手机支付宝扫下方二维码付款（最稳妥）：**")
                                 try:
-                                    st.image(_qr, width=280)
+                                    st.image(_qr, use_column_width=True)
                                 except Exception:
                                     st.markdown(f'[打开付款二维码]({_qr})', unsafe_allow_html=True)
                                 st.markdown(
