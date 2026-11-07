@@ -2182,7 +2182,8 @@ def render_sidebar():
                         _opay_cols = st.columns(3)
                         for _col, _pk in zip(_opay_cols, ["month", "year", "five"]):
                             _plan = opay.PLANS[_pk]
-                            if _col.button(_plan["label"], key="opay_" + _pk, use_container_width=True):
+                            _short = _plan["label"].split(" ")[0]  # 侧边栏窄，只显示档位名（月卡/年卡/5年卡）
+                            if _col.button(_short, key="opay_" + _pk, use_container_width=True):
                                 if not st.session_state.get("user_id"):
                                     st.error("请先登录后再购买")
                                 else:
@@ -2198,15 +2199,22 @@ def render_sidebar():
                             _url = _resp.get("purchase_url")
                             _qr = _resp.get("purchase_qr_code")
                             if _qr:
-                                st.markdown("**📱 用手机支付宝扫下方二维码付款（最稳妥）：**")
+                                st.success("✅ 订单已创建")
+                                # 主入口：醒目按钮，点一下在新窗口打开完整付款二维码（最稳，已验证可用）
+                                st.markdown(
+                                    f'<a href="{_qr}" target="_blank" '
+                                    f'style="display:block;text-align:center;padding:0.6em 1em;'
+                                    f'background:#1677ff;color:#fff;border-radius:8px;'
+                                    f'text-decoration:none;font-weight:bold;font-size:1.05em;">'
+                                    f'📱 打开付款二维码（新窗口）</a>',
+                                    unsafe_allow_html=True,
+                                )
+                                st.caption("点上方按钮在新窗口打开二维码，用手机支付宝扫码付款。")
+                                # 备用：侧边栏内联预览（新窗口被拦截时仍有二维码可扫）
                                 try:
                                     st.image(_qr, use_column_width=True)
                                 except Exception:
-                                    st.markdown(f'[打开付款二维码]({_qr})', unsafe_allow_html=True)
-                                st.markdown(
-                                    f'<a href="{_qr}" target="_blank">🔗 在新窗口打开二维码</a>',
-                                    unsafe_allow_html=True,
-                                )
+                                    pass
                             if _url:
                                 st.markdown("---")
                                 st.markdown(
