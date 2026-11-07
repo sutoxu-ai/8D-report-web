@@ -2219,11 +2219,11 @@ def render_sidebar():
                             st.caption("付款成功后会自动延长有效期，无需联系客服、无需输入激活码。")
                         else:
                             st.caption("付款成功后会自动激活，无需联系客服、无需输入激活码。")
-                        _opay_cols = st.columns(3)
-                        for _col, _pk in zip(_opay_cols, ["month", "year", "five"]):
+                        # 整行宽度的按钮纵向排列，避免侧栏过窄导致"月卡 ¥9.9"等价格文字被截断
+                        for _pk in ["month", "year", "five"]:
                             _plan = opay.PLANS[_pk]
-                            # 按钮直接显示"档位名 + 价格"（如 月卡 ¥9.9/月），付款前即知价
-                            if _col.button(_plan["label"], key="opay_" + _pk, use_container_width=True):
+                            # 按钮直接显示"档位名 + 价格"（如 月卡 ¥9.9），付款前即知价
+                            if st.button(_plan["label"], key="opay_" + _pk, use_container_width=True):
                                 if not st.session_state.get("user_id"):
                                     st.error("请先登录后再购买")
                                 else:
