@@ -79,6 +79,8 @@ hide_streamlit_style = """
 
     /* 只隐藏右上角菜单 */
     #MainMenu {visibility: hidden !important; display: none !important;}
+    /* 隐藏 Streamlit 默认无障碍跳转链接 "Skip to main content" */
+    a[href^="#main"], [data-testid="stSkipLink"], a.stSkipLink { display: none !important; }
 
     /* ========== 顶部 header / 工具栏改为蓝色背景 ========== */
     header[data-testid="stHeader"],
@@ -1770,6 +1772,14 @@ def _ppt_parse_blocks(body):
     return blocks
 
 
+# PPT 导出依赖 python-pptx；部署环境若缺失则隐藏 PPT 按钮，避免显示"导出不可用"告警
+try:
+    import pptx  # noqa: F401
+    PPTX_AVAILABLE = True
+except Exception:
+    PPTX_AVAILABLE = False
+
+
 def export_to_pptx(content, product_name, lang):
     """将报告导出为结构化的 PPT：标题页 + 每个 D 章节一页（含分色标题带、徽章、表格、自动分页）。"""
     from pptx import Presentation
@@ -2205,17 +2215,7 @@ def render_sidebar():
                     if opay is not None:
                         st.markdown("### 💳 支付宝一键开通（推荐）")
                         if plan in ('pro', 'enterprise'):
-                            _exp = lic.get('license_expire')
-                            _exp_str = ""
-                            if _exp:
-                                try:
-                                    _exp_str = datetime.fromisoformat(_exp).strftime('%Y-%m-%d')
-                                except Exception:
-                                    _exp_str = str(_exp)
-                            if _exp_str:
-                                st.info("✅ 您当前为正式版，有效期至 " + _exp_str + "，到期后可在此续费/升级。")
-                            else:
-                                st.info("✅ 您当前为正式版（永久），无需续费。")
+                            st.info("💡 当前会员有效期内不可重复购买；到期后可在此续费/升级。")
                             st.caption("付款成功后会自动延长有效期，无需联系客服、无需输入激活码。")
                         else:
                             st.caption("付款成功后会自动激活，无需联系客服、无需输入激活码。")
@@ -2337,11 +2337,12 @@ def render_sidebar():
         if user_id:
             st.markdown(f"**{T['history_header']}**")
             history = load_report_history(user_id)
-            if not history:
+            _real_history = [r for r in history[:5] if (r.get('product_name') or '').strip()]
+            if not _real_history:
                 st.caption(T["no_history"])
             else:
-                for report in history[:5]:
-                    with st.expander(f"{(report.get('product_name') or 'N/A')[:20]} | {report['created_at'][:10]}"):
+                for report in _real_history:
+                    with st.expander(f"{(report.get('product_name') or '未命名')[:20]} | {report['created_at'][:10]}"):
                         st.caption((report.get('problem_desc') or '')[:80])
                         col_load, col_del = st.columns([3, 1])
                         with col_load:
@@ -2649,21 +2650,23 @@ with col_preview:
                         use_container_width=True
                     )
                 with ex_col2:
-                    try:
-                        ppt_data = export_to_pptx(
-                            st.session_state.current_result,
-                            product_name or "8D_Report",
-                            st.session_state.lang
-                        )
-                        st.download_button(
-                            label=T["download_ppt"],
-                            data=ppt_data,
-                            file_name=f"8D_Report_{datetime.now().strftime('%Y%m%d')}.pptx",
-                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                            use_container_width=True
-                        )
-                    except Exception:
-                        st.warning("⚠️ PPT 导出不可用（依赖缺失）" if st.session_state.lang == "zh" else "⚠️ PPT export unavailable")
+                    if PPTX_AVAILABLE:
+                        try:
+                            ppt_data = export_to_pptx(
+                                st.session_state.current_result,
+                                product_name or "8D_Report",
+                                st.session_state.lang
+                            )
+                            st.download_button(
+                                label=T["download_ppt"],
+                                data=ppt_data,
+                                file_name=f"8D_Report_{datetime.now().strftime('%Y%m%d')}.pptx",
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                use_container_width=True
+                            )
+                        except Exception:
+                            st.warning("⚠️ PPT 生成失败" if st.session_state.lang == "zh" else "⚠️ PPT generation failed")
+                    # 依赖缺失时直接不显示 PPT 按钮，避免"导出不可用"告警
             else:
                 st.info(T["export_disabled"])
     else:
