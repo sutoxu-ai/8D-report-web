@@ -2211,10 +2211,15 @@ def render_sidebar():
                                 )
                                 st.caption("点上方按钮在新窗口打开二维码，用手机支付宝扫码付款。")
                                 # 备用：侧边栏内联预览（新窗口被拦截时仍有二维码可扫）
-                                try:
-                                    st.image(_qr, use_column_width=True)
-                                except Exception:
-                                    pass
+                                # 套白底容器，避免深色主题下二维码对比度过低、发虚
+                                st.markdown(
+                                    f'<div style="background:#ffffff;padding:10px;border-radius:8px;'
+                                    f'text-align:center;">'
+                                    f'<img src="{_qr}" alt="付款二维码" '
+                                    f'style="display:block;width:100%;max-width:240px;'
+                                    f'margin:0 auto;background:#ffffff;" /></div>',
+                                    unsafe_allow_html=True,
+                                )
                             if _url:
                                 st.markdown("---")
                                 st.markdown(
