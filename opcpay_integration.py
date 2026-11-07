@@ -87,7 +87,8 @@ def create_purchase(user_id, plan_key, supabase=None):
     if not purchase_url:
         raise RuntimeError("一人付未返回 purchase_url，响应: " + json.dumps(resp, ensure_ascii=False))
 
-    return purchase_url
+    # 返回完整响应：调用方可取 purchase_url（手机唤起）与 purchase_qr_code（桌面扫码）
+    return resp
 
 
 # ---------------------------------------------------------------------------
