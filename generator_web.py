@@ -2457,108 +2457,116 @@ with col_input:
         if not problem_desc:
             st.error(T["no_desc"])
         else:
-            with st.status(T["generating"], expanded=True) as status:
-                try:
-                    client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
+            # 防连点：生成进行中拦截，避免重复调 DeepSeek 刷爆额度
+            if st.session_state.get("is_generating"):
+                st.warning("⚠️ 正在生成中，请勿重复点击")
+                st.stop()
+            st.session_state["is_generating"] = True
+            try:
+                with st.status(T["generating"], expanded=True) as status:
+                    try:
+                        client = openai.OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-                    if st.session_state.lang == "zh":
-                        user_prompt = (
-                            f"请根据以下信息生成 8D 报告："
-                            f"产品：{product_name or '未提供'}, "
-                            f"客户：{customer or '未提供'}, "
-                            f"日期：{occur_date}, "
-                            f"数量：{defect_qty}, "
-                            f"严重程度：{severity}, "
-                            f"标准：{industry_std}, "
-                            f"团队：{team_members or '未提供'}\n\n"
-                            f"问题描述：{problem_desc}\n\n"
-                            f"【行业专属要求】\n{industry_guide}"
+                        if st.session_state.lang == "zh":
+                            user_prompt = (
+                                f"请根据以下信息生成 8D 报告："
+                                f"产品：{product_name or '未提供'}, "
+                                f"客户：{customer or '未提供'}, "
+                                f"日期：{occur_date}, "
+                                f"数量：{defect_qty}, "
+                                f"严重程度：{severity}, "
+                                f"标准：{industry_std}, "
+                                f"团队：{team_members or '未提供'}\n\n"
+                                f"问题描述：{problem_desc}\n\n"
+                                f"【行业专属要求】\n{industry_guide}"
+                            )
+                        else:
+                            user_prompt = (
+                                f"Generate 8D report based on:\n"
+                                f"Product: {product_name or 'N/A'}\n"
+                                f"Customer: {customer or 'N/A'}\n"
+                                f"Date: {occur_date}\n"
+                                f"Quantity: {defect_qty}\n"
+                                f"Severity: {severity}\n"
+                                f"Standard: {industry_std}\n"
+                                f"Team: {team_members or 'N/A'}\n\n"
+                                f"Problem Description: {problem_desc}\n\n"
+                                f"[Industry-specific Requirements]\n{industry_guide}"
+                            )
+
+                        response = client.chat.completions.create(
+                            model="deepseek-chat",
+                            messages=[
+                                {"role": "system", "content": SYSTEM_PROMPT[st.session_state.lang]},
+                                {"role": "user", "content": user_prompt}
+                            ],
+                            stream=True,
+                            temperature=0.2,
+                            max_tokens=4096
                         )
-                    else:
-                        user_prompt = (
-                            f"Generate 8D report based on:\n"
-                            f"Product: {product_name or 'N/A'}\n"
-                            f"Customer: {customer or 'N/A'}\n"
-                            f"Date: {occur_date}\n"
-                            f"Quantity: {defect_qty}\n"
-                            f"Severity: {severity}\n"
-                            f"Standard: {industry_std}\n"
-                            f"Team: {team_members or 'N/A'}\n\n"
-                            f"Problem Description: {problem_desc}\n\n"
-                            f"[Industry-specific Requirements]\n{industry_guide}"
-                        )
 
-                    response = client.chat.completions.create(
-                        model="deepseek-chat",
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT[st.session_state.lang]},
-                            {"role": "user", "content": user_prompt}
-                        ],
-                        stream=True,
-                        temperature=0.2,
-                        max_tokens=4096
-                    )
+                        full_content = ""
+                        progress_placeholder = st.empty()
+                        stream_placeholder = st.empty()
 
-                    full_content = ""
-                    progress_placeholder = st.empty()
-                    stream_placeholder = st.empty()
-
-                    for chunk in response:
-                        delta = chunk.choices[0].delta.content
-                        if delta:
-                            full_content += delta
-                            # 检测当前 D 步骤
-                            current_d = 0
-                            for i in range(1, 9):
-                                if re.search(rf'D{i}[:：]', full_content):
-                                    current_d = i
-                            # 更新进度圆点
-                            if current_d > 0:
-                                dots_html = '<div class="progress-dots">'
+                        for chunk in response:
+                            delta = chunk.choices[0].delta.content
+                            if delta:
+                                full_content += delta
+                                # 检测当前 D 步骤
+                                current_d = 0
                                 for i in range(1, 9):
-                                    if i < current_d:
-                                        dots_html += '<div class="progress-dot dot-done">✓</div>'
-                                    elif i == current_d:
-                                        dots_html += f'<div class="progress-dot dot-active">D{i}</div>'
-                                    else:
-                                        dots_html += f'<div class="progress-dot dot-pending">D{i}</div>'
-                                dots_html += '</div>'
-                                progress_placeholder.markdown(dots_html, unsafe_allow_html=True)
-                            stream_placeholder.markdown(full_content)
+                                    if re.search(rf'D{i}[:：]', full_content):
+                                        current_d = i
+                                # 更新进度圆点
+                                if current_d > 0:
+                                    dots_html = '<div class="progress-dots">'
+                                    for i in range(1, 9):
+                                        if i < current_d:
+                                            dots_html += '<div class="progress-dot dot-done">✓</div>'
+                                        elif i == current_d:
+                                            dots_html += f'<div class="progress-dot dot-active">D{i}</div>'
+                                        else:
+                                            dots_html += f'<div class="progress-dot dot-pending">D{i}</div>'
+                                    dots_html += '</div>'
+                                    progress_placeholder.markdown(dots_html, unsafe_allow_html=True)
+                                stream_placeholder.markdown(full_content)
 
-                    # 完成后全部绿色
-                    dots_done = '<div class="progress-dots">'
-                    for i in range(1, 9):
-                        dots_done += '<div class="progress-dot dot-done">✓</div>'
-                    dots_done += '</div>'
-                    progress_placeholder.markdown(dots_done, unsafe_allow_html=True)
+                        # 完成后全部绿色
+                        dots_done = '<div class="progress-dots">'
+                        for i in range(1, 9):
+                            dots_done += '<div class="progress-dot dot-done">✓</div>'
+                        dots_done += '</div>'
+                        progress_placeholder.markdown(dots_done, unsafe_allow_html=True)
 
-                    status.update(label="✅ " + T["success"], state="complete", expanded=False)
+                        status.update(label="✅ " + T["success"], state="complete", expanded=False)
 
-                    final_result = clean_format(full_content)
-                    st.session_state.current_result = final_result
-                    inc_trial_used(user_id)
-                    save_report_history(user_id, product_name, customer, problem_desc, final_result, st.session_state.lang)
+                        final_result = clean_format(full_content)
+                        st.session_state.current_result = final_result
+                        inc_trial_used(user_id)
+                        save_report_history(user_id, product_name, customer, problem_desc, final_result, st.session_state.lang)
 
-                except openai.APIConnectionError:
-                    status.update(label="❌ 网络连接失败", state="error")
-                    st.error("🌐 网络连接失败，请检查网络后重试")
-                except openai.RateLimitError:
-                    status.update(label="❌ API 频率超限", state="error")
-                    st.error("⏱️ API 调用频率超限，请等待 30 秒后重试")
-                except openai.AuthenticationError:
-                    status.update(label="❌ API 密钥验证失败", state="error")
-                    st.error("🔑 API 密钥验证失败，请联系管理员")
-                except openai.APIError as e:
-                    status.update(label="❌ 服务异常", state="error")
-                    err_detail = str(e) if str(e) else "未知错误"
-                    logging.error(f"APIError 详情：{e}", exc_info=True)
-                    st.error(f"❌ 服务异常：{err_detail}")
-                except Exception as e:
-                    status.update(label="❌ 系统错误", state="error")
-                    logging.error(f"生成报告未知错误：{e}", exc_info=True)
-                    st.error(T["api_error"])
+                    except openai.APIConnectionError:
+                        status.update(label="❌ 网络连接失败", state="error")
+                        st.error("🌐 网络连接失败，请检查网络后重试")
+                    except openai.RateLimitError:
+                        status.update(label="❌ API 频率超限", state="error")
+                        st.error("⏱️ API 调用频率超限，请等待 30 秒后重试")
+                    except openai.AuthenticationError:
+                        status.update(label="❌ API 密钥验证失败", state="error")
+                        st.error("🔑 API 密钥验证失败，请联系管理员")
+                    except openai.APIError as e:
+                        status.update(label="❌ 服务异常", state="error")
+                        err_detail = str(e) if str(e) else "未知错误"
+                        logging.error(f"APIError 详情：{e}", exc_info=True)
+                        st.error(f"❌ 服务异常：{err_detail}")
+                    except Exception as e:
+                        status.update(label="❌ 系统错误", state="error")
+                        logging.error(f"生成报告未知错误：{e}", exc_info=True)
+                        st.error(T["api_error"])
 
+            finally:
+                st.session_state["is_generating"] = False
 with col_preview:
     st.markdown(f'<div class="panel-title">{T["preview_header"]}</div>', unsafe_allow_html=True)
     if st.session_state.current_result:
