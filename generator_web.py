@@ -2196,20 +2196,25 @@ def render_sidebar():
                             _resp = st.session_state["opay_resp"]
                             _url = _resp.get("purchase_url")
                             _qr = _resp.get("purchase_qr_code")
-                            if _url:
-                                st.markdown(
-                                    f'<a href="{_url}" target="_blank">'
-                                    f'👉 点击前往支付宝付款（手机端唤起 App）</a>',
-                                    unsafe_allow_html=True,
-                                )
                             if _qr:
-                                st.markdown("**或用手机支付宝扫码付款：**")
+                                st.markdown("**📱 用手机支付宝扫下方二维码付款（最稳妥）：**")
                                 try:
-                                    st.image(_qr)
+                                    st.image(_qr, width=280)
                                 except Exception:
                                     st.markdown(f'[打开付款二维码]({_qr})', unsafe_allow_html=True)
-                            st.caption("电脑浏览器点上方链接可能白屏（alipays:// 是手机唤起协议），"
-                                       "用手机支付宝扫二维码最稳妥。付款后刷新本页即自动变为正式版。")
+                                st.markdown(
+                                    f'<a href="{_qr}" target="_blank">🔗 在新窗口打开二维码</a>',
+                                    unsafe_allow_html=True,
+                                )
+                            if _url:
+                                st.markdown("---")
+                                st.markdown(
+                                    f'<a href="{_url}" target="_blank">'
+                                    f'👉 手机端可点此直接唤起支付宝 App 付款</a>',
+                                    unsafe_allow_html=True,
+                                )
+                            st.caption("电脑浏览器点上面「唤起」链接可能白屏（alipays:// 是手机协议），"
+                                       "请用手机支付宝扫上方二维码。付款后刷新本页即自动变为正式版。")
 
                     # ---- 微信人工开通（备用）----
                     st.markdown("---")
