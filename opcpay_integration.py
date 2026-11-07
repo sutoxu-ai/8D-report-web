@@ -24,11 +24,11 @@ from datetime import datetime, timedelta
 
 OPCPAY_BASE = "https://ai6666.com/opcpay/api/pay/v1"
 
-# ⚠️ 上线前把下面三个 sku 改成你在一人付后台「收费配置」里实际生成的 skuId
+# sku_id 取自一人付后台「收费配置」实际生成的值（已填入，勿随意改动）
 PLANS = {
-    "month": {"label": "月卡 ¥9.9/月", "sku": "REPLACE_MONTH_SKU", "plan_days": 30},
-    "year":  {"label": "年卡 ¥39/年",  "sku": "REPLACE_YEAR_SKU",  "plan_days": 365},
-    "five":  {"label": "5年卡 ¥99/5年", "sku": "REPLACE_FIVE_SKU",  "plan_days": 1825},
+    "month": {"label": "月卡 ¥9.9/月", "sku": "S0806000213847679", "plan_days": 30},
+    "year":  {"label": "年卡 ¥39/年",  "sku": "S0806000213847680", "plan_days": 365},
+    "five":  {"label": "5年卡 ¥99/5年", "sku": "S0806000213847681", "plan_days": 1825},
 }
 
 
@@ -55,9 +55,9 @@ def create_purchase(user_id, plan_key, supabase=None):
     idem = f"{user_id}:{uuid.uuid4()}"
 
     body = {
-        "userId": user_id,
-        "idempotencyKey": idem,
-        "skuId": plan["sku"],
+        "user_id": user_id,
+        "idempotency_key": idem,
+        "sku_id": plan["sku"],
     }
     req = urllib.request.Request(
         OPCPAY_BASE + "/purchase",
