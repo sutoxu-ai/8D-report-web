@@ -1294,7 +1294,7 @@ def create_free_license(user_id):
             "user_id": user_id,
             "plan_type": "free",
             "trial_used": 0,
-            "trial_limit": 0
+            "trial_limit": 1
         }).execute()
         return r.data[0] if r.data else None
     except Exception:
@@ -1306,7 +1306,10 @@ def can_generate_report(user_id):
         return False
     plan = lic.get('plan_type', 'free')
     if plan == 'free':
-        return False  # 未激活
+        # 免费用户仅享有注册赠送的试用次数（trial_limit），用完即止
+        used = lic.get('trial_used', 0) or 0
+        limit = lic.get('trial_limit', 0) or 0
+        return used < limit
     if plan == 'trial':
         # 试用：受次数上限 + 有效期双重限制
         used = lic.get('trial_used', 0) or 0
@@ -2162,7 +2165,7 @@ def render_sidebar():
                             "user_id": user_input,
                             "plan_type": "free",
                             "trial_used": 0,
-                            "trial_limit": 0
+                            "trial_limit": 1
                         }).execute()
                         st.session_state.registration_attempted = True  # 标记会话已注册
                     except Exception:
@@ -2184,7 +2187,13 @@ def render_sidebar():
             if lic:
                 plan = lic.get('plan_type')
                 if plan == 'free':
-                    st.warning(T["no_license"])
+                    _used = lic.get('trial_used', 0) or 0
+                    _limit = lic.get('trial_limit', 0) or 0
+                    _remain = max(_limit - _used, 0)
+                    if _remain > 0:
+                        st.info(f"🆓 免费体验版（剩 {_remain} 次生成）")
+                    else:
+                        st.warning(T["no_license"])
                 elif plan == 'trial':
                     st.info("🆓 试用版")
                     _used = lic.get('trial_used', 0) or 0
@@ -2239,20 +2248,33 @@ def render_sidebar():
                                         else:
                                             st.error("创建订单失败：" + _msg)
                         if st.session_state.get("opay_resp"):
-                            _resp = st.session_state["opay_resp"]
-                            _qr = _resp.get("purchase_qr_code")
-                            if _qr:
-                                st.success("✅ 订单已创建")
-                                # 侧边栏内联预览二维码：已验证在深色主题下清晰可读，手机支付宝直接扫
-                                st.markdown(
-                                    f'<div style="background:#ffffff;padding:10px;border-radius:8px;'
-                                    f'text-align:center;">'
-                                    f'<img src="{_qr}" alt="付款二维码" '
-                                    f'style="display:block;width:100%;max-width:240px;'
-                                    f'margin:0 auto;background:#ffffff;" /></div>',
-                                    unsafe_allow_html=True,
-                                )
-                                st.caption("📱 手机支付宝扫上方二维码，付款后刷新本页即自动激活。")
+                            # 若已付款并刷新成正式版：清除待支付状态，提示成功（避免重复显示二维码）
+                            _lic_now = get_user_license(st.session_state.user_id)
+                            if _lic_now and _lic_now.get('plan_type') in ('pro', 'enterprise'):
+                                st.session_state["opay_resp"] = None
+                                st.success("✅ 已激活正式版，开始使用吧！")
+                            else:
+                                _resp = st.session_state["opay_resp"]
+                                _qr = _resp.get("purchase_qr_code")
+                                if _qr:
+                                    st.success("✅ 订单已创建")
+                                    # 侧边栏内联预览二维码：已验证在深色主题下清晰可读，手机支付宝直接扫
+                                    st.markdown(
+                                        f'<div style="background:#ffffff;padding:10px;border-radius:8px;'
+                                        f'text-align:center;">'
+                                        f'<img src="{_qr}" alt="付款二维码" '
+                                        f'style="display:block;width:100%;max-width:240px;'
+                                        f'margin:0 auto;background:#ffffff;" /></div>',
+                                        unsafe_allow_html=True,
+                                    )
+                                    st.caption("📱 手机支付宝扫上方二维码，付款后点下方按钮刷新状态。")
+                                    if st.button("🔄 我已支付，刷新状态", key="opay_refresh_status", use_container_width=True):
+                                        try:
+                                            opay.clear_entitlement_cache(st.session_state.user_id)
+                                        except Exception:
+                                            pass
+                                        clear_license_cache(st.session_state.user_id)
+                                        st.rerun()
 
                     # ---- 微信人工开通（备用）----
                     st.markdown("---")
@@ -2603,10 +2625,13 @@ with col_preview:
             ">{copy_label}</button>
             </div>
             '''
-            components.html(copy_html, height=45)
+            if lic and lic.get('plan_type') in ('pro', 'enterprise'):
+                components.html(copy_html, height=45)
+            else:
+                st.caption("🔒 复制需正式版")
         
         with btn_col2:
-            if lic and lic.get('plan_type') in ('pro', 'enterprise', 'trial'):
+            if lic and lic.get('plan_type') in ('pro', 'enterprise'):
                 ex_col1, ex_col2 = st.columns(2)
                 with ex_col1:
                     word_data = export_to_word(
