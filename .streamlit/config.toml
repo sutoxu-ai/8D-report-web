@@ -2,7 +2,12 @@
 gatherUsageStats = false
 
 [theme]
-base = "light"
+base = "dark"
+primaryColor = "#1677ff"
+backgroundColor = "#0d1b3d"
+secondaryBackgroundColor = "#16263f"
+textColor = "#ffffff"
+font = "sans serif"
 
 [server]
 enableCORS = false
@@ -14,6 +19,5 @@ showErrorDetails = false
 [runner]
 magicEnabled = false
 
-# 尝试隐藏部署按钮（部分版本可能不生效）
 [ui]
 hideDeployedWithStreamlit = true
