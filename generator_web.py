@@ -2222,8 +2222,8 @@ def render_sidebar():
                         _opay_cols = st.columns(3)
                         for _col, _pk in zip(_opay_cols, ["month", "year", "five"]):
                             _plan = opay.PLANS[_pk]
-                            _short = _plan["label"].split(" ")[0]  # 侧边栏窄，只显示档位名（月卡/年卡/5年卡）
-                            if _col.button(_short, key="opay_" + _pk, use_container_width=True):
+                            # 按钮直接显示"档位名 + 价格"（如 月卡 ¥9.9/月），付款前即知价
+                            if _col.button(_plan["label"], key="opay_" + _pk, use_container_width=True):
                                 if not st.session_state.get("user_id"):
                                     st.error("请先登录后再购买")
                                 else:
@@ -2240,22 +2240,10 @@ def render_sidebar():
                                             st.error("创建订单失败：" + _msg)
                         if st.session_state.get("opay_resp"):
                             _resp = st.session_state["opay_resp"]
-                            _url = _resp.get("purchase_url")
                             _qr = _resp.get("purchase_qr_code")
                             if _qr:
                                 st.success("✅ 订单已创建")
-                                # 主入口：醒目按钮，点一下在新窗口打开完整付款二维码（最稳，已验证可用）
-                                st.markdown(
-                                    f'<a href="{_qr}" target="_blank" '
-                                    f'style="display:block;text-align:center;padding:0.6em 1em;'
-                                    f'background:#1677ff;color:#fff;border-radius:8px;'
-                                    f'text-decoration:none;font-weight:bold;font-size:1.05em;">'
-                                    f'📱 打开付款二维码（新窗口）</a>',
-                                    unsafe_allow_html=True,
-                                )
-                                st.caption("点上方按钮在新窗口打开二维码，用手机支付宝扫码付款。")
-                                # 备用：侧边栏内联预览（新窗口被拦截时仍有二维码可扫）
-                                # 套白底容器，避免深色主题下二维码对比度过低、发虚
+                                # 侧边栏内联预览二维码：已验证在深色主题下清晰可读，手机支付宝直接扫
                                 st.markdown(
                                     f'<div style="background:#ffffff;padding:10px;border-radius:8px;'
                                     f'text-align:center;">'
@@ -2264,15 +2252,7 @@ def render_sidebar():
                                     f'margin:0 auto;background:#ffffff;" /></div>',
                                     unsafe_allow_html=True,
                                 )
-                            if _url:
-                                st.markdown("---")
-                                st.markdown(
-                                    f'<a href="{_url}" target="_blank">'
-                                    f'👉 手机端可点此直接唤起支付宝 App 付款</a>',
-                                    unsafe_allow_html=True,
-                                )
-                            st.caption("电脑浏览器点上面「唤起」链接可能白屏（alipays:// 是手机协议），"
-                                       "请用手机支付宝扫上方二维码。付款后刷新本页即自动变为正式版。")
+                                st.caption("📱 手机支付宝扫上方二维码，付款后刷新本页即自动激活。")
 
                     # ---- 微信人工开通（备用）----
                     st.markdown("---")
