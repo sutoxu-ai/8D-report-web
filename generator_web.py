@@ -2315,6 +2315,35 @@ def render_sidebar():
                             st.caption("付款成功后会自动延长有效期，无需联系客服、无需输入激活码。")
                         else:
                             st.caption("付款成功后会自动激活，无需联系客服、无需输入激活码。")
+
+                        # 首选：直接展示 /access 返回的一人付官方付款二维码（最稳，绕开 /purchase 被待支付订单拦截的问题）
+                        try:
+                            _ent = opay.get_entitlement(st.session_state.user_id)
+                        except Exception:
+                            _ent = None
+                        _pay_qr = (_ent or {}).get("purchase_qr_code") if _ent else None
+                        if _pay_qr:
+                            st.markdown("**扫码支付开通（任选套餐）：**")
+                            st.markdown(
+                                f'<div style="background:#ffffff;padding:10px;border-radius:8px;'
+                                f'text-align:center;">'
+                                f'<img src="{_pay_qr}" alt="付款二维码" '
+                                f'style="display:block;width:100%;max-width:240px;'
+                                f'margin:0 auto;background:#ffffff;" /></div>',
+                                unsafe_allow_html=True,
+                            )
+                            if st.button("🔄 我已支付，刷新状态", key="opay_refresh_status_main", use_container_width=True):
+                                try:
+                                    opay.clear_entitlement_cache(st.session_state.user_id)
+                                except Exception:
+                                    pass
+                                clear_license_cache(st.session_state.user_id)
+                                st.rerun()
+                        else:
+                            st.caption("（若上方未显示二维码，可点击下方套餐按钮）")
+
+                        # 备选：按套餐分别下单（月卡/年卡/5年卡，付款前即知价）；仅在上方官方码不可用时使用
+                        st.markdown("或选择具体套餐：")
                         # 整行宽度的按钮纵向排列，避免侧栏过窄导致"月卡 ¥9.9"等价格文字被截断
                         for _pk in ["month", "year", "five"]:
                             _plan = opay.PLANS[_pk]
@@ -2331,7 +2360,38 @@ def render_sidebar():
                                     except Exception as _e:
                                         _msg = str(_e)
                                         if "NOW_PAY_PRODUCT_NOT_PURCHASABLE" in _msg:
-                                            st.warning("⚠️ 当前会员仍在有效期内，暂不可重复购买。请于到期后再续费/升级。")
+                                            # 一人付判定"已有生效权益/订单"而拒绝下单，但本地可能记录为已过期。
+                                            # 重新从 /access 同步一次确认真实状态，避免误导用户。
+                                            try:
+                                                resolve_license(st.session_state.user_id)
+                                                _lic_now = get_user_license(st.session_state.user_id)
+                                                _act = False
+                                                if _lic_now and _lic_now.get('plan_type') in ('pro', 'enterprise'):
+                                                    _e2 = _lic_now.get('license_expire')
+                                                    if not _e2:
+                                                        _act = True
+                                                    else:
+                                                        try:
+                                                            _act = datetime.now() < datetime.fromisoformat(_e2)
+                                                        except Exception:
+                                                            _act = True
+                                                if _act:
+                                                    _exp_str = ""
+                                                    if _lic_now.get('license_expire'):
+                                                        try:
+                                                            _exp_str = "（有效期至 " + datetime.fromisoformat(_lic_now['license_expire']).strftime('%Y-%m-%d') + "）"
+                                                        except Exception:
+                                                            pass
+                                                    st.success("✅ 您当前已是正式版%s，无需重复购买，直接去生成报告即可。" % _exp_str)
+                                                    st.session_state["opay_resp"] = None
+                                                else:
+                                                    st.warning(
+                                                        "⚠️ 一人付提示该账号已有生效中的权益或订单，但本地记录显示已过期。\n"
+                                                        "常见原因：① 该手机号此前已通过支付宝开通且仍在有效期；② 存在未支付订单。\n"
+                                                        "请登录一人付后台核实该账号权益状态，或联系客服 907749064。"
+                                                    )
+                                            except Exception:
+                                                st.warning("⚠️ 当前会员仍在有效期内，暂不可重复购买。请于到期后再续费/升级。")
                                         else:
                                             st.error("创建订单失败：" + _msg)
                         if st.session_state.get("opay_resp"):
