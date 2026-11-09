@@ -2257,6 +2257,16 @@ def render_sidebar():
             
             if lic:
                 plan = lic.get('plan_type')
+                # 计算"正式版是否仍生效"：必须校验 license_expire，否则已过期仍被当成生效中（错误显示"不可重复购买"）
+                _exp_dt = None
+                if lic.get('license_expire'):
+                    try:
+                        _exp_dt = datetime.fromisoformat(lic['license_expire'])
+                    except Exception:
+                        _exp_dt = None
+                _pro_active = (plan in ('pro', 'enterprise')) and (
+                    (_exp_dt is None) or (datetime.now() < _exp_dt)
+                )
                 if plan == 'free':
                     _used = lic.get('trial_used', 0) or 0
                     _limit = lic.get('trial_limit', 0) or 0
@@ -2277,25 +2287,31 @@ def render_sidebar():
                         except Exception:
                             pass
                 else:
-                    st.success(T["pro_version"])
-                    if lic.get('license_expire'):
-                        try:
-                            _exp = datetime.fromisoformat(lic['license_expire']).strftime('%Y-%m-%d')
-                            st.caption(T["valid_until_date"].format(date=_exp))
-                        except Exception:
-                            pass
+                    # pro / enterprise（含已过期情形，需据 license_expire 判断是否仍生效）
+                    if _pro_active:
+                        st.success(T["pro_version"])
+                        if _exp_dt is not None:
+                            st.caption(T["valid_until_date"].format(date=_exp_dt.strftime('%Y-%m-%d')))
+                        else:
+                            st.caption(T["permanent_valid"])
                     else:
-                        st.caption(T["permanent_valid"])
+                        # 已过期：提示过期并引导充值，不再错误地显示"不可重复购买"
+                        st.error(T["license_expired"])
+                        if _exp_dt is not None:
+                            st.caption(T["valid_until_date"].format(date=_exp_dt.strftime('%Y-%m-%d')))
 
-                # 各版本都展示购买入口（pro/enterprise 用户可继续购买以延长有效期）
+                # 各版本都展示购买入口（pro/enterprise 用户可继续购买以延长有效期；已过期则可重新开通）
                 if plan in ('free', 'trial', 'pro', 'enterprise'):
                     st.markdown("---")
 
                     # ---- 一人付：支付宝一键开通（全自动，付款后自动激活，无需输码）----
                     if opay is not None:
                         st.markdown("### 💳 支付宝一键开通（推荐）")
-                        if plan in ('pro', 'enterprise'):
+                        if plan in ('pro', 'enterprise') and _pro_active:
                             st.info("💡 当前会员有效期内不可重复购买；到期后可在此续费/升级。")
+                            st.caption("付款成功后会自动延长有效期，无需联系客服、无需输入激活码。")
+                        elif plan in ('pro', 'enterprise'):
+                            st.warning("⚠️ 授权已过期，点击下方按钮即可续费 / 重新开通。")
                             st.caption("付款成功后会自动延长有效期，无需联系客服、无需输入激活码。")
                         else:
                             st.caption("付款成功后会自动激活，无需联系客服、无需输入激活码。")
